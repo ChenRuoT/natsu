@@ -49,17 +49,17 @@ import {
   loadSidebarTabOrder,
 } from "./appearance";
 
-const KEY = "monocode.transcriptLayout";
-const ACCENT_COLOR_KEY = "monocode.accentColor";
-const SCHEME_KEY = "monocode.colorScheme";
-const ANCHOR_KEY = "monocode.transcriptAnchor";
-const SHOW_EXCLUDED_FILES_KEY = "monocode.showExcludedFiles";
-const CHAT_BACKGROUND_PATH_KEY = "monocode.chatBackgroundPath";
-const CHAT_BACKGROUND_OPACITY_KEY = "monocode.chatBackgroundOpacity";
-const CHAT_BACKGROUND_SCOPE_KEY = "monocode.chatBackgroundScope";
-const NEW_THREAD_BACKGROUND_EFFECT_KEY = "monocode.newThreadBackgroundEffect";
-const THEME_DARK_LIGHTNESS_KEY = "monocode.themeDarkLightness";
-const DIFF_PALETTE_KEY = "monocode.diffPalette";
+const KEY = "natsu.transcriptLayout";
+const ACCENT_COLOR_KEY = "natsu.accentColor";
+const SCHEME_KEY = "natsu.colorScheme";
+const ANCHOR_KEY = "natsu.transcriptAnchor";
+const SHOW_EXCLUDED_FILES_KEY = "natsu.showExcludedFiles";
+const CHAT_BACKGROUND_PATH_KEY = "natsu.chatBackgroundPath";
+const CHAT_BACKGROUND_OPACITY_KEY = "natsu.chatBackgroundOpacity";
+const CHAT_BACKGROUND_SCOPE_KEY = "natsu.chatBackgroundScope";
+const NEW_THREAD_BACKGROUND_EFFECT_KEY = "natsu.newThreadBackgroundEffect";
+const THEME_DARK_LIGHTNESS_KEY = "natsu.themeDarkLightness";
+const DIFF_PALETTE_KEY = "natsu.diffPalette";
 
 function mockLocalStorage() {
   const data = new Map<string, string>();
@@ -92,13 +92,13 @@ describe("right panel tabs", () => {
     expect(loadRightPanelTab()).toBe("files");
     saveRightPanelTab("graph");
     expect(loadRightPanelTab()).toBe("graph");
-    localStorage.setItem("monocode.rightPanelTab", "unknown");
+    localStorage.setItem("natsu.rightPanelTab", "unknown");
     expect(loadRightPanelTab()).toBe("files");
   });
 
   it("adds Graph after the existing Explorer/Changes order", () => {
     localStorage.setItem(
-      "monocode.sidebarTabOrder",
+      "natsu.sidebarTabOrder",
       JSON.stringify(["sessions", "changes", "inbox", "files"]),
     );
     expect(loadRightPanelTabOrder()).toEqual(["changes", "files", "graph"]);
@@ -113,11 +113,11 @@ describe("right panel tabs", () => {
 
   it("repairs partial, duplicate and invalid saved orders", () => {
     localStorage.setItem(
-      "monocode.rightPanelTabOrder",
+      "natsu.rightPanelTabOrder",
       JSON.stringify(["graph", "unknown", "graph"]),
     );
     expect(loadRightPanelTabOrder()).toEqual(["graph", "files", "changes"]);
-    localStorage.setItem("monocode.rightPanelTabOrder", "invalid JSON");
+    localStorage.setItem("natsu.rightPanelTabOrder", "invalid JSON");
     expect(loadRightPanelTabOrder()).toEqual(["files", "changes", "graph"]);
   });
 });

@@ -254,7 +254,7 @@ describe("inset session previews", () => {
       title: "Review hover previews",
       harness: "claude",
       model: "claude:sonnet-4.6",
-      repo: "monocode",
+      repo: "natsu",
       branch: "feature/session-preview",
       worktreeCwd: "/workspace/worktrees/session-preview",
       additions: 42,
@@ -885,27 +885,27 @@ describe("sidebar session IDs", () => {
     await act(async () => copyHarnessId.click());
     expect(copyText).toHaveBeenNthCalledWith(1, "harness-session-2");
 
-    const monocodeMenu = openCopyIdMenu("session-2");
-    const copyMonoCodeId = Array.from(
-      monocodeMenu.querySelectorAll<HTMLButtonElement>('[role="menuitem"]'),
-    ).find((item) => item.textContent === "MonoCode session ID")!;
-    expect(copyMonoCodeId.disabled).toBe(false);
-    await act(async () => copyMonoCodeId.click());
+    const natsuMenu = openCopyIdMenu("session-2");
+    const copyNatsuId = Array.from(
+      natsuMenu.querySelectorAll<HTMLButtonElement>('[role="menuitem"]'),
+    ).find((item) => item.textContent === "Natsu session ID")!;
+    expect(copyNatsuId.disabled).toBe(false);
+    await act(async () => copyNatsuId.click());
     expect(copyText).toHaveBeenNthCalledWith(2, "session-2");
   });
 
-  it("keeps the MonoCode ID available before the harness supplies an ID", async () => {
+  it("keeps the Natsu ID available before the harness supplies an ID", async () => {
     act(() => render());
     const copyMenu = openCopyIdMenu("session-1");
     const copyHarnessId = Array.from(
       copyMenu.querySelectorAll<HTMLButtonElement>('[role="menuitem"]'),
     ).find((item) => item.textContent === "Harness session ID")!;
-    const copyMonoCodeId = Array.from(
+    const copyNatsuId = Array.from(
       copyMenu.querySelectorAll<HTMLButtonElement>('[role="menuitem"]'),
-    ).find((item) => item.textContent === "MonoCode session ID")!;
+    ).find((item) => item.textContent === "Natsu session ID")!;
     expect(copyHarnessId.disabled).toBe(true);
-    expect(copyMonoCodeId.disabled).toBe(false);
-    await act(async () => copyMonoCodeId.click());
+    expect(copyNatsuId.disabled).toBe(false);
+    await act(async () => copyNatsuId.click());
     expect(copyText).toHaveBeenCalledExactlyOnceWith("session-1");
   });
 });
@@ -1080,7 +1080,7 @@ describe("sidebar reorder affordances", () => {
       },
     ];
     localStorage.setItem(
-      "monocode.sessionFolders",
+      "natsu.sessionFolders",
       JSON.stringify({
         "/workspace/project": [
           {
@@ -1206,7 +1206,7 @@ describe("sidebar pinned sessions", () => {
     expect(group.querySelector('[data-session-card="session-1"]')).toBeNull();
     expect(
       JSON.parse(
-        localStorage.getItem("monocode.pinnedSessionsCollapsed") ?? "{}",
+        localStorage.getItem("natsu.pinnedSessionsCollapsed") ?? "{}",
       ),
     ).toEqual({ "/workspace/project": true });
   });

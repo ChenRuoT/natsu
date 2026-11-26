@@ -1,12 +1,12 @@
 import { pathKey, prettyCwd, slash } from "../../../shared/lib/paths";
 import { REMOTE_PATH_PREFIX } from "../../../shared/lib/remotePaths";
 
-const KEY = "monocode.recentProjects";
-const RAIL_ORDER_KEY = "monocode.projectRailOrder";
-const RAIL_PINNED_KEY = "monocode.projectRailPinned";
-const ARCHIVED_KEY = "monocode.archivedProjects";
-const ARCHIVED_CHANGED = "monocode:archived-projects-changed";
-const PROJECT_PATHS_CHANGED = "monocode:project-paths-changed";
+const KEY = "natsu.recentProjects";
+const RAIL_ORDER_KEY = "natsu.projectRailOrder";
+const RAIL_PINNED_KEY = "natsu.projectRailPinned";
+const ARCHIVED_KEY = "natsu.archivedProjects";
+const ARCHIVED_CHANGED = "natsu:archived-projects-changed";
+const PROJECT_PATHS_CHANGED = "natsu:project-paths-changed";
 const MAX = 20;
 
 export type RecentProject = {

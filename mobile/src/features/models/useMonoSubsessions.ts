@@ -4,7 +4,7 @@ import { useModelCatalog } from "@/features/models/useModelCatalog";
 import type { Mono } from "@/features/workspace/types";
 import { monoConversationId } from "@/features/workspace/WorkspaceProvider";
 
-/** A model id as the desktop keeps it (native_model in monocode-core's
+/** A model id as the desktop keeps it (native_model in natsu-core's
  *  store): without its provider in front, and Claude's versioned ids spelled
  *  as the CLI takes them. */
 const nativeModel = (id: string, harness: string) => {

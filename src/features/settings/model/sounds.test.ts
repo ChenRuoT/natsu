@@ -22,7 +22,7 @@ import {
 } from "./sounds";
 import { updateNotificationPreferences } from "../../notifications/model/notificationPreferences";
 
-const KEY = "monocode.sounds";
+const KEY = "natsu.sounds";
 
 function mockLocalStorage() {
   const data = new Map<string, string>();

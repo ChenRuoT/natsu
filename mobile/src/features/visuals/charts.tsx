@@ -1,4 +1,4 @@
-// The desktop's dithered charts (crates/monocode-gpui/src/visuals/charts.rs),
+// The desktop's dithered charts (crates/natsu-gpui/src/visuals/charts.rs),
 // drawn with SVG: the same cells, tones and curves, without its hover
 // readouts and draw-in motion.
 import { useState, type ReactNode } from "react";

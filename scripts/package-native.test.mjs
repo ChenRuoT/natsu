@@ -25,10 +25,10 @@ test(
     const release = join(directory, "target/release");
     await mkdir(bin);
     await mkdir(release, { recursive: true });
-    const binary = join(release, "monocode-gpui");
+    const binary = join(release, "natsu-gpui");
     await writeFile(
       binary,
-      "#!/bin/sh\nprintf 'Monocode Native 0.16.0-preview.2\\n'\n",
+      "#!/bin/sh\nprintf 'Natsu Native 0.16.0-preview.2\\n'\n",
     );
     await chmod(binary, 0o755);
     const fakeTool = `#!/usr/bin/env node
@@ -43,7 +43,7 @@ if (name === 'ditto') {
   else {
     fs.cpSync(args[0], args[1], { recursive: true });
     if (process.env.NATIVE_TEST_SPARSE_DMG_BYTES) {
-      fs.truncateSync(path.join(args[1], 'Contents/MacOS/monocode-gpui'), Number(process.env.NATIVE_TEST_SPARSE_DMG_BYTES));
+      fs.truncateSync(path.join(args[1], 'Contents/MacOS/natsu-gpui'), Number(process.env.NATIVE_TEST_SPARSE_DMG_BYTES));
     }
   }
 }
@@ -132,7 +132,7 @@ if (name === 'xcrun' && args[0] === 'stapler' && process.env.NATIVE_TEST_STAPLER
       "Applications symlink is not traversed",
     );
     const plist = await readFile(
-      join(release, "Monocode Native.app/Contents/Info.plist"),
+      join(release, "Natsu Native.app/Contents/Info.plist"),
       "utf8",
     );
     assert.ok(
@@ -143,10 +143,10 @@ if (name === 'xcrun' && args[0] === 'stapler' && process.env.NATIVE_TEST_STAPLER
     assert.ok(plist.includes("<key>CFBundleVersion</key><string>2</string>"));
     assert.ok(
       plist.includes(
-        "<key>MonocodeNativeVersion</key><string>0.16.0-preview.2</string>",
+        "<key>NatsuNativeVersion</key><string>0.16.0-preview.2</string>",
       ),
     );
-    assert.ok(plist.includes("<string>dev.usemono.gpui</string>"));
+    assert.ok(plist.includes("<string>com.chenruot.natsu.gpui</string>"));
     for (const action of ["staple", "validate"]) {
       await t.test(
         `${action} recovers from ticket-service failures`,
@@ -220,7 +220,7 @@ if (name === 'xcrun' && args[0] === 'stapler' && process.env.NATIVE_TEST_STAPLER
     );
     await writeFile(
       binary,
-      "#!/bin/sh\nprintf 'Monocode Native 0.16.0-preview.3\\n'\n",
+      "#!/bin/sh\nprintf 'Natsu Native 0.16.0-preview.3\\n'\n",
     );
     await assert.rejects(
       () =>

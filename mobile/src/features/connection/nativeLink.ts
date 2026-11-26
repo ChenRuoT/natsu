@@ -7,7 +7,7 @@ type NativeLink = {
   nativeTranscriptVersion?: number;
   typingPostureVersion?: number;
 };
-const module = requireOptionalNativeModule<NativeLink>("MonocodeLink");
+const module = requireOptionalNativeModule<NativeLink>("NatsuLink");
 // Older development builds and Android retain the existing transcript.
 export const hasNativeTranscript =
   Platform.OS === "ios" && module?.nativeTranscriptVersion === 1;

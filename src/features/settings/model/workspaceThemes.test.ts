@@ -49,7 +49,7 @@ describe("workspace themes", () => {
     expect(loadWorkspaceTheme()).toBe(WORKSPACE_THEME_DEFAULT);
     saveWorkspaceTheme("moss");
     expect(loadWorkspaceTheme()).toBe("moss");
-    localStorage.setItem("monocode.workspaceTheme", "not-a-theme");
+    localStorage.setItem("natsu.workspaceTheme", "not-a-theme");
     expect(loadWorkspaceTheme()).toBe(WORKSPACE_THEME_DEFAULT);
   });
 

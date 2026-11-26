@@ -9,24 +9,24 @@ agent, no network, the same text at the same pace every run.
   `REPLAY_CHARS` change its length and pace. The test
   `provider::process_tests::perf_replay_streams_a_whole_claude_turn` keeps it in
   step with the parser.
-- `stream-profile.sh [binary] [seconds]` opens a separate Monocode window on
+- `stream-profile.sh [binary] [seconds]` opens a separate Natsu window on
   throwaway data with the replay as Claude, waits for you to send a message,
-  then profiles that window with Monocode Performance's `--profile`.
+  then profiles that window with Natsu Performance's `--profile`.
 
 ```sh
-scripts/perf/stream-profile.sh                                   # the installed app
-scripts/perf/stream-profile.sh target/release/monocode-gpui 30   # a local build
+scripts/perf/stream-profile.sh                                # the installed app
+scripts/perf/stream-profile.sh target/release/natsu-gpui 30   # a local build
 ```
 
 - `frame-run.sh [binary] [seconds]` does the same hands-off:
-  `MONOCODE_PERF_PROMPT` makes the first chat switch to the replayed Claude
-  and send a message by itself, and `MONOCODE_FRAME_LOG` writes one line per
+  `NATSU_PERF_PROMPT` makes the first chat switch to the replayed Claude
+  and send a message by itself, and `NATSU_FRAME_LOG` writes one line per
   second. It prints the log and its averages. `PROFILE=1` also samples stacks
   over the same window.
 
 ```sh
-scripts/perf/frame-run.sh crates/monocode-gpui/target/release/monocode-gpui 20
-PROFILE=1 scripts/perf/frame-run.sh crates/monocode-gpui/target/release/monocode-gpui 15
+scripts/perf/frame-run.sh crates/natsu-gpui/target/release/natsu-gpui 20
+PROFILE=1 scripts/perf/frame-run.sh crates/natsu-gpui/target/release/natsu-gpui 15
 ```
 
 A frame log line reads:
@@ -44,7 +44,7 @@ reused. `by` names the views whose own `notify` asked for those frames. After
 `|` come counts the app adds with `gpui::frame_stats::count` / `add`: fresh
 row measurements in microseconds by row kind, and lines and characters GPUI
 had to shape because its line cache missed. Any run of the app takes
-`MONOCODE_FRAME_LOG=<file>`, not just the replay.
+`NATSU_FRAME_LOG=<file>`, not just the replay.
 
 Compare a change with the report from before it (CPU, main thread, and the
 view and layout rows). Profile a release build; a debug build's numbers say

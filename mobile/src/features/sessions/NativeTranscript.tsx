@@ -82,7 +82,7 @@ type Props = ViewProps & {
   onScrollState: (event: NativeSyntheticEvent<{ away: boolean; log?: string }>) => void;
 };
 const NativeView = hasNativeTranscript
-  ? requireNativeView<Props>("MonocodeLink")
+  ? requireNativeView<Props>("NatsuLink")
   : null;
 
 /** React owns chrome and occasional interactions. Native owns all transcript data. */
@@ -222,8 +222,8 @@ export function NativeTranscript({
       } else if (action.type === "session" && action.sessionId && action.projectId) {
         openSession(action.projectId, action.sessionId, action.title);
       } else if (action.type === "link" && action.url) {
-        if (action.url.startsWith("monocode-file:"))
-          openFile?.(action.url.slice("monocode-file:".length));
+        if (action.url.startsWith("natsu-file:"))
+          openFile?.(action.url.slice("natsu-file:".length));
         else if (/^https?:\/\/|^mailto:/i.test(action.url))
           void Linking.openURL(action.url).catch(() => {});
       }
@@ -319,7 +319,7 @@ const styles = StyleSheet.create({ fill: { flex: 1 } });
  * takes it off.
  */
 function useReactions(conversationId: string) {
-  const key = `monocode.reactions.${conversationId}`;
+  const key = `natsu.reactions.${conversationId}`;
   const [reactions, setReactions] = useState<Record<string, string>>(() => {
     try {
       return JSON.parse(Storage.getItemSync(key) ?? "{}") as Record<string, string>;

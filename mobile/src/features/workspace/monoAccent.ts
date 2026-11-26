@@ -7,7 +7,7 @@ import { ACCENTS } from "@/ui/theme";
 export type MonoAccent = keyof typeof ACCENTS | "theme";
 
 // Kept on this phone, per desktop and Mono, as reactions are.
-const KEY = "monocode.monoAccents";
+const KEY = "natsu.monoAccents";
 let accents: Readonly<Record<string, MonoAccent>> = load();
 const listeners = new Set<() => void>();
 

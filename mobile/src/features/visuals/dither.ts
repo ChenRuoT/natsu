@@ -1,5 +1,5 @@
 // Ordered dithering, as the desktop's charts draw it
-// (crates/monocode-gpui/src/visuals/dither.rs): a tone in [0, 1] becomes a
+// (crates/natsu-gpui/src/visuals/dither.rs): a tone in [0, 1] becomes a
 // share of inked 3px cells through a 4×4 Bayer matrix, so fills read as
 // halftone texture instead of flat translucent colour.
 

@@ -119,20 +119,16 @@ fn menu_item(
 
 pub fn dispatch(app: &AppHandle, id: &str) {
     match id {
-        "help_website" => {
-            let _ = open::that("https://usemono.dev");
-        }
         "help_github" => {
-            let _ = open::that("https://github.com/hardbeat920/monocode");
+            let _ = open::that("https://github.com/ChenRuoT/natsu");
         }
         "help_report_bug" => {
-            let _ = open::that(
-                "https://github.com/hardbeat920/monocode/issues/new?template=bug_report.yml",
-            );
+            let _ =
+                open::that("https://github.com/ChenRuoT/natsu/issues/new?template=bug_report.yml");
         }
         "help_request_feature" => {
             let _ = open::that(
-                "https://github.com/hardbeat920/monocode/issues/new?template=feature_request.yml",
+                "https://github.com/ChenRuoT/natsu/issues/new?template=feature_request.yml",
             );
         }
         "new_window" => {
@@ -513,10 +509,10 @@ fn build(
 
     #[cfg(target_os = "macos")]
     {
-        let quit = MenuItemBuilder::with_id("quit", "Quit MonoCode")
+        let quit = MenuItemBuilder::with_id("quit", "Quit Natsu")
             .accelerator("CmdOrCtrl+Q")
             .build(app)?;
-        let app_menu = SubmenuBuilder::new(app, "MonoCode")
+        let app_menu = SubmenuBuilder::new(app, "Natsu")
             .about(Some(AboutMetadata::default()))
             .separator()
             .item(&open_settings)
@@ -534,13 +530,11 @@ fn build(
             .minimize()
             .maximize()
             .build()?;
-        let website = MenuItemBuilder::with_id("help_website", "MonoCode Website").build(app)?;
         let github = MenuItemBuilder::with_id("help_github", "View on GitHub").build(app)?;
         let report_bug = MenuItemBuilder::with_id("help_report_bug", "Report a Bug…").build(app)?;
         let request_feature =
             MenuItemBuilder::with_id("help_request_feature", "Request a Feature…").build(app)?;
         let help = SubmenuBuilder::with_id(app, tauri::menu::HELP_SUBMENU_ID, "Help")
-            .item(&website)
             .item(&github)
             .separator()
             .item(&report_bug)

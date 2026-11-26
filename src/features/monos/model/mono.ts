@@ -54,18 +54,18 @@ export type Mono = {
   legacyProject?: string;
 };
 
-const ROSTER_KEY = "monocode:mono-roster";
-const MONOS_CHANGED = "monocode:monos-changed";
-export const HANDED_KEY = "monocode:mono-handed";
+const ROSTER_KEY = "natsu:mono-roster";
+const MONOS_CHANGED = "natsu:monos-changed";
+export const HANDED_KEY = "natsu:mono-handed";
 
 /** Storage from when each project had one Mono, keyed by project. */
-const LEGACY_AGENTS_KEY = "monocode:monos";
-const LEGACY_PROFILES_KEY = "monocode:mono-profiles";
+const LEGACY_AGENTS_KEY = "natsu:monos";
+const LEGACY_PROFILES_KEY = "natsu:mono-profiles";
 /** And from before Monos had their name. */
 const LEGACY_KEYS: [string, string][] = [
-  ["monocode:project-agents", LEGACY_AGENTS_KEY],
-  ["monocode:project-agent-profiles", LEGACY_PROFILES_KEY],
-  ["monocode:project-agent-handed", HANDED_KEY],
+  ["natsu:project-agents", LEGACY_AGENTS_KEY],
+  ["natsu:project-agent-profiles", LEGACY_PROFILES_KEY],
+  ["natsu:project-agent-handed", HANDED_KEY],
 ];
 
 function readJson(key: string): unknown {
@@ -239,7 +239,7 @@ export function createMono(projects: readonly string[] = []): Mono {
   return mono;
 }
 
-const OPEN_MONO_KEY = "monocode:open-mono";
+const OPEN_MONO_KEY = "natsu:open-mono";
 
 /** The Mono whose conversation was open, so the next launch reopens it. */
 export function loadOpenMono(): string | undefined {

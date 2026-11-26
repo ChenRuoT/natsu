@@ -20,7 +20,7 @@ import time
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 SYSTEM = {"Darwin": "darwin", "Linux": "linux"}[platform.system()]
 ARCH = {"arm64": "arm64", "aarch64": "arm64", "x86_64": "x64"}[platform.machine()]
-LAUNCHER = ROOT / "build" / "host-packages" / f"{SYSTEM}-{ARCH}" / "monocode-host"
+LAUNCHER = ROOT / "build" / "host-packages" / f"{SYSTEM}-{ARCH}" / "natsu-host"
 
 
 def free_port():
@@ -39,28 +39,28 @@ def main():
     profile_directory = "debug" if profile == "dev" else profile
     if args.native:
         metadata = json.loads(subprocess.check_output([
-            "cargo", "metadata", "--manifest-path", str(ROOT / "crates/monocode-gpui/Cargo.toml"),
+            "cargo", "metadata", "--manifest-path", str(ROOT / "crates/natsu-gpui/Cargo.toml"),
             "--no-deps", "--format-version", "1",
         ], cwd=ROOT, text=True))
         target = pathlib.Path(metadata["target_directory"])
         if os.environ.get("CARGO_BUILD_TARGET"):
             target /= os.environ["CARGO_BUILD_TARGET"]
-        desktop = args.desktop or target / profile_directory / "monocode-gpui"
-        transport_test = ["cargo", "test", "--manifest-path", "crates/monocode-gpui/Cargo.toml", "--locked", "--offline", "-j", "1", "-p", "monocode-core", "--profile", profile, "--lib", "remote::ssh::tests::loopback_transport_preserves_host_and_reconnects"]
-        build_hint = f"cargo build --manifest-path crates/monocode-gpui/Cargo.toml -p monocode-gpui --profile {profile}"
+        desktop = args.desktop or target / profile_directory / "natsu-gpui"
+        transport_test = ["cargo", "test", "--manifest-path", "crates/natsu-gpui/Cargo.toml", "--locked", "--offline", "-j", "1", "-p", "natsu-core", "--profile", profile, "--lib", "remote::ssh::tests::loopback_transport_preserves_host_and_reconnects"]
+        build_hint = f"cargo build --manifest-path crates/natsu-gpui/Cargo.toml -p natsu-gpui --profile {profile}"
     else:
-        desktop = args.desktop or ROOT / "target" / profile_directory / "monocode"
+        desktop = args.desktop or ROOT / "target" / profile_directory / "natsu"
         transport_test = ["cargo", "test", "--lib", "remote_ssh::tests::loopback_transport_preserves_host_and_reconnects"]
         if args.profile:
             transport_test.extend(["--profile", profile])
-        build_hint = "cargo build --bin monocode" + (f" --profile {profile}" if args.profile else "")
+        build_hint = "cargo build --bin natsu" + (f" --profile {profile}" if args.profile else "")
     desktop = desktop.resolve()
     if not desktop.is_file():
         raise RuntimeError(f"Run {build_hint} first, or pass --desktop with an existing build")
     if not LAUNCHER.is_file():
         raise RuntimeError("Run npm run host:package first")
     sshd = shutil.which("sshd") or "/usr/sbin/sshd"
-    with tempfile.TemporaryDirectory(prefix="monocode-ssh-integration-") as directory:
+    with tempfile.TemporaryDirectory(prefix="natsu-ssh-integration-") as directory:
         folder = pathlib.Path(directory)
         for key in ("host", "client"):
             subprocess.run(["ssh-keygen", "-q", "-t", "ed25519", "-N", "", "-f", str(folder / key)], check=True)
@@ -98,14 +98,14 @@ def main():
                 worker = threading.Thread(target=answer_prompt, daemon=True)
                 worker.start()
                 result = subprocess.run(["ssh", "-F", "/dev/null", "-i", str(folder / "client"), "-p", str(ssh_port), "-o", "IdentitiesOnly=yes", "-o", "StrictHostKeyChecking=ask", "-o", f"UserKnownHostsFile={folder}/prompt_known_hosts", f"{pwd.getpwuid(os.getuid()).pw_name}@127.0.0.1", "printf", "askpass-ok"],
-                    env={**os.environ, "SSH_ASKPASS": str(desktop), "SSH_ASKPASS_REQUIRE": "force", "DISPLAY": "monocode:0", "MONOCODE_SSH_ASKPASS_ADDRESS": f"127.0.0.1:{prompts.getsockname()[1]}", "MONOCODE_SSH_ASKPASS_SECRET": secret}, stdin=subprocess.DEVNULL, capture_output=True, text=True, timeout=25)
+                    env={**os.environ, "SSH_ASKPASS": str(desktop), "SSH_ASKPASS_REQUIRE": "force", "DISPLAY": "natsu:0", "NATSU_SSH_ASKPASS_ADDRESS": f"127.0.0.1:{prompts.getsockname()[1]}", "NATSU_SSH_ASKPASS_SECRET": secret}, stdin=subprocess.DEVNULL, capture_output=True, text=True, timeout=25)
                 worker.join(timeout=1)
                 assert prompt_results == [True], prompt_results
                 assert result.returncode == 0 and result.stdout == "askpass-ok", result.stderr
                 print("Native askpass verified the disposable SSH host fingerprint.")
             host("start")
             device = json.loads(host("pair", "--name", "Loopback test", "--json"))
-            env = {**os.environ, "MONOCODE_TEST_SSH_TARGET": f"{pwd.getpwuid(os.getuid()).pw_name}@127.0.0.1", "MONOCODE_TEST_SSH_PORT": str(ssh_port), "MONOCODE_TEST_HOST_PORT": str(host_port), "MONOCODE_TEST_SSH_KEY": str(folder / "client"), "MONOCODE_TEST_KNOWN_HOSTS": str(folder / "known_hosts"), "MONOCODE_TEST_TOKEN": device["token"], "MONOCODE_TEST_ENVIRONMENT": device["environmentId"]}
+            env = {**os.environ, "NATSU_TEST_SSH_TARGET": f"{pwd.getpwuid(os.getuid()).pw_name}@127.0.0.1", "NATSU_TEST_SSH_PORT": str(ssh_port), "NATSU_TEST_HOST_PORT": str(host_port), "NATSU_TEST_SSH_KEY": str(folder / "client"), "NATSU_TEST_KNOWN_HOSTS": str(folder / "known_hosts"), "NATSU_TEST_TOKEN": device["token"], "NATSU_TEST_ENVIRONMENT": device["environmentId"]}
             subprocess.run([*transport_test, "--", "--ignored"], cwd=ROOT, env=env, check=True)
             assert json.loads(host("connection-info"))["port"] == host_port
             print("Packaged host survived both native SSH tunnel closures.")

@@ -18,7 +18,7 @@ afterEach(async () => {
 });
 
 it.each([false, true])("applies generated worktree names only to retained sessions (deleted: %s)", async (deleted) => {
-  const cwd = mkdtempSync(join(tmpdir(), "monocode-host-names-"));
+  const cwd = mkdtempSync(join(tmpdir(), "natsu-host-names-"));
   const git = (...args: string[]) => execFileSync("git", args, { cwd });
   git("init", "-q");
   git("checkout", "-q", "-b", "main");
@@ -61,7 +61,7 @@ it.each([false, true])("applies generated worktree names only to retained sessio
     rmSync(root, { recursive: true, force: true });
     rmSync(cwd, { recursive: true, force: true });
   });
-  const tree = await createHostWorktree(cwd, "mc/12345678", "HEAD", false);
+  const tree = await createHostWorktree(cwd, "natsu/12345678", "HEAD", false);
   const { sessionId } = engine.command({
     type: "create",
     commandId: "create-named",
@@ -85,8 +85,8 @@ it.each([false, true])("applies generated worktree names only to retained sessio
     const logged = vi.spyOn(console, "debug").mockImplementation(() => {});
     try {
       finishBranch("remote-naming");
-      await vi.waitFor(() => expect(logged).toHaveBeenCalledWith("[monocode] remote worktree branch", expect.any(Error)));
-      expect((await hostWorktrees(cwd)).worktrees.find((item) => item.path === tree.path)?.branch).toBe("mc/12345678");
+      await vi.waitFor(() => expect(logged).toHaveBeenCalledWith("[natsu] remote worktree branch", expect.any(Error)));
+      expect((await hostWorktrees(cwd)).worktrees.find((item) => item.path === tree.path)?.branch).toBe("natsu/12345678");
     } finally { logged.mockRestore(); }
     return;
   }
@@ -94,14 +94,14 @@ it.each([false, true])("applies generated worktree names only to retained sessio
   await vi.waitFor(() => {
     expect(store.session(sessionId).session).toMatchObject({
       title: "codex · Fix remote naming",
-      branch: "mc/remote-naming",
+      branch: "natsu/remote-naming",
       worktreeCwd: tree.path,
     });
   });
   expect(
     (await hostWorktrees(cwd)).worktrees.find((item) => item.path === tree.path)
       ?.branch,
-  ).toBe("mc/remote-naming");
+  ).toBe("natsu/remote-naming");
   expect(title).toHaveBeenCalledTimes(1);
   expect(branch).toHaveBeenCalledTimes(1);
   engine.command({
@@ -114,12 +114,12 @@ it.each([false, true])("applies generated worktree names only to retained sessio
   expect(title).toHaveBeenCalledTimes(1);
   expect(branch).toHaveBeenCalledTimes(1);
   await expect(
-    renameHostWorktreeBranch(cwd, tree.path, "mc/12345678", "mc/other"),
+    renameHostWorktreeBranch(cwd, tree.path, "natsu/12345678", "natsu/other"),
   ).rejects.toThrow("changed");
 });
 
 it("creates registered host worktrees and binds new sessions to the selected checkout", async () => {
-  const cwd = mkdtempSync(join(tmpdir(), "monocode-host-worktrees-"));
+  const cwd = mkdtempSync(join(tmpdir(), "natsu-host-worktrees-"));
   const git = (...args: string[]) => execFileSync("git", args, { cwd });
   git("init", "-q");
   git("checkout", "-q", "-b", "main");

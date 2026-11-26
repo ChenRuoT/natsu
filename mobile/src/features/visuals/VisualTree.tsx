@@ -1,5 +1,5 @@
 // A visual's component tree drawn natively, as the desktop's VisualView lays
-// it out (crates/monocode-gpui/src/visuals.rs). Its controls show their state
+// it out (crates/natsu-gpui/src/visuals.rs). Its controls show their state
 // but don't act yet: the visual runs on the desktop.
 import { useState } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";

@@ -1,0 +1,5 @@
+{
+  "platforms": ["apple", "android"],
+  "apple": { "modules": ["NatsuLinkModule"] },
+  "android": { "modules": ["expo.modules.natsulink.NatsuLinkModule"] }
+}

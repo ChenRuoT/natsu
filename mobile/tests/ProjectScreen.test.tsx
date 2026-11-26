@@ -355,7 +355,7 @@ vi.mock("@/ui/usePushedIn", () => ({
 
 const project: Project = {
   id: "project",
-  name: "Monocode",
+  name: "Natsu",
   path: "/repo",
   machine: "desktop",
   branch: "main",

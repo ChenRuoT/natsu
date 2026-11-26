@@ -1,98 +1,73 @@
-<h1 align="center">Monocode</h1>
+<h1 align="center">Natsu</h1>
 
 <p align="center">
-  <strong>A GUI for your coding agents.</strong>
+  <strong>Multi-Agent CLI Workbench for local Git worktrees, terminals, diffs, and remote hosts.</strong>
 </p>
 
-<p align="center">
-  <img width="1680" height="1050" alt="MonoCode with agent sessions open side by side" src="https://github.com/user-attachments/assets/89e04066-69de-473d-9aab-88b9ca3e3b7b" />
-</p>
+Natsu is an independent open-source continuation and fork of [`hardbeat920/monocode`](https://github.com/hardbeat920/monocode) under the [MIT License](LICENSE).
 
-> [!NOTE]
-> **Try the new [Monocode Native preview](https://github.com/hardbeat920/monocode/releases)**, our experimental Rust + GPUI app for macOS, Linux and Windows. Read the [preview details](#monocode-native-preview) before installing.
+Works with your existing local CLI subscriptions and logins for **Claude Code**, **Codex**, **Cursor**, **Grok Build**, **OpenCode**, **Antigravity**, **Pi**, **omp**, **fx**, **Hermes Agent**, and **Devin**. Natsu resolves CLIs from your system `PATH` or configured binary paths and does not bundle proprietary agent binaries or sell tokens.
 
-Works with your subscriptions on Claude Code, Codex, Cursor, Grok Build, OpenCode, Antigravity, Pi, omp, fx, Hermes Agent, and Devin. If they’re installed and logged in, MonoCode can run them. Tabs are sessions. The composer is the input. MonoCode does not sell tokens.
+## Features
 
-## Install
+- **Project & Session Tabs**: Keep conversations organized by project and split panes side by side.
+- **Git Worktree Orchestration**: Run parallel tasks in isolated worktrees (`natsu/*` branches) with built-in diffing, staging, and commit history.
+- **Integrated Terminals & Editor**: Native ConPTY/PTY terminals and code editor tabs alongside agent transcripts.
+- **`/operator` & Monos**: Let sessions coordinate sub-sessions, worktrees, notes, and scheduled tasks.
+- **Remote Hosts & Mobile Companion**: Headless Node host daemon (`~/.natsu-host`) over SSH and Expo mobile companion link.
 
-Install and sign in to at least one supported agent first. See [provider setup](docs/providers.md) for instructions.
+## Quick Start (Windows 11 & Cross-Platform Dev)
 
-| Platform | Native | Tauri |
-| --- | --- | --- |
-| macOS, Apple Silicon | [MonocodeNative_aarch64.dmg](https://github.com/hardbeat920/monocode/releases/download/native-v0.16.0-preview.14/MonocodeNative_0.16.0-preview.14_aarch64.dmg) | [MonoCode.dmg](https://dl.usemono.dev/MonoCode.dmg) |
-| macOS, Intel | [MonocodeNative_x64.dmg](https://github.com/hardbeat920/monocode/releases/download/native-v0.16.0-preview.14/MonocodeNative_0.16.0-preview.14_x64.dmg) | [MonoCode_x64.dmg](https://dl.usemono.dev/MonoCode_x64.dmg) |
-| Linux, x86_64 | [.deb, .rpm, or AppImage](https://github.com/hardbeat920/monocode/releases/tag/native-v0.16.0-preview.14) | [.deb, .rpm, or AppImage](https://github.com/hardbeat920/monocode/releases/latest) |
-| Windows, x86_64 | [Installer](https://github.com/hardbeat920/monocode/releases/download/native-v0.16.0-preview.14/MonocodeNative_0.16.0-preview.14_x64-setup.exe) | [Installer](https://github.com/hardbeat920/monocode/releases/latest) |
+### Prerequisites
 
-On macOS, open the DMG and drag MonoCode to Applications. On Windows, run the installer. See [Linux setup](docs/install.md) for dependencies and package instructions.
+- **Node.js 20+** (Node.js 22+ for `native:*`, Node.js 24+ for `host/`)
+- **Stable Rust toolchain** (`stable-x86_64-pc-windows-msvc` on Windows 11) + Visual Studio C++ Build Tools + WebView2 Runtime
+- At least one supported provider CLI installed and signed in (see [provider setup](docs/providers.md))
 
-## Get started
+### Run the Desktop App (Tauri + React)
 
-Open a project folder, choose an agent, and send a message. Each tab is a session. Split panes to work with sessions side by side.
-
-- Keep conversations organized by project.
-- Use separate Git worktrees for parallel tasks.
-- Edit files and review changes in the app.
-- Start a message with `/operator` to let an agent open sessions and manage worktrees and notes.
-
-Monos are experimental agents that work across your projects. They keep a memory and can run scheduled tasks you set up with them.
-
-MonoCode is still early. If something breaks, [report a bug](https://github.com/hardbeat920/monocode/issues).
-
-## Guides
-
-- [Provider setup](docs/providers.md)
-- [Linux installation](docs/install.md)
-- [Agent access with /operator](docs/agent-access.md)
-- [Remote sessions, experimental](docs/remote-access.md)
-
-## Build from source
-
-You’ll need Node.js 20+ and a stable Rust toolchain. See [build setup](docs/building.md) for platform dependencies and packaging.
-
-The mobile app is a separate Expo project in [`mobile/`](mobile/README.md). Run it with `cd mobile && npm install && npm start`.
-
-```bash
+```powershell
 npm install
 npm run tauri dev
 ```
 
-Small, focused contributions are welcome. Read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a pull request.
+### Run Verification Checks
 
-## Monocode Native preview
-
-The Rust + GPUI app is an experimental preview. React/Tauri remains the
-production app.
-
-Download a packaged preview for macOS, Linux or Windows from the
-[releases page](https://github.com/hardbeat920/monocode/releases). See
-[known limitations](docs/native/parity.md) before testing.
-
-You can install it alongside MonoCode, but **the preview uses your existing
-MonoCode database and saves changes there**. Back up your data with the app
-closed before testing, and avoid editing the same conversations in both apps
-at once.
-
-To try GPUI from this checkout with Node.js 22+, Rust and Xcode on macOS:
-
-```sh
-npm run native:dev     # launch with a separate development database
-npm run native:build   # create an optimized app using installed MonoCode data
+```powershell
+npm run check               # vitest + tsc + cargo fmt/clippy/test
+npm run check:web           # vitest + tsc --noEmit
+npm run check:rust          # cargo fmt --check + clippy + cargo test
 ```
 
-Type `r` then Enter in the development terminal to rebuild and restart; there is
-no hot reload. The release app saves changes to your installed MonoCode data.
-See the [native guide](docs/native/README.md) for prerequisites, build output,
-checks and preview limitations.
+### Experimental GPUI Native Preview
 
-## Contributors
+An experimental pure-Rust + GPUI frontend lives in `crates/natsu-core` and `crates/natsu-gpui` (separate Cargo workspace):
 
-Thanks to everyone who contributes to MonoCode!
+```powershell
+npm run native:dev          # isolated dev DB (Natsu Development/natsu.db)
+npm run native:build        # optimized native build
+npm run native:check        # script tests + fmt + clippy + native tests
+```
 
-[![MonoCode contributors](https://contrib.rocks/image?repo=hardbeat920/monocode)](https://github.com/hardbeat920/monocode/graphs/contributors)
+See the [native guide](docs/native/README.md) and [build setup](docs/building.md) for platform dependencies and packaging details.
 
-Contributor image by [contrib.rocks](https://contrib.rocks).
+## Guides
 
-## License
+- [Provider setup](docs/providers.md)
+- [Build from source](docs/building.md)
+- [Linux installation](docs/install.md)
+- [Agent access with /operator](docs/agent-access.md)
+- [Remote sessions (experimental)](docs/remote-access.md)
+- [Mobile companion](mobile/README.md)
 
-[MIT](LICENSE). Provider names and logos are trademarks of their owners. See [NOTICE](NOTICE).
+## Issues & Contributing
+
+If something breaks, [open an issue](https://github.com/ChenRuoT/natsu/issues). Small, focused contributions are welcome — read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a pull request.
+
+## License & Attribution
+
+Licensed under the [MIT License](LICENSE).
+
+- Original upstream work by Nick (`Copyright (c) 2026 Nick`) at [`hardbeat920/monocode`](https://github.com/hardbeat920/monocode).
+- Independent continuation and modifications by ChenRuoT (`Copyright (c) 2026 ChenRuoT`) at [`ChenRuoT/natsu`](https://github.com/ChenRuoT/natsu).
+- Provider names and logos are trademarks of their respective owners. See [NOTICE](NOTICE) for full third-party notices.

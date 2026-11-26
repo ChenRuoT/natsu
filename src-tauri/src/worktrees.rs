@@ -414,7 +414,10 @@ fn rename_branch(root: &Path, path: &Path, branch: &str) -> Result<Worktree, Str
         return Err("The main working copy cannot be renamed here".into());
     }
     let current = tree.branch.as_deref().ok_or("The worktree is detached")?;
-    if !current.starts_with("mc/") && !current.starts_with("monocode/") {
+    if !current.starts_with("natsu/")
+        && !current.starts_with("mc/")
+        && !current.starts_with("monocode/")
+    {
         return Err("Only automatically created worktree branches can be renamed".into());
     }
     if current == branch {
@@ -741,7 +744,7 @@ pub fn git_orchestration_worktree_remove(
     let conn = store.lock_conn()?;
     let removed = remove_with_sessions(&conn, &root, &path, true, true)?;
     if let Some(branch) = branch {
-        if branch.starts_with("mc/orch-") {
+        if branch.starts_with("natsu/orch-") || branch.starts_with("mc/orch-") {
             if let Err(error) = git(Path::new(&removed.project_cwd), &["branch", "-D", &branch]) {
                 eprintln!("Orchestration worktree removed; temporary branch cleanup will need a retry: {error}");
             }
@@ -755,7 +758,7 @@ pub async fn git_orchestration_branch_remove(cwd: String, branch: String) -> Res
     tauri::async_runtime::spawn_blocking(move || {
         let root = expand_home(&cwd);
         let branch = branch.trim();
-        if !branch.starts_with("mc/orch-") {
+        if !branch.starts_with("natsu/orch-") && !branch.starts_with("mc/orch-") {
             return Err("Only orchestration temporary branches can be removed here".into());
         }
         git(&root, &["check-ref-format", "--branch", branch])?;
@@ -787,7 +790,7 @@ mod tests {
     }
     fn repo() -> Repo {
         let dir =
-            std::env::temp_dir().join(format!("monocode-worktree-test-{}", uuid::Uuid::new_v4()));
+            std::env::temp_dir().join(format!("natsu-worktree-test-{}", uuid::Uuid::new_v4()));
         let root = dir.join("repo");
         std::fs::create_dir_all(&root).unwrap();
         git_checked(&root, &["init", "-b", "main"]).unwrap();
@@ -889,7 +892,7 @@ mod tests {
         std::fs::write(root.join("untracked.txt"), "lead new\n").unwrap();
         std::fs::remove_file(root.join("deleted.txt")).unwrap();
 
-        let tree = create_seeded(&root, "mc/orch-testworker").unwrap();
+        let tree = create_seeded(&root, "natsu/orch-testworker").unwrap();
         let worker = Path::new(&tree.path);
         assert_eq!(
             std::fs::read_to_string(worker.join("tracked.txt")).unwrap(),
@@ -901,12 +904,12 @@ mod tests {
         );
         assert!(!worker.join("deleted.txt").exists());
         assert_eq!(
-            create_seeded(&root, "mc/orch-testworker").unwrap().path,
+            create_seeded(&root, "natsu/orch-testworker").unwrap().path,
             tree.path
         );
 
         std::fs::write(root.join("tracked.txt"), "later lead edit\n").unwrap();
-        assert!(create_seeded(&root, "mc/orch-testworker").is_err());
+        assert!(create_seeded(&root, "natsu/orch-testworker").is_err());
         assert_eq!(
             std::fs::read_to_string(worker.join("tracked.txt")).unwrap(),
             "lead dirty\n"
@@ -933,18 +936,24 @@ mod tests {
     fn renames_only_temporary_worktree_branches() {
         let repo = repo();
         let root = repo.0.join("repo");
-        let tree = create(&root, "mc/12345678", "main", false).unwrap();
-        let renamed = rename_branch(&root, Path::new(&tree.path), "mc/faster-worktrees").unwrap();
-        assert_eq!(renamed.branch.as_deref(), Some("mc/faster-worktrees"));
+        let tree = create(&root, "natsu/12345678", "main", false).unwrap();
+        let renamed =
+            rename_branch(&root, Path::new(&tree.path), "natsu/faster-worktrees").unwrap();
+        assert_eq!(renamed.branch.as_deref(), Some("natsu/faster-worktrees"));
         assert!(git(
             &root,
-            &["rev-parse", "--verify", "refs/heads/mc/faster-worktrees"]
+            &["rev-parse", "--verify", "refs/heads/natsu/faster-worktrees"]
         )
         .is_ok());
-        assert!(rename_branch(&root, &root, "mc/nope").is_err());
+        assert!(rename_branch(&root, &root, "natsu/nope").is_err());
+
+        let legacy_tree = create(&root, "mc/87654321", "main", false).unwrap();
+        let legacy_renamed =
+            rename_branch(&root, Path::new(&legacy_tree.path), "natsu/legacy-mc").unwrap();
+        assert_eq!(legacy_renamed.branch.as_deref(), Some("natsu/legacy-mc"));
 
         let regular = create(&root, "feature/manual", "main", false).unwrap();
-        assert!(rename_branch(&root, Path::new(&regular.path), "mc/should-not-change").is_err());
+        assert!(rename_branch(&root, Path::new(&regular.path), "natsu/should-not-change").is_err());
     }
 
     #[test]

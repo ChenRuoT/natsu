@@ -16,7 +16,7 @@ import { PixelMascot } from "@/features/mascots/PixelMascot";
 import { HeaderBlur } from "@/features/files/codeScreen";
 import { plainText } from "@/features/sessions/markdownParser";
 import { useKeyboardLift } from "@/features/sessions/SessionScreen";
-import { MONOCODE_MARK } from "@/ui/brand";
+import { NATSU_MARK } from "@/ui/brand";
 import { CircleButton } from "@/ui/CircleButton";
 import { GradualBlur } from "@/ui/GradualBlur";
 import { Icon } from "@/ui/Icon";
@@ -49,7 +49,7 @@ const PREVIEW_HEIGHT = 260;
 
 /**
  * The Monos-only layout's first screen, as a messaging app's chat list:
- * the Monocode mark and a new Mono in the native header, the Monos heard
+ * the Natsu mark and a new Mono in the native header, the Monos heard
  * from last first, and settings and search in glass at the foot, level with a chat's
  * composer. A Mono's chat pushes over it.
  */
@@ -269,7 +269,7 @@ export function MonoHome() {
         )}
       </ScrollView>
 
-      {/* The stack's native header: the Monocode mark and a new Mono as
+      {/* The stack's native header: the Natsu mark and a new Mono as
           native items, so they morph into a chat's back and ⋯ as one is
           pushed. */}
       <Stack.Screen options={{ headerTitle: "" }} />
@@ -277,9 +277,9 @@ export function MonoHome() {
         <Stack.Toolbar.View hidesSharedBackground>
           <View style={styles.markBox}>
             <Image
-              source={MONOCODE_MARK}
+              source={NATSU_MARK}
               style={[styles.mark, { tintColor: colors.content }]}
-              accessibilityLabel="Monocode"
+              accessibilityLabel="Natsu"
               accessibilityIgnoresInvertColors
             />
           </View>
@@ -538,7 +538,7 @@ const useStyles = themedStyles((colors) => ({
     alignItems: "center",
     gap: 10,
     minHeight: 70,
-    // The mascot's left edge level with the Monocode mark's: iOS insets
+    // The mascot's left edge level with the Natsu mark's: iOS insets
     // the bar's items 16pt, and the mark sits 3pt into its 44pt box.
     paddingLeft: 19,
     paddingRight: 20,
@@ -593,7 +593,7 @@ const useStyles = themedStyles((colors) => ({
     color: colors.muted,
     fontSize: 15,
   },
-  // The Monocode mark, centred over the rows' mascots below it.
+  // The Natsu mark, centred over the rows' mascots below it.
   markBox: {
     width: AVATAR,
     height: AVATAR,

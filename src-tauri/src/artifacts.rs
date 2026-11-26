@@ -93,7 +93,7 @@ pub fn artifacts_delete(
     let conn = store.lock_conn()?;
     delete_artifact(&conn, &id).map_err(|e| e.to_string())?;
     drop(conn);
-    let _ = app.emit("monocode:artifact-deleted", &id);
+    let _ = app.emit("natsu:artifact-deleted", &id);
     Ok(())
 }
 
@@ -190,7 +190,7 @@ pub fn artifacts_upsert(
 }
 
 /// Scheme that serves `html` artifacts to the sandboxed frames that show them.
-pub const HTML_SCHEME: &str = "monoartifact";
+pub const HTML_SCHEME: &str = "natsuartifact";
 
 /// The page may run inline scripts and load public styles, scripts, images and
 /// fonts, but it cannot fetch, frame, submit forms or leave its sandbox, even
@@ -202,7 +202,7 @@ const HTML_CSP: &str = "sandbox allow-scripts; default-src 'none'; \
 
 /// Runs first in every page: applies the theme the app posts, reports the
 /// content height so the frame can fit it, and hands web links to the app.
-const HTML_BOOTSTRAP: &str = r#"<script>(function(){var s=document.createElement("style"),c=document.currentScript,h;c.parentNode.insertBefore(s,c.nextSibling);var base="html{background:var(--background);color:var(--foreground);font-family:var(--font-sans)}body{margin:0}";s.textContent=base;function post(m){if(parent!==window)parent.postMessage(m,"*");}window.addEventListener("message",function(e){var d=e.data;if(e.source!==parent||!d||d.type!=="monocode:theme"||!d.vars)return;var css=":root{color-scheme:"+(d.scheme==="light"?"light":"dark")+";";for(var k in d.vars)if(/^--[a-z0-9-]+$/.test(k))css+=k+":"+String(d.vars[k]).replace(/[;{}<>]/g,"")+";";s.textContent=css+"}"+base;});document.addEventListener("click",function(e){var a=e.target&&e.target.closest?e.target.closest("a[href]"):null,u;if(!a)return;try{u=new URL(a.getAttribute("href"),document.baseURI);}catch(x){return;}if(!/^https?:$/.test(u.protocol))return;e.preventDefault();if(e.isTrusted)post({type:"monocode:open-link",url:u.href});},true);function size(){var r=document.documentElement,v=Math.ceil(r.scrollHeight>r.clientHeight?r.scrollHeight:r.getBoundingClientRect().height);if(v===h)return;h=v;post({type:"monocode:height",height:v});}if(window.ResizeObserver){var o=new ResizeObserver(size);o.observe(document.documentElement);document.addEventListener("DOMContentLoaded",function(){if(document.body)o.observe(document.body);});}window.addEventListener("load",size);document.addEventListener("DOMContentLoaded",size);post({type:"monocode:ready"});})();</script>"#;
+const HTML_BOOTSTRAP: &str = r#"<script>(function(){var s=document.createElement("style"),c=document.currentScript,h;c.parentNode.insertBefore(s,c.nextSibling);var base="html{background:var(--background);color:var(--foreground);font-family:var(--font-sans)}body{margin:0}";s.textContent=base;function post(m){if(parent!==window)parent.postMessage(m,"*");}window.addEventListener("message",function(e){var d=e.data;if(e.source!==parent||!d||d.type!=="natsu:theme"||!d.vars)return;var css=":root{color-scheme:"+(d.scheme==="light"?"light":"dark")+";";for(var k in d.vars)if(/^--[a-z0-9-]+$/.test(k))css+=k+":"+String(d.vars[k]).replace(/[;{}<>]/g,"")+";";s.textContent=css+"}"+base;});document.addEventListener("click",function(e){var a=e.target&&e.target.closest?e.target.closest("a[href]"):null,u;if(!a)return;try{u=new URL(a.getAttribute("href"),document.baseURI);}catch(x){return;}if(!/^https?:$/.test(u.protocol))return;e.preventDefault();if(e.isTrusted)post({type:"natsu:open-link",url:u.href});},true);function size(){var r=document.documentElement,v=Math.ceil(r.scrollHeight>r.clientHeight?r.scrollHeight:r.getBoundingClientRect().height);if(v===h)return;h=v;post({type:"natsu:height",height:v});}if(window.ResizeObserver){var o=new ResizeObserver(size);o.observe(document.documentElement);document.addEventListener("DOMContentLoaded",function(){if(document.body)o.observe(document.body);});}window.addEventListener("load",size);document.addEventListener("DOMContentLoaded",size);post({type:"natsu:ready"});})();</script>"#;
 
 /// Serves `<scheme>://localhost/<id>`. Only `html` artifacts are served, so a
 /// frame can never show a document's Markdown as a page.

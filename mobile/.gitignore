@@ -39,5 +39,5 @@ yarn-error.*
 # generated native folders
 /ios
 /android
-modules/monocode-link/ios/*.xcframework/
-modules/monocode-link/android/src/main/jniLibs/
+modules/natsu-link/ios/*.xcframework/
+modules/natsu-link/android/src/main/jniLibs/

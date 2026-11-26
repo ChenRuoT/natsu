@@ -108,7 +108,7 @@ pub fn codex_mono_store_prepare(
     let has_thread = match thread_id {
         Some(id) => {
             validate_thread_id(&id)?;
-            !home.join(".monocode-migrations").join(&id).exists()
+            !home.join(".natsu-migrations").join(&id).exists()
                 && contains_thread(&home.join("sessions"), &id)?
         }
         None => false,
@@ -173,7 +173,7 @@ fn private_entry(name: &str) -> bool {
         || name.ends_with(".db")
         || name.ends_with(".db-wal")
         || name.ends_with(".db-shm")
-        || name.starts_with(".monocode-")
+        || name.starts_with(".natsu-")
         || name == "session_index.jsonl.lock"
 }
 
@@ -597,7 +597,7 @@ fn copy_rollouts_with_edges(
     {
         return Err("The saved Mono root does not match its thread id".into());
     }
-    let pending_dir = home.join(".monocode-migrations");
+    let pending_dir = home.join(".natsu-migrations");
     std::fs::create_dir_all(&pending_dir).map_err(|e| e.to_string())?;
     let pending = pending_dir.join(thread_id);
     std::fs::write(&pending, b"pending").map_err(|e| e.to_string())?;
@@ -690,7 +690,7 @@ pub(crate) struct AgentEdge {
 }
 
 fn edge_snapshot_path(home: &Path, thread_id: &str) -> PathBuf {
-    home.join(".monocode-agent-state")
+    home.join(".natsu-agent-state")
         .join(format!("{thread_id}.json"))
 }
 
@@ -830,7 +830,7 @@ mod tests {
     impl Fixture {
         fn new() -> Self {
             let dir =
-                std::env::temp_dir().join(format!("monocode-codex-store-{}", uuid::Uuid::new_v4()));
+                std::env::temp_dir().join(format!("natsu-codex-store-{}", uuid::Uuid::new_v4()));
             std::fs::create_dir_all(&dir).unwrap();
             Self(dir)
         }
@@ -1128,7 +1128,7 @@ mod tests {
             assert_eq!(std::fs::read(path).unwrap(), std::fs::read(target).unwrap());
         }
         assert!(contains_thread(&fixture.home().join("sessions"), "root-id").unwrap());
-        assert!(!fixture.home().join(".monocode-migrations/root-id").exists());
+        assert!(!fixture.home().join(".natsu-migrations/root-id").exists());
         // A retry is safe and leaves source files intact.
         copy_rollouts(
             &fixture.source(),

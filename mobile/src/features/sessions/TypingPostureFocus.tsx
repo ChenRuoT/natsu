@@ -8,7 +8,7 @@ type Props = ViewProps & {
   onEnterTypingPosture: () => void;
 };
 const NativeView = hasTypingPosture
-  ? requireNativeView<Props>("MonocodeLink", "TypingPostureView")
+  ? requireNativeView<Props>("NatsuLink", "TypingPostureView")
   : null;
 
 /** A newer native build adds hinge support; older builds simply omit it. */

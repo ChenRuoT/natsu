@@ -12,7 +12,7 @@ import { FadingBackground } from "@/features/background/FadingBackground";
 import type { EmptyBackground } from "@/features/background/useEmptyBackground";
 import { PixelMascot } from "@/features/mascots/PixelMascot";
 import type { Project } from "@/features/workspace/types";
-import { MONOCODE_MARK } from "@/ui/brand";
+import { NATSU_MARK } from "@/ui/brand";
 import { themedStyles } from "@/ui/theme";
 
 import { COMPOSER_FADE, useSessionLayout } from "./SessionScreen";
@@ -30,7 +30,7 @@ const ACCESSORY_GAP = 10;
 /** The photo is drawn a moment after the screen opens, so it eases in slower. */
 const BACKGROUND_ENTER = FadeIn.duration(520).easing(Easing.out(Easing.quad));
 
-// Empty conversation: a dimmed Monocode logo above the prompt, and the
+// Empty conversation: a dimmed Natsu logo above the prompt, and the
 // project's name under it, over the background set for it on this phone, or
 // a still frame of the connect screen's ASCII field where no photo is set.
 // A Mono's chat greets with its own mascot instead, on a plain background.
@@ -105,7 +105,7 @@ export function EmptySession({
           ) : (
             <>
               <Image
-                source={MONOCODE_MARK}
+                source={NATSU_MARK}
                 style={styles.mark}
                 accessibilityIgnoresInvertColors
               />

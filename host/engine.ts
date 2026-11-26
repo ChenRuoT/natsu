@@ -89,7 +89,7 @@ export function parseCommand(input: unknown): HostCommand {
       v.autoWorktreeBranch !== undefined &&
       (v.worktreeCwd === undefined ||
         typeof v.autoWorktreeBranch !== "string" ||
-        !/^mc\/[a-z0-9]{8}$/.test(v.autoWorktreeBranch))
+        !/^(?:natsu|mc)\/[a-z0-9]{8}$/.test(v.autoWorktreeBranch))
     )
       throw new Error("Invalid automatically created worktree branch");
     return {
@@ -740,7 +740,7 @@ export class HostEngine {
           if (live) live.value = saved;
         })
         .catch((error) =>
-          console.debug("[monocode] remote session title", error),
+          console.debug("[natsu] remote session title", error),
         );
     }
     const temporary = value.autoWorktreeBranch;
@@ -770,7 +770,7 @@ export class HostEngine {
           if (live) live.value = saved;
         })
         .catch((error) =>
-          console.debug("[monocode] remote worktree branch", error),
+          console.debug("[natsu] remote worktree branch", error),
         );
     }
   }

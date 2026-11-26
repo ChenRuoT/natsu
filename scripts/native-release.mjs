@@ -48,7 +48,7 @@ export function nativeManifest({ version, baseUrl, artifacts, notes = "" }) {
     if (!platforms[target])
       throw new Error(`Missing native package: ${target}`);
   return {
-    app_id: "dev.usemono.gpui",
+    app_id: "com.chenruot.natsu.gpui",
     channel: "native-preview",
     version,
     notes,
@@ -57,7 +57,7 @@ export function nativeManifest({ version, baseUrl, artifacts, notes = "" }) {
 }
 
 export async function prepareNativeRelease(directory, env = process.env) {
-  const version = env.MONOCODE_NATIVE_VERSION;
+  const version = env.NATSU_NATIVE_VERSION;
   previewVersion(version);
   if (!env.TAURI_SIGNING_PRIVATE_KEY || !env.TAURI_UPDATER_PUBKEY)
     throw new Error(

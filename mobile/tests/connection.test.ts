@@ -57,7 +57,7 @@ const invitation = {
 };
 function link(value: unknown) {
   return (
-    "monocode://pair?i=" +
+    "natsu://pair?i=" +
     Buffer.from(JSON.stringify(value)).toString("base64url")
   );
 }

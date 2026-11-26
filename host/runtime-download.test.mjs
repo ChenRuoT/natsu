@@ -21,7 +21,7 @@ const url =
 const delays = [1_000, 2_000, 4_000];
 
 async function fixture(t) {
-  const cache = await mkdtemp(join(tmpdir(), "monocode-runtime-"));
+  const cache = await mkdtemp(join(tmpdir(), "natsu-runtime-"));
   t.after(() => rm(cache, { recursive: true, force: true }));
   const archive = join(cache, "runtime.tar.gz");
   const wait = t.mock.fn(async () => {});

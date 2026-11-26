@@ -25,7 +25,7 @@ import { initializeProviderBinaryPaths } from "./features/providers/model/provid
 import "./features/connections/model/remoteCommands";
 import "./styles/index.css";
 
-performance.mark("monocode:bootstrap");
+performance.mark("natsu:bootstrap");
 // Let local boot IPC overlap loading/evaluating the workspace UI.
 const appLoaded = import("./app/App");
 
@@ -51,10 +51,10 @@ function dismissBootSplash() {
     splash.classList.add("boot-splash-out");
     window.setTimeout(() => {
       splash.remove();
-      performance.mark("monocode:ui-ready");
-      performance.measure("monocode:navigation-to-ui", {
+      performance.mark("natsu:ui-ready");
+      performance.measure("natsu:navigation-to-ui", {
         start: 0,
-        end: "monocode:ui-ready",
+        end: "natsu:ui-ready",
       });
     }, 180);
   };
@@ -103,7 +103,7 @@ void Promise.all([
     { windowTransfer, resumed, history, historyCwd },
     { default: App },
   ]) => {
-    performance.mark("monocode:workspace-ready");
+    performance.mark("natsu:workspace-ready");
     const installedUpdate = windowTransfer ? null : consumeInstalledUpdate();
     ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
       <React.StrictMode>

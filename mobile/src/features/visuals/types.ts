@@ -1,5 +1,5 @@
 // A visual's component tree as the desktop renders it
-// (crates/monocode-core/src/visual/model.rs): data, never HTML.
+// (crates/natsu-core/src/visual/model.rs): data, never HTML.
 
 export type ThemeColor =
   | "ink" | "muted" | "faint" | "accent" | "positive" | "negative" | "warning"

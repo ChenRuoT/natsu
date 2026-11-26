@@ -219,12 +219,12 @@ describe("UsageProviderChip", () => {
             saveShowRemainingUsage(remaining);
           } else {
             localStorage.setItem(
-              "monocode.showRemainingUsage",
+              "natsu.showRemainingUsage",
               remaining ? "1" : "0",
             );
             window.dispatchEvent(
               new StorageEvent("storage", {
-                key: "monocode.showRemainingUsage",
+                key: "natsu.showRemainingUsage",
               }),
             );
           }

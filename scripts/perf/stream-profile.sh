@@ -1,39 +1,39 @@
 #!/bin/sh
-# Profile Monocode while a replayed reply streams.
+# Profile Natsu while a replayed reply streams.
 #
-#   scripts/perf/stream-profile.sh [path/to/monocode-gpui] [seconds]
+#   scripts/perf/stream-profile.sh [path/to/natsu-gpui] [seconds]
 #
-# Starts a separate Monocode window on throwaway data, with `claude` replaced
+# Starts a separate Natsu window on throwaway data, with `claude` replaced
 # by scripts/perf/fake-claude-stream.py. Send any message in a Claude chat in
 # that window; once the reply starts streaming, the stack profiler samples the
 # window for the given seconds (default 30), then this script closes the
-# window it started. The running Monocode and its data are not touched.
+# window it started. The running Natsu and its data are not touched.
 set -eu
 
 here=$(cd "$(dirname "$0")" && pwd)
-app=${1:-"/Applications/Monocode Native.app/Contents/MacOS/monocode-gpui"}
+app=${1:-"/Applications/Natsu Native.app/Contents/MacOS/natsu-gpui"}
 seconds=${2:-30}
-profiler=${MONOCODE_PROFILER:-"$HOME/code/mono-perf-chip/dist/Monocode Performance.app/Contents/MacOS/MonocodePerformance"}
+profiler=${NATSU_PROFILER:-"$HOME/code/mono-perf-chip/dist/Natsu Performance.app/Contents/MacOS/NatsuPerformance"}
 replay="$here/fake-claude-stream.py"
 
-[ -x "$app" ] || { echo "No Monocode binary at $app" >&2; exit 1; }
-[ -x "$profiler" ] || { echo "No profiler at $profiler (set MONOCODE_PROFILER)" >&2; exit 1; }
+[ -x "$app" ] || { echo "No Natsu binary at $app" >&2; exit 1; }
+[ -x "$profiler" ] || { echo "No profiler at $profiler (set NATSU_PROFILER)" >&2; exit 1; }
 
-work=$(mktemp -d "${TMPDIR:-/tmp}/monocode-stream-profile.XXXXXX")
+work=$(mktemp -d "${TMPDIR:-/tmp}/natsu-stream-profile.XXXXXX")
 out="$work/profile"
 mkdir -p "$work/data" "$work/project" "$out"
 
 # The reply streams a little longer than the capture, so it covers it whole.
 export REPLAY_SECONDS=$((seconds + 15)) REPLAY_MARK="$work/streaming"
-MONOCODE_NATIVE_DATA_DIR="$work/data" MONOCODE_CLAUDE_BINARY="$replay" \
+NATSU_NATIVE_DATA_DIR="$work/data" NATSU_CLAUDE_BINARY="$replay" \
     "$app" --dev-data --cwd "$work/project" >"$work/app.log" 2>&1 &
 pid=$!
 trap 'kill "$pid" 2>/dev/null || true' EXIT INT TERM
 
-echo "Started Monocode (PID $pid) on $work/data."
+echo "Started Natsu (PID $pid) on $work/data."
 echo "Send any message in a Claude chat there; profiling starts when the reply streams."
 until [ -e "$work/streaming" ]; do
-    kill -0 "$pid" 2>/dev/null || { echo "Monocode exited; see $work/app.log" >&2; exit 1; }
+    kill -0 "$pid" 2>/dev/null || { echo "Natsu exited; see $work/app.log" >&2; exit 1; }
     sleep 1
 done
 # Let the first frames and the transcript settle before sampling

@@ -223,23 +223,23 @@ describe("dedupeInboxItems", () => {
         number: 10,
         updatedAt: "2026-08-27T10:00:00Z",
         projectPath: "/tmp/agent-terminal",
-        repo: "hardbeat920/monocode",
+        repo: "chenruot/natsu",
       }),
       item({
         number: 10,
         updatedAt: "2026-08-27T10:00:00Z",
-        projectPath: "/tmp/monocode",
-        repo: "HardBeat920/monocode",
+        projectPath: "/tmp/natsu",
+        repo: "ChenRuoT/natsu",
       }),
     ];
     const deduped = dedupeInboxItems(rows, [
-      "/tmp/monocode",
+      "/tmp/natsu",
       "/tmp/agent-terminal",
     ]);
     expect(deduped).toHaveLength(1);
-    expect(deduped[0]?.projectPath).toBe("/tmp/monocode");
+    expect(deduped[0]?.projectPath).toBe("/tmp/natsu");
     expect(inboxItemKey(deduped[0]!)).toBe(
-      "github:hardbeat920/monocode:issue:10",
+      "github:chenruot/natsu:issue:10",
     );
   });
 
@@ -297,11 +297,11 @@ describe("groupProjectsByRepo", () => {
   it("fetches each GitHub remote once", () => {
     expect(
       groupProjectsByRepo([
-        { path: "/tmp/monocode", repo: "hardbeat920/monocode" },
-        { path: "/tmp/agent-terminal", repo: "HardBeat920/monocode" },
+        { path: "/tmp/natsu", repo: "chenruot/natsu" },
+        { path: "/tmp/agent-terminal", repo: "ChenRuoT/natsu" },
         { path: "/tmp/docs", repo: "acme/docs" },
       ]).map((project) => project.path),
-    ).toEqual(["/tmp/monocode", "/tmp/docs"]);
+    ).toEqual(["/tmp/natsu", "/tmp/docs"]);
   });
 
   it("fetches a shared upstream once while preserving its preferred checkout", () => {

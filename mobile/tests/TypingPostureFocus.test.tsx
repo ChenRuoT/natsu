@@ -45,5 +45,5 @@ it("loads the named posture view only in a supporting iOS build", async () => {
   const { TypingPostureFocus } = await import("@/features/sessions/TypingPostureFocus");
   act(() => root.render(<TypingPostureFocus enabled onEnterTypingPosture={() => {}} />));
   expect(container.querySelector("[data-native-posture]")).not.toBeNull();
-  expect(native.requireView).toHaveBeenCalledWith("MonocodeLink", "TypingPostureView");
+  expect(native.requireView).toHaveBeenCalledWith("NatsuLink", "TypingPostureView");
 });

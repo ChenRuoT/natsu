@@ -17,7 +17,7 @@ import { traceSwitch } from "./ScenePager";
 import { useColors } from "./theme";
 
 // A screen's content loading, in the desktop charts' dither: a ring of 3pt
-// cells inked through the 4x4 Bayer pattern (crates/monocode-gpui/src/visuals/
+// cells inked through the 4x4 Bayer pattern (crates/natsu-gpui/src/visuals/
 // dither.rs), its bright head sweeping round from twelve o'clock as the
 // charts' donut does, its tail thinning into scattered cells behind it, in the
 // desktop spinner's slate, peach and pink.
@@ -48,7 +48,7 @@ const GROUND_OUT = { delay: 80, duration: 200, easing: Easing.inOut(Easing.quad)
 const RING_GONE_SCALE = 0.7;
 const BAYER4 = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5];
 /** The desktop's working spinner's inks, top row to bottom
- *  (crates/monocode-gpui/src/session_mark.rs): slate, peach and pink. The
+ *  (crates/natsu-gpui/src/session_mark.rs): slate, peach and pink. The
  *  ring takes them top to bottom too, so its head runs through all three. */
 const INKS = ["#6f84a3", "#e8b583", "#e47fa6"];
 
