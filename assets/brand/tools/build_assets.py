@@ -5,8 +5,8 @@
 Needs Python 3 with Pillow, and the repo's node_modules (rasterising goes through
 `npx tauri icon`, i.e. resvg - the same renderer Tauri and GPUI use).
 
-What it writes is listed in assets/brand/README.md. It cannot rebuild
-src-tauri/macos/Assets.car - that needs Xcode's actool on macOS (see the README).
+What it writes is listed in assets/brand/README.md. src-tauri/macos/Assets.car is
+compiled from AppIcon.icon on macOS by scripts/compile-macos-icon.sh (run in CI).
 """
 import json
 import os
@@ -173,7 +173,8 @@ def main():
     write_icon_json(('mobile', 'assets', 'app.icon', 'icon.json'), 'icon.png')
 
     shutil.rmtree(TMP, ignore_errors=True)
-    print('done. Not rebuilt: src-tauri/macos/Assets.car (needs actool on macOS, see assets/brand/README.md)')
+    print('done. src-tauri/macos/Assets.car is compiled in CI by scripts/compile-macos-icon.sh;')
+    print('refresh the committed fallback from the macos-assets-car artifact (see assets/brand/README.md)')
 
 
 if __name__ == '__main__':

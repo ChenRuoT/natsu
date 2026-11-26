@@ -104,6 +104,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Fails the check if AppIcon.icon stops compiling. The artifact is the
+      # Assets.car to commit as the release fallback when the icon changes.
+      - name: Compile the macOS 26 app icon
+        if: runner.os == 'macOS'
+        run: bash scripts/compile-macos-icon.sh --strict
+
+      - name: Upload the compiled Assets.car
+        if: runner.os == 'macOS'
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-assets-car
+          path: src-tauri/macos/Assets.car
+          if-no-files-found: error
+
       - name: Install Linux system dependencies
         if: runner.os == 'Linux'
         run: bash scripts/install-linux-deps-debian.sh --sources /etc/apt/sources.list.d/ubuntu.sources

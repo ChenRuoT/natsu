@@ -148,6 +148,11 @@ jobs:
           # https://github.com/actions/runner-images/issues/14924
           echo 'block return out quick proto udp from any to any port 443' | sudo pfctl -f -
           sudo pfctl -E
+      # bundle-native-macos.sh ships src-tauri/macos/Assets.car; rebuild it from
+      # AppIcon.icon. On failure the committed copy ships and the run shows a warning.
+      - name: Compile the macOS 26 app icon
+        if: runner.os == 'macOS'
+        run: bash scripts/compile-macos-icon.sh
       - name: Package native app
         shell: bash
         env:
