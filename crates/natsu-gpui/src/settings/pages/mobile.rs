@@ -1373,7 +1373,10 @@ mod tests {
         assert_eq!(overlay.size, size(px(1200.), px(900.)));
         assert_eq!(dialog.size.width, px(560.));
         assert!(dialog.size.height > px(620.) && dialog.size.height < px(720.));
-        assert_eq!(dialog.center(), overlay.center());
+        // The dialog's height follows its wrapped copy, so its origin can snap to
+        // the pixel grid and leave the centre a fraction of a pixel off.
+        assert_eq!(dialog.center().x, overlay.center().x);
+        assert!((dialog.center().y - overlay.center().y).abs() <= px(0.5));
         assert_eq!(code.size, size(px(384.), px(384.)));
         assert_eq!(code.center().x, dialog.center().x);
 
