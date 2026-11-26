@@ -104,6 +104,11 @@ jobs:
           );
           NODE
 
+      # macOS 26 draws the app icon from Assets.car; rebuild it from AppIcon.icon.
+      # On failure the committed copy ships and the run shows a warning.
+      - name: Compile the macOS 26 app icon
+        run: bash scripts/compile-macos-icon.sh
+
       - name: Build, sign, and notarize macOS packages
         env:
           APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}

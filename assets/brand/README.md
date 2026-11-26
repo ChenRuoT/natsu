@@ -56,9 +56,16 @@ You need Python 3 with Pillow, plus the repo's `node_modules`: images are raster
   `src-tauri/src/mono_chat.rs` and `crates/natsu-gpui/src/monos/status.rs` both read this file as a
   single-colour template image. It therefore stays a white mark with `>_` cut out. The Icon Composer layer
   is `Assets/natsu-mark.png`.
-- **`src-tauri/macos/Assets.car` is not rebuilt.** macOS 26 draws the app icon from this compiled
-  catalogue, so until it is rebuilt from `AppIcon.icon`, macOS 26 builds still show the old icon. Rebuilding
-  needs Xcode 26's `actool` (or Icon Composer) on a Mac. Older macOS versions use `icon.icns`, which is up to date.
+- **`src-tauri/macos/Assets.car` is compiled in CI, not here.** macOS 26 draws the app icon from this
+  catalogue. [`scripts/compile-macos-icon.sh`](../../scripts/compile-macos-icon.sh) compiles it from
+  `AppIcon.icon` with Xcode 26's `actool`, so no local Mac is needed:
+  - Both macOS release jobs (`release.yml`, `native-release.yml`) run the script before packaging.
+  - The macOS `check` job in `ci.yml` runs it with `--strict` and uploads the result as the
+    `macos-assets-car` artifact.
+  - The committed copy is the fallback a release ships if `actool` fails; the run then shows a warning.
+    When `AppIcon.icon` changes, refresh it from that artifact
+    (`gh run download <run-id> --repo ChenRuoT/natsu -n macos-assets-car -D src-tauri/macos`).
+  - Older macOS versions use `icon.icns`.
 - **Small in-app logos.** `public/natsu.png` and the GPUI `natsu.png` are 1024 px renders of the master.
   The desktop UI shows them at 16 px (update card, update notification), where the petals blur. If that
   matters, point those spots at a raster of `natsu-mark-16.svg` / `natsu-mark-32.svg`.
