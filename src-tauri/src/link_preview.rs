@@ -10,7 +10,7 @@ const HTTP_TIMEOUT: Duration = Duration::from_secs(7);
 const MAX_REDIRECTS: usize = 5;
 const MAX_PAGE_BYTES: usize = 512 * 1024;
 const MAX_ICON_BYTES: usize = 256 * 1024;
-const USER_AGENT: &str = "Mozilla/5.0 (compatible; MonoCode-LinkPreview/1.0)";
+const USER_AGENT: &str = "Mozilla/5.0 (compatible; Natsu-LinkPreview/1.0)";
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -226,17 +226,13 @@ fn is_public_ipv6(ip: Ipv6Addr) -> bool {
         return is_public_ipv4(ipv4);
     }
     let segments = ip.segments();
-    if ip.is_unspecified()
+    !(ip.is_unspecified()
         || ip.is_loopback()
         || ip.is_multicast()
         || segments[0] & 0xfe00 == 0xfc00
         || segments[0] & 0xffc0 == 0xfe80
         || segments[0] & 0xffc0 == 0xfec0
-        || (segments[0] == 0x2001 && segments[1] == 0x0db8)
-    {
-        return false;
-    }
-    true
+        || (segments[0] == 0x2001 && segments[1] == 0x0db8))
 }
 
 fn is_redirect(status: u16) -> bool {

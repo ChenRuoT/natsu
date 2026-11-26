@@ -1,11 +1,11 @@
 import { useSyncExternalStore } from "react";
 import { readFlag, writeFlag } from "./storageFlags";
 
-const SHOW_REMAINING_USAGE_KEY = "monocode.showRemainingUsage";
-const MASK_EMAILS_KEY = "monocode.maskEmails";
-const COMPOSER_AUTOCORRECT_KEY = "monocode.composerAutocorrect";
-const RAIL_MONOS_PINNED_KEY = "monocode.railMonosPinned";
-export const PACED_REVEAL_KEY = "monocode.pacedReveal";
+const SHOW_REMAINING_USAGE_KEY = "natsu.showRemainingUsage";
+const MASK_EMAILS_KEY = "natsu.maskEmails";
+const COMPOSER_AUTOCORRECT_KEY = "natsu.composerAutocorrect";
+const RAIL_MONOS_PINNED_KEY = "natsu.railMonosPinned";
+export const PACED_REVEAL_KEY = "natsu.pacedReveal";
 
 export const SHOW_REMAINING_USAGE_DEFAULT = false;
 export const MASK_EMAILS_DEFAULT = true;
@@ -14,14 +14,14 @@ export const RAIL_MONOS_PINNED_DEFAULT = false;
 
 /** Fired on `window` whenever the usage meter direction flips (detail: boolean). */
 export const SHOW_REMAINING_USAGE_CHANGE_EVENT =
-  "monocode:showremainingusagechange";
+  "natsu:showremainingusagechange";
 /** Fired on `window` whenever email masking flips (detail: boolean). */
-export const MASK_EMAILS_CHANGE_EVENT = "monocode:maskemailschange";
+export const MASK_EMAILS_CHANGE_EVENT = "natsu:maskemailschange";
 /** Fired on `window` whenever composer autocorrect flips (detail: boolean). */
 export const COMPOSER_AUTOCORRECT_CHANGE_EVENT =
-  "monocode:composerautocorrectchange";
+  "natsu:composerautocorrectchange";
 /** Fired on `window` whenever Monos are pinned to or unpinned from the icon rail (detail: boolean). */
-export const RAIL_MONOS_PINNED_CHANGE_EVENT = "monocode:railmonospinnedchange";
+export const RAIL_MONOS_PINNED_CHANGE_EVENT = "natsu:railmonospinnedchange";
 
 function flagStore(key: string, fallback: boolean, event: string) {
   // Holds a saved value only while storage failed to keep it, so the switch
@@ -76,16 +76,16 @@ const railMonosPinned = flagStore(
 const pacedReveal = flagStore(
   PACED_REVEAL_KEY,
   true,
-  "monocode:pacedrevealchange",
+  "natsu:pacedrevealchange",
 );
 export const loadPacedReveal = pacedReveal.load;
 export const savePacedReveal = pacedReveal.save;
 export const usePacedReveal = pacedReveal.useFlag;
 
 const newLayoutPromptDismissed = flagStore(
-  "monocode.newLayoutPromptDismissed",
+  "natsu.newLayoutPromptDismissed",
   false,
-  "monocode:newlayoutpromptdismissedchange",
+  "natsu:newlayoutpromptdismissedchange",
 );
 export const saveNewLayoutPromptDismissed = newLayoutPromptDismissed.save;
 export const useNewLayoutPromptDismissed = newLayoutPromptDismissed.useFlag;

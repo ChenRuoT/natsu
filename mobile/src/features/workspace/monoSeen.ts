@@ -8,7 +8,7 @@ import type { Mono } from "./types";
 // no count of its own.
 type Seen = Readonly<Record<string, string>>;
 
-const storageKey = (desktop: string) => `monocode.monoSeen.${desktop}`;
+const storageKey = (desktop: string) => `natsu.monoSeen.${desktop}`;
 let loadedFor: string | undefined;
 let seen: Seen = {};
 const listeners = new Set<() => void>();

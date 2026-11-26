@@ -1,15 +1,15 @@
 Unicode True
 !include "MUI2.nsh"
 !include "FileFunc.nsh"
-Name "Monocode Native"
+Name "Natsu Native"
 OutFile "@OUTFILE@"
-InstallDir "$LOCALAPPDATA\Programs\Monocode Native"
-InstallDirRegKey HKCU "Software\Monocode Native" "InstallDir"
+InstallDir "$LOCALAPPDATA\Programs\Natsu Native"
+InstallDirRegKey HKCU "Software\Natsu Native" "InstallDir"
 RequestExecutionLevel user
 SetCompressor /SOLID lzma
 VIProductVersion "@WINDOWS_VERSION@"
-VIAddVersionKey "ProductName" "Monocode Native"
-VIAddVersionKey "FileDescription" "Monocode Native preview installer"
+VIAddVersionKey "ProductName" "Natsu Native"
+VIAddVersionKey "FileDescription" "Natsu Native preview installer"
 VIAddVersionKey "FileVersion" "@VERSION@"
 !define MUI_ICON "@ICON@"
 !insertmacro MUI_PAGE_DIRECTORY
@@ -29,64 +29,64 @@ Function .onInit
   System::Call 'kernel32::WaitForSingleObject(p r1, i 120000) i .r2'
   System::Call 'kernel32::CloseHandle(p r1)'
   StrCmp $2 0 ready
-  Abort "Monocode Native did not close. Please try updating again."
+  Abort "Natsu Native did not close. Please try updating again."
   ready:
 FunctionEnd
-Section "Monocode Native"
+Section "Natsu Native"
   SetOutPath "$INSTDIR"
   ClearErrors
-  File /oname=monocode-gpui.next.exe "@STAGE@\monocode-gpui.exe"
+  File /oname=natsu-gpui.next.exe "@STAGE@\natsu-gpui.exe"
   IfErrors install_failed
   StrCpy $HadPrevious 0
-  IfFileExists "$INSTDIR\monocode-gpui.exe" 0 replace_binary
-  Delete "$INSTDIR\monocode-gpui.previous.exe"
+  IfFileExists "$INSTDIR\natsu-gpui.exe" 0 replace_binary
+  Delete "$INSTDIR\natsu-gpui.previous.exe"
   ClearErrors
-  Rename "$INSTDIR\monocode-gpui.exe" "$INSTDIR\monocode-gpui.previous.exe"
+  Rename "$INSTDIR\natsu-gpui.exe" "$INSTDIR\natsu-gpui.previous.exe"
   IfErrors install_failed
   StrCpy $HadPrevious 1
   replace_binary:
   ClearErrors
-  Rename "$INSTDIR\monocode-gpui.next.exe" "$INSTDIR\monocode-gpui.exe"
+  Rename "$INSTDIR\natsu-gpui.next.exe" "$INSTDIR\natsu-gpui.exe"
   IfErrors rollback_binary
   File "@STAGE@\native-install.json"
   File /r "@STAGE@\licenses"
   WriteUninstaller "$INSTDIR\Uninstall.exe"
-  WriteRegStr HKCU "Software\Monocode Native" "InstallDir" "$INSTDIR"
-  WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\MonocodeNative" "DisplayName" "Monocode Native"
-  WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\MonocodeNative" "DisplayVersion" "@VERSION@"
-  WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\MonocodeNative" "UninstallString" '"$INSTDIR\Uninstall.exe"'
-  CreateShortcut "$SMPROGRAMS\Monocode Native.lnk" "$INSTDIR\monocode-gpui.exe"
-  CreateShortcut "$DESKTOP\Monocode Native.lnk" "$INSTDIR\monocode-gpui.exe"
-  Delete "$INSTDIR\monocode-gpui.previous.exe"
+  WriteRegStr HKCU "Software\Natsu Native" "InstallDir" "$INSTDIR"
+  WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\NatsuNative" "DisplayName" "Natsu Native"
+  WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\NatsuNative" "DisplayVersion" "@VERSION@"
+  WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\NatsuNative" "UninstallString" '"$INSTDIR\Uninstall.exe"'
+  CreateShortcut "$SMPROGRAMS\Natsu Native.lnk" "$INSTDIR\natsu-gpui.exe"
+  CreateShortcut "$DESKTOP\Natsu Native.lnk" "$INSTDIR\natsu-gpui.exe"
+  Delete "$INSTDIR\natsu-gpui.previous.exe"
   Goto install_done
   rollback_binary:
   StrCmp $HadPrevious 1 0 install_failed
-  Rename "$INSTDIR\monocode-gpui.previous.exe" "$INSTDIR\monocode-gpui.exe"
+  Rename "$INSTDIR\natsu-gpui.previous.exe" "$INSTDIR\natsu-gpui.exe"
   install_failed:
-  Delete "$INSTDIR\monocode-gpui.next.exe"
-  MessageBox MB_ICONSTOP "Monocode Native could not be updated. The previous executable was retained. Close other Monocode Native processes and try again."
+  Delete "$INSTDIR\natsu-gpui.next.exe"
+  MessageBox MB_ICONSTOP "Natsu Native could not be updated. The previous executable was retained. Close other Natsu Native processes and try again."
   Abort
   install_done:
 SectionEnd
 Function .onInstFailed
   StrCmp $UpdatePID "" failed_done
-  IfFileExists "$INSTDIR\monocode-gpui.exe" 0 failed_done
-  Exec '"$INSTDIR\monocode-gpui.exe"'
+  IfFileExists "$INSTDIR\natsu-gpui.exe" 0 failed_done
+  Exec '"$INSTDIR\natsu-gpui.exe"'
   failed_done:
 FunctionEnd
 Function .onInstSuccess
   StrCmp $UpdatePID "" done
-  Exec '"$INSTDIR\monocode-gpui.exe"'
+  Exec '"$INSTDIR\natsu-gpui.exe"'
   done:
 FunctionEnd
 Section "Uninstall"
-  Delete "$SMPROGRAMS\Monocode Native.lnk"
-  Delete "$DESKTOP\Monocode Native.lnk"
-  Delete "$INSTDIR\monocode-gpui.exe"
+  Delete "$SMPROGRAMS\Natsu Native.lnk"
+  Delete "$DESKTOP\Natsu Native.lnk"
+  Delete "$INSTDIR\natsu-gpui.exe"
   Delete "$INSTDIR\native-install.json"
   Delete "$INSTDIR\Uninstall.exe"
   RMDir /r "$INSTDIR\licenses"
   RMDir "$INSTDIR"
-  DeleteRegKey HKCU "Software\Monocode Native"
-  DeleteRegKey HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\MonocodeNative"
+  DeleteRegKey HKCU "Software\Natsu Native"
+  DeleteRegKey HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\NatsuNative"
 SectionEnd

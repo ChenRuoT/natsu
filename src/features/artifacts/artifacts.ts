@@ -18,8 +18,8 @@ export type ArtifactUpsert = Omit<Artifact, "createdAt" | "updatedAt">;
 export type ArtifactCard = Pick<Artifact, "id" | "kind" | "title"> & {
   summary?: string;
 };
-export const ARTIFACTS_CHANGED_EVENT = "monocode:artifacts-changed";
-export const ARTIFACT_DELETED_EVENT = "monocode:artifact-deleted";
+export const ARTIFACTS_CHANGED_EVENT = "natsu:artifacts-changed";
+export const ARTIFACT_DELETED_EVENT = "natsu:artifact-deleted";
 
 export function artifactLabel(kind: ArtifactKind): string {
   switch (kind) {
@@ -32,7 +32,7 @@ export function artifactLabel(kind: ArtifactKind): string {
 
 /** Where the app's own scheme serves an `html` artifact to its sandboxed frame. */
 export function htmlArtifactUrl(id: string): string {
-  return convertFileSrc(id, "monoartifact");
+  return convertFileSrc(id, "natsuartifact");
 }
 
 export function getArtifact(id: string): Promise<Artifact | null> {

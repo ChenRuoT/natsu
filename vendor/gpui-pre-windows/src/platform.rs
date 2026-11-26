@@ -1921,7 +1921,7 @@ mod tests {
                 }
             }
             let fixture = Fixture(std::env::temp_dir().join(format!(
-                "monocode-reveal-{}-{}",
+                "natsu-reveal-{}-{}",
                 std::process::id(),
                 std::time::SystemTime::now()
                     .duration_since(std::time::UNIX_EPOCH)

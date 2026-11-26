@@ -1529,8 +1529,8 @@ function SidebarComponent({
               },
               {
                 kind: "item" as const,
-                id: "copy-monocode-session-id",
-                label: "MonoCode session ID",
+                id: "copy-natsu-session-id",
+                label: "Natsu session ID",
               },
             ],
           },
@@ -1675,7 +1675,7 @@ function SidebarComponent({
       setRenamingSessionId(sessionId);
       return;
     }
-    if (id === "copy-harness-session-id" || id === "copy-monocode-session-id") {
+    if (id === "copy-harness-session-id" || id === "copy-natsu-session-id") {
       const value =
         id === "copy-harness-session-id" ? providerSessionId : sessionId;
       if (value) {

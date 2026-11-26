@@ -4,7 +4,7 @@ import Storage from "expo-sqlite/kv-store";
 export type Place = { kind: "project" | "mono"; id: string };
 
 // Per desktop, since each has its own projects and monos.
-const storageKey = (desktop: string) => `monocode.lastPlace.${desktop}`;
+const storageKey = (desktop: string) => `natsu.lastPlace.${desktop}`;
 /** The last place written, so revisiting it writes nothing. */
 const written = new Map<string, string>();
 

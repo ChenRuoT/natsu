@@ -76,20 +76,20 @@ export function temporaryWorktreeBranchName(
     .replace(/[^a-zA-Z0-9]/g, "")
     .slice(0, 8)
     .toLowerCase();
-  return `mc/${token || Date.now().toString(36)}`;
+  return `natsu/${token || Date.now().toString(36)}`;
 }
 
 export function orchestrationWorktreeBranchName(id: string): string {
   const token = id.replace(/[^a-zA-Z0-9]/g, "").slice(0, 12).toLowerCase();
-  return `mc/orch-${token || Date.now().toString(36)}`;
+  return `natsu/orch-${token || Date.now().toString(36)}`;
 }
 
 export function namedWorktreeBranch(fragment: string): string | null {
   const clean = fragment
     .trim()
-    .replace(/^(?:mc|monocode)\/+/, "")
+    .replace(/^(?:natsu|mc|monocode)\/+/, "")
     .replace(/^\/+|\/+$/g, "");
-  return clean ? `mc/${clean}` : null;
+  return clean ? `natsu/${clean}` : null;
 }
 
 export async function removeWorktree(

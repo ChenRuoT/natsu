@@ -133,7 +133,7 @@ pub(crate) fn view_reused() {
     STATS.with_borrow_mut(|acc| acc.stats.views_reused += 1);
 }
 
-/// `monocode_gpui::transcript::TranscriptView` becomes `transcript::TranscriptView`.
+/// `natsu_gpui::transcript::TranscriptView` becomes `transcript::TranscriptView`.
 fn short_type_name(name: &'static str) -> &'static str {
     let generic = name.find('<').unwrap_or(name.len());
     let path = &name[..generic];
@@ -156,7 +156,7 @@ mod tests {
     #[test]
     fn keeps_module_and_type() {
         assert_eq!(
-            short_type_name("monocode_gpui::transcript::TranscriptView"),
+            short_type_name("natsu_gpui::transcript::TranscriptView"),
             "transcript::TranscriptView"
         );
         assert_eq!(short_type_name("shell::Shell"), "shell::Shell");

@@ -1,8 +1,7 @@
 name: Native preview release
 
 on:
-  push:
-    tags: ["native-v*"]
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -55,7 +54,7 @@ jobs:
           targets: ${{ matrix.target }}
       - uses: Swatinem/rust-cache@v2
         with:
-          workspaces: crates/monocode-gpui
+          workspaces: crates/natsu-gpui
           key: native-release-${{ matrix.target }}
           cache-on-failure: true
       - name: Configure native channel and version
@@ -66,9 +65,9 @@ jobs:
           node --input-type=module -e 'import { previewVersion } from "./scripts/package-native.mjs"; previewVersion(process.argv[1]);' "$VERSION"
           test -n "$TAURI_UPDATER_PUBKEY"
           test -n "$R2_PUBLIC_BASE_URL"
-          echo "MONOCODE_NATIVE_VERSION=$VERSION" >> "$GITHUB_ENV"
-          echo "MONOCODE_NATIVE_UPDATER_ENDPOINT=${R2_PUBLIC_BASE_URL%/}/native-preview/latest.json" >> "$GITHUB_ENV"
-          echo "MONOCODE_NATIVE_UPDATER_PUBKEY=$TAURI_UPDATER_PUBKEY" >> "$GITHUB_ENV"
+          echo "NATSU_NATIVE_VERSION=$VERSION" >> "$GITHUB_ENV"
+          echo "NATSU_NATIVE_UPDATER_ENDPOINT=${R2_PUBLIC_BASE_URL%/}/native-preview/latest.json" >> "$GITHUB_ENV"
+          echo "NATSU_NATIVE_UPDATER_PUBKEY=$TAURI_UPDATER_PUBKEY" >> "$GITHUB_ENV"
       - name: Install native Linux build dependencies
         if: runner.os == 'Linux'
         run: |
@@ -114,12 +113,12 @@ jobs:
       - run: npm ci
       - run: node --test scripts/native-release.test.mjs scripts/package-native.test.mjs
       - name: Test native update backend
-        run: cargo test --locked --manifest-path crates/monocode-gpui/Cargo.toml -p monocode-core --profile native-dev app_update
+        run: cargo test --locked --manifest-path crates/natsu-gpui/Cargo.toml -p natsu-core --profile native-dev app_update
       - name: Reclaim Mac updater-test build space
         if: runner.os == 'macOS'
         run: |
           df -h .
-          cargo clean --manifest-path crates/monocode-gpui/Cargo.toml --profile native-dev
+          cargo clean --manifest-path crates/natsu-gpui/Cargo.toml --profile native-dev
           df -h .
       - name: Require a current macOS SDK
         if: runner.os == 'macOS'
@@ -139,7 +138,7 @@ jobs:
         if: matrix.target == 'x86_64-apple-darwin'
         run: /usr/sbin/softwareupdate --install-rosetta --agree-to-license || arch -x86_64 /usr/bin/true
       - name: Build optimized native app
-        run: cargo build --locked --manifest-path crates/monocode-gpui/Cargo.toml -p monocode-gpui --target ${{ matrix.target }} --release
+        run: cargo build --locked --manifest-path crates/natsu-gpui/Cargo.toml -p natsu-gpui --target ${{ matrix.target }} --release
       - name: Use TCP for Mac notarization
         if: runner.os == 'macOS'
         run: |
@@ -157,7 +156,7 @@ jobs:
           APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
         run: |
           set -euo pipefail
-          BINARY="crates/monocode-gpui/target/${{ matrix.target }}/release/monocode-gpui"
+          BINARY="crates/natsu-gpui/target/${{ matrix.target }}/release/natsu-gpui"
           if [ "$RUNNER_OS" = Windows ]; then BINARY="$BINARY.exe"; fi
           node scripts/package-native.mjs '${{ matrix.kind }}' "$BINARY" native-dist '${{ matrix.arch }}'
       - uses: actions/upload-artifact@v4
@@ -207,12 +206,12 @@ jobs:
           node --input-type=module -e 'import { previewVersion } from "./scripts/package-native.mjs"; previewVersion(process.argv[1]);' "$VERSION"
           test -n "$TAURI_UPDATER_PUBKEY"
           test -n "$R2_PUBLIC_BASE_URL"
-          echo "MONOCODE_NATIVE_VERSION=$VERSION" >> "$GITHUB_ENV"
-          echo "MONOCODE_NATIVE_UPDATER_ENDPOINT=${R2_PUBLIC_BASE_URL%/}/native-preview/latest.json" >> "$GITHUB_ENV"
-          echo "MONOCODE_NATIVE_UPDATER_PUBKEY=$TAURI_UPDATER_PUBKEY" >> "$GITHUB_ENV"
-      - run: cargo test --locked --manifest-path crates/monocode-gpui/Cargo.toml -p monocode-core --profile native-dev app_update
-      - run: cargo build --locked --manifest-path crates/monocode-gpui/Cargo.toml -p monocode-gpui --release
-      - run: node scripts/package-native.mjs rpm crates/monocode-gpui/target/release/monocode-gpui native-dist x86_64
+          echo "NATSU_NATIVE_VERSION=$VERSION" >> "$GITHUB_ENV"
+          echo "NATSU_NATIVE_UPDATER_ENDPOINT=${R2_PUBLIC_BASE_URL%/}/native-preview/latest.json" >> "$GITHUB_ENV"
+          echo "NATSU_NATIVE_UPDATER_PUBKEY=$TAURI_UPDATER_PUBKEY" >> "$GITHUB_ENV"
+      - run: cargo test --locked --manifest-path crates/natsu-gpui/Cargo.toml -p natsu-core --profile native-dev app_update
+      - run: cargo build --locked --manifest-path crates/natsu-gpui/Cargo.toml -p natsu-gpui --release
+      - run: node scripts/package-native.mjs rpm crates/natsu-gpui/target/release/natsu-gpui native-dist x86_64
       - uses: actions/upload-artifact@v4
         with:
           name: native-linux-rpm
@@ -255,21 +254,21 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
         with:
-          workspaces: crates/monocode-gpui
+          workspaces: crates/natsu-gpui
           key: native-publication-verifier
       - name: Sign all update packages and the native manifest
         run: |
-          echo "MONOCODE_NATIVE_VERSION=${GITHUB_REF_NAME#native-v}" >> "$GITHUB_ENV"
-          MONOCODE_NATIVE_VERSION="${GITHUB_REF_NAME#native-v}" node scripts/native-release.mjs native-dist
+          echo "NATSU_NATIVE_VERSION=${GITHUB_REF_NAME#native-v}" >> "$GITHUB_ENV"
+          NATSU_NATIVE_VERSION="${GITHUB_REF_NAME#native-v}" node scripts/native-release.mjs native-dist
       - name: Verify the signed feed and all packages with the native client
-        run: cargo run --locked --manifest-path crates/monocode-gpui/Cargo.toml -p monocode-core --example verify_native_update --profile native-dev -- native-dist
+        run: cargo run --locked --manifest-path crates/natsu-gpui/Cargo.toml -p natsu-core --example verify_native_update --profile native-dev -- native-dist
       - name: Publish native preview assets
         run: |
           set -euo pipefail
           ENDPOINT="https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com"
           node --input-type=module -e 'import { readFileSync } from "node:fs"; for (const file of JSON.parse(readFileSync("native-dist/release-files.json"))) console.log(file);' > "$RUNNER_TEMP/native-files.txt"
           if ! gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
-            gh release create "$GITHUB_REF_NAME" --draft --prerelease --latest=false --target "$GITHUB_SHA" --title "Monocode Native ${MONOCODE_NATIVE_VERSION}" --notes-file docs/native/preview-release-notes.md
+            gh release create "$GITHUB_REF_NAME" --draft --prerelease --latest=false --target "$GITHUB_SHA" --title "Natsu Native ${NATSU_NATIVE_VERSION}" --notes-file docs/native/preview-release-notes.md
           fi
           IS_DRAFT=$(gh release view "$GITHUB_REF_NAME" --json isDraft --jq .isDraft)
           if [ "$IS_DRAFT" != true ]; then
@@ -278,7 +277,7 @@ jobs:
           fi
           FILES=()
           while IFS= read -r file; do
-            aws s3 cp "native-dist/$file" "s3://${R2_BUCKET_NAME}/native-preview/${MONOCODE_NATIVE_VERSION}/$file" --cache-control 'public,max-age=31536000,immutable' --endpoint-url "$ENDPOINT"
+            aws s3 cp "native-dist/$file" "s3://${R2_BUCKET_NAME}/native-preview/${NATSU_NATIVE_VERSION}/$file" --cache-control 'public,max-age=31536000,immutable' --endpoint-url "$ENDPOINT"
             FILES+=("native-dist/$file")
           done < "$RUNNER_TEMP/native-files.txt"
           gh release upload "$GITHUB_REF_NAME" "${FILES[@]}" --clobber

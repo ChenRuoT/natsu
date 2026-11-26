@@ -1,5 +1,5 @@
 import { unwrapShellCommand } from "../../../integrations/harness/core/shellIntent";
-import { monoCodeToolCall } from "../../sessions/model/monocodeToolCall";
+import { natsuToolCall } from "../../sessions/model/natsuToolCall";
 import {
   isProseBlock,
   type TurnItem,
@@ -94,7 +94,7 @@ function sessionReceipt(block: Block): SessionReceipt {
         ? block.tool.preview.title
         : (block.tool.title ?? block.text);
     const call = command
-      ? monoCodeToolCall({
+      ? natsuToolCall({
           ...block,
           tool: {
             ...block.tool,

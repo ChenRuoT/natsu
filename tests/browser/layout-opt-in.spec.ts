@@ -51,8 +51,8 @@ test("opens the first project from a collapsed projectless sidebar", async ({
   page,
 }) => {
   await page.addInitScript(() => {
-    localStorage.setItem("monocode.insetLayout", "1");
-    localStorage.setItem("monocode.sessionSidebarOpen", "0");
+    localStorage.setItem("natsu.insetLayout", "1");
+    localStorage.setItem("natsu.sessionSidebarOpen", "0");
   });
   await page.goto("/tests/browser/workspace-performance.html?empty");
   const sidebar = page.locator(".inset-sidebar");
@@ -91,7 +91,7 @@ test("opts in from the invitation and switches back without changing glass", asy
   page,
 }, testInfo) => {
   await page.addInitScript(() => {
-    localStorage.setItem("monocode.insetGlass", "0");
+    localStorage.setItem("natsu.insetGlass", "0");
   });
   await page.goto("/tests/browser/workspace-performance.html");
   const notice = page.getByRole("status", { name: "Try the Focused layout" });
@@ -145,7 +145,7 @@ test("opts in from the invitation and switches back without changing glass", asy
   await resizer.hover();
   await expect(resizer).not.toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
   expect(
-    await page.evaluate(() => localStorage.getItem("monocode.insetGlass")),
+    await page.evaluate(() => localStorage.getItem("natsu.insetGlass")),
   ).toBe("0");
 
   await page.reload();
@@ -182,7 +182,7 @@ test("keeps the classic workspace after switching to the Classic layout and leav
   page,
 }) => {
   await page.addInitScript(() => {
-    localStorage.setItem("monocode.insetLayout", "1");
+    localStorage.setItem("natsu.insetLayout", "1");
   });
   await page.goto("/tests/browser/workspace-performance.html");
   await expect(page.locator(".inset-shell")).toBeVisible({ timeout: 15_000 });

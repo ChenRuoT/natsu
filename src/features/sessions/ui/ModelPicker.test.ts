@@ -515,7 +515,7 @@ describe("model picker", () => {
       },
     ]);
     localStorage.setItem(
-      "monocode.favoriteModels",
+      "natsu.favoriteModels",
       JSON.stringify([
         "cursor:auto",
         "cursor:muse-spark-1.3",

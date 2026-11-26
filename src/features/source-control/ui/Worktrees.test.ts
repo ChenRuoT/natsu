@@ -130,14 +130,17 @@ const result = (branch = "feature"): Worktrees => ({
 it("builds temporary and generated worktree branch names", () => {
   expect(
     temporaryWorktreeBranchName("12345678-90ab-cdef-1234-567890abcdef"),
-  ).toBe("mc/12345678");
+  ).toBe("natsu/12345678");
   expect(namedWorktreeBranch("feature/faster-worktrees")).toBe(
-    "mc/feature/faster-worktrees",
+    "natsu/feature/faster-worktrees",
   );
   expect(namedWorktreeBranch("monocode/already-prefixed")).toBe(
-    "mc/already-prefixed",
+    "natsu/already-prefixed",
   );
-  expect(namedWorktreeBranch("mc/already-short")).toBe("mc/already-short");
+  expect(namedWorktreeBranch("mc/already-short")).toBe("natsu/already-short");
+  expect(namedWorktreeBranch("natsu/already-natsu")).toBe(
+    "natsu/already-natsu",
+  );
   expect(namedWorktreeBranch("  ")).toBeNull();
 });
 

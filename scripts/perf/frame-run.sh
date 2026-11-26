@@ -1,23 +1,23 @@
 #!/bin/sh
 # Measure frames and main-thread CPU while a replayed reply streams, hands-off.
 #
-#   scripts/perf/frame-run.sh [path/to/monocode-gpui] [seconds]
+#   scripts/perf/frame-run.sh [path/to/natsu-gpui] [seconds]
 #   MODE=scroll scripts/perf/frame-run.sh ...   # scroll a finished reply instead
 #
-# Like stream-profile.sh, but nobody has to click: MONOCODE_PERF_PROMPT makes
-# the first chat send a message by itself, and MONOCODE_FRAME_LOG records one
+# Like stream-profile.sh, but nobody has to click: NATSU_PERF_PROMPT makes
+# the first chat send a message by itself, and NATSU_FRAME_LOG records one
 # line per second (frames, draw time, main-thread CPU, which views asked for
 # frames). Prints the log and its averages, then closes the window it started.
 set -eu
 
 here=$(cd "$(dirname "$0")" && pwd)
-app=${1:-"/Applications/Monocode Native.app/Contents/MacOS/monocode-gpui"}
+app=${1:-"/Applications/Natsu Native.app/Contents/MacOS/natsu-gpui"}
 seconds=${2:-20}
 replay="$here/fake-claude-stream.py"
 
-[ -x "$app" ] || { echo "No Monocode binary at $app" >&2; exit 1; }
+[ -x "$app" ] || { echo "No Natsu binary at $app" >&2; exit 1; }
 
-work=$(mktemp -d "${TMPDIR:-/tmp}/monocode-frame-run.XXXXXX")
+work=$(mktemp -d "${TMPDIR:-/tmp}/natsu-frame-run.XXXXXX")
 mkdir -p "$work/data" "$work/project"
 log="$work/frames.log"
 
@@ -25,20 +25,20 @@ log="$work/frames.log"
 # transcript scrolls up and down at SCROLL_SPEED pixels per second.
 mode=${MODE:-stream}
 if [ "$mode" = scroll ]; then
-    export REPLAY_SECONDS=${SCROLL_REPLY_SECONDS:-25} MONOCODE_PERF_SCROLL=${SCROLL_SPEED:-1500}
+    export REPLAY_SECONDS=${SCROLL_REPLY_SECONDS:-25} NATSU_PERF_SCROLL=${SCROLL_SPEED:-1500}
 else
     export REPLAY_SECONDS=$((seconds + 15))
 fi
 export REPLAY_MARK="$work/streaming"
-MONOCODE_NATIVE_DATA_DIR="$work/data" MONOCODE_CLAUDE_BINARY="$replay" \
-    MONOCODE_PERF_PROMPT="stream" MONOCODE_FRAME_LOG="$log" \
+NATSU_NATIVE_DATA_DIR="$work/data" NATSU_CLAUDE_BINARY="$replay" \
+    NATSU_PERF_PROMPT="stream" NATSU_FRAME_LOG="$log" \
     "$app" --dev-data --cwd "$work/project" >"$work/app.log" 2>&1 &
 pid=$!
 trap 'kill "$pid" 2>/dev/null || true' EXIT INT TERM
 
 waited=0
 until [ -e "$work/streaming" ]; do
-    kill -0 "$pid" 2>/dev/null || { echo "Monocode exited; see $work/app.log" >&2; exit 1; }
+    kill -0 "$pid" 2>/dev/null || { echo "Natsu exited; see $work/app.log" >&2; exit 1; }
     waited=$((waited + 1))
     [ "$waited" -lt 60 ] || { echo "No reply streamed in 60s; see $work/app.log" >&2; exit 1; }
     sleep 1
@@ -50,8 +50,8 @@ else
     sleep "${PROFILE_DELAY:-3}"
 fi
 : >"$log"
-# PROFILE=1 also samples stacks over the same window with Monocode Performance.
-profiler=${MONOCODE_PROFILER:-"$HOME/code/mono-perf-chip/dist/Monocode Performance.app/Contents/MacOS/MonocodePerformance"}
+# PROFILE=1 also samples stacks over the same window with Natsu Performance.
+profiler=${NATSU_PROFILER:-"$HOME/code/mono-perf-chip/dist/Natsu Performance.app/Contents/MacOS/NatsuPerformance"}
 if [ "${PROFILE:-0}" = 1 ] && [ -x "$profiler" ]; then
     mkdir -p "$work/profile"
     "$profiler" --profile "$seconds" --pid "$pid" --output "$work/profile" >"$work/profile/summary.json"
