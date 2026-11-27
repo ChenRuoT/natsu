@@ -70,7 +70,7 @@ impl Shell {
             .clone()
             .unwrap_or_else(|| conversation.summary.cwd.clone());
         if self.orchestrations.values().any(|run| run.cwd == cwd) {
-            self.error = Some("An orchestration is already using this checkout.".into());
+            self.error = Some(tr("An orchestration is already using this checkout.").into());
             cx.notify();
             return;
         }
@@ -339,7 +339,10 @@ impl Shell {
                         .map_err(|e| e.to_string())?
                         .starts_with(&root)
                     {
-                        return Err(format!("Assignment scope escapes the checkout: {file}"));
+                        return Err(tr_fmt(
+                            "Assignment scope escapes the checkout: {file}",
+                            &[("file", &file)],
+                        ));
                     }
                 }
                 let store = locked(&store)?;

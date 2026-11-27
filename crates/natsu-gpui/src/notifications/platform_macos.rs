@@ -1,3 +1,4 @@
+use natsu_core::i18n::tr;
 use std::{
     cell::RefCell,
     collections::VecDeque,
@@ -159,12 +160,12 @@ pub fn request_permission() -> Receiver<Permission> {
 /// wait at most five seconds in a background task and then play its fallback.
 pub fn show(notification: Notification) -> Receiver<Result<(), String>> {
     let Some(center) = center() else {
-        return resolved(Err("Notifications require an app bundle".into()));
+        return resolved(Err(tr("Notifications require an app bundle").into()));
     };
     let (sender, receiver) = mpsc::channel();
     let block = RcBlock::new(move |settings: NonNull<UNNotificationSettings>| {
         if map_settings(unsafe { settings.as_ref() }) != Permission::Granted {
-            let _ = sender.send(Err("Notifications are not authorized".into()));
+            let _ = sender.send(Err(tr("Notifications are not authorized").into()));
             return;
         }
         let content = UNMutableNotificationContent::new();
@@ -223,7 +224,7 @@ pub fn dismiss(tag: &str) {
 pub fn open_settings() -> Result<(), String> {
     let identifier = NSBundle::mainBundle()
         .bundleIdentifier()
-        .ok_or("Notifications require an app bundle")?;
+        .ok_or(tr("Notifications require an app bundle"))?;
     std::process::Command::new("open")
         .arg(format!(
             "x-apple.systempreferences:com.apple.Notifications-Settings.extension?id={identifier}"

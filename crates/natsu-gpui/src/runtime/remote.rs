@@ -1,6 +1,7 @@
 //! The host owns agent execution. Desktop disconnection never cancels it.
 use super::*;
 use base64::{Engine, engine::general_purpose::STANDARD};
+use natsu_core::i18n::{tr, tr_fmt};
 use natsu_core::{
     agent::{Decision, Question, QuestionItem, QuestionOption},
     store::{RemoteSession, RemoteUpload},
@@ -50,7 +51,7 @@ fn command(kind: &str, session_id: Option<&str>) -> Value {
 pub(crate) fn host_model(provider: &str, model: Option<&str>) -> Result<String, String> {
     let model = model
         .filter(|value| !value.trim().is_empty())
-        .ok_or("Choose a model on the remote machine before sending")?;
+        .ok_or(tr("Choose a model on the remote machine before sending"))?;
     Ok(if model.starts_with(&format!("{provider}:")) {
         model.into()
     } else {
@@ -94,7 +95,9 @@ fn configure_command(
 /// background callback cannot overwrite a more recent model/access choice.
 pub(crate) fn configure_saved(store: Database, id: i64) -> Result<(), String> {
     let lock = operation_lock(&store, id);
-    let _guard = lock.lock().map_err(|_| "Remote session is unavailable")?;
+    let _guard = lock
+        .lock()
+        .map_err(|_| tr("Remote session is unavailable"))?;
     let (mut binding, settings) = {
         let store = locked(&store)?;
         let Some(binding) = store.remote_session(id)? else {
@@ -155,7 +158,7 @@ fn dispatch_outbox(
                 binding
                     .session_id
                     .as_deref()
-                    .ok_or("Remote session creation has not been confirmed")?
+                    .ok_or(tr("Remote session creation has not been confirmed"))?
             );
             let mut durable = binding.clone();
             durable.outbox[0] = next.clone();
@@ -166,7 +169,7 @@ fn dispatch_outbox(
             .iter()
             .any(|upload| Some(upload.command_id.as_str()) == next["commandId"].as_str())
         {
-            return Err("Remote attachments have not finished uploading".into());
+            return Err(tr("Remote attachments have not finished uploading").into());
         }
         let receipt = match client.request(machine, "commands.dispatch", next.clone()) {
             Ok(receipt) => receipt,
@@ -186,15 +189,15 @@ fn dispatch_outbox(
         let id = receipt["sessionId"]
             .as_str()
             .filter(|id| !id.is_empty())
-            .ok_or("Host command receipt has no session identity")?;
+            .ok_or(tr("Host command receipt has no session identity"))?;
         if receipt["commandId"] != next["commandId"] {
-            return Err("Host returned a receipt for another command".into());
+            return Err(tr("Host returned a receipt for another command").into());
         }
         if next["type"] != "create" && binding.session_id.as_deref() != Some(id) {
-            return Err("Host returned a receipt for another session".into());
+            return Err(tr("Host returned a receipt for another session").into());
         }
         if receipt["revision"].as_u64().is_none() {
-            return Err("Host command receipt has no revision".into());
+            return Err(tr("Host command receipt has no revision").into());
         }
         let mut durable = binding.clone();
         if next["type"] == "create" {
@@ -234,28 +237,32 @@ fn prepare_attachments(
     command_id: &str,
 ) -> Result<(Vec<Value>, Vec<RemoteUpload>), String> {
     if files.len() > 20 {
-        return Err("Too many attachments (20 maximum)".into());
+        return Err(tr("Too many attachments (20 maximum)").into());
     }
     let mut references = Vec::new();
     let mut uploads = Vec::new();
     for path in files {
-        let metadata =
-            std::fs::metadata(path).map_err(|e| format!("Cannot read {}: {e}", path.display()))?;
+        let metadata = std::fs::metadata(path).map_err(|e| {
+            tr_fmt(
+                "Cannot read {path}: {error}",
+                &[("path", &path.display()), ("error", &e)],
+            )
+        })?;
         if !metadata.is_file() {
-            return Err(format!("{} is not a file", path.display()));
+            return Err(tr_fmt("{path} is not a file", &[("path", &path.display())]));
         }
         let size = metadata.len();
         if size > MAX_ATTACHMENT_BYTES {
-            return Err(format!(
-                "{} is too large to send to a remote machine (20 MB maximum)",
-                path.display()
+            return Err(tr_fmt(
+                "{path} is too large to send to a remote machine (20 MB maximum)",
+                &[("path", &path.display())],
             ));
         }
         let name = path
             .file_name()
             .and_then(|s| s.to_str())
             .filter(|name| !name.trim().is_empty() && name.encode_utf16().count() <= 255)
-            .ok_or("Invalid attachment file name")?;
+            .ok_or(tr("Invalid attachment file name"))?;
         let id = natsu_core::remote::protocol::new_attachment_id();
         let (mime, kind) = attachment_type(path);
         references.push(json!({"id":id,"name":name,"size":size,"mimeType":mime,"kind":kind}));
@@ -276,7 +283,7 @@ fn prepare_for_session(
     command_id: &str,
 ) -> Result<(Vec<Value>, Vec<RemoteUpload>), String> {
     if files.len() > 20 {
-        return Err("Too many attachments (20 maximum)".into());
+        return Err(tr("Too many attachments (20 maximum)").into());
     }
     let mut references = Vec::new();
     let mut uploads = Vec::new();
@@ -284,9 +291,9 @@ fn prepare_for_session(
         let source = path.to_string_lossy();
         if natsu_core::remote::attachments::is_attachment_source(&source) {
             let source = natsu_core::remote::attachments::parse_source(&source)
-                .ok_or("Invalid remote attachment")?;
+                .ok_or(tr("Invalid remote attachment"))?;
             if source.environment != environment {
-                return Err("Attachment belongs to another machine".into());
+                return Err(tr("Attachment belongs to another machine").into());
             }
             let snapshot = client.load_session(machine, &source.session, None)?;
             let file = snapshot["session"]["blocks"]
@@ -298,7 +305,7 @@ fn prepare_for_session(
                     file["id"].as_str() == Some(source.id.as_str())
                         && file["size"].as_u64() == Some(source.size as u64)
                 })
-                .ok_or("Original remote attachment is no longer available")?;
+                .ok_or(tr("Original remote attachment is no longer available"))?;
             let mut reference = json!({});
             for key in ["id", "name", "mimeType", "kind", "size"] {
                 reference[key] = file[key].clone();
@@ -320,17 +327,21 @@ fn upload_pending(
     binding: &mut RemoteSession,
 ) -> Result<(), String> {
     while let Some(upload) = binding.uploads.first().cloned() {
-        let mut file = std::fs::File::open(&upload.path)
-            .map_err(|e| format!("Cannot read {}: {e}", upload.path.display()))?;
+        let mut file = std::fs::File::open(&upload.path).map_err(|e| {
+            tr_fmt(
+                "Cannot read {path}: {error}",
+                &[("path", &upload.path.display()), ("error", &e)],
+            )
+        })?;
         let metadata = file.metadata().map_err(|e| e.to_string())?;
         if !metadata.is_file()
             || metadata.len() != upload.size
             || upload.size > MAX_ATTACHMENT_BYTES
         {
-            return Err(
-                "Attachment changed before upload. Restore the original file before retrying."
-                    .into(),
-            );
+            return Err(tr(
+                "Attachment changed before upload. Restore the original file before retrying.",
+            )
+            .into());
         }
         let mut offset = 0u64;
         loop {
@@ -342,11 +353,11 @@ fn upload_pending(
             }
             let expected = offset + read as u64;
             if expected > upload.size {
-                return Err("Attachment changed during upload".into());
+                return Err(tr("Attachment changed during upload").into());
             }
             let reply = client.request(machine,"attachments.upload",json!({"id":upload.id,"offset":offset,"size":upload.size,"data":STANDARD.encode(&data)}))?;
             if reply["offset"].as_u64() != Some(expected) {
-                return Err("Host returned an invalid attachment offset".into());
+                return Err(tr("Host returned an invalid attachment offset").into());
             }
             offset = expected;
             if read == 0 {
@@ -354,7 +365,7 @@ fn upload_pending(
             }
         }
         if offset != upload.size {
-            return Err("Attachment changed during upload".into());
+            return Err(tr("Attachment changed during upload").into());
         }
         let mut durable = binding.clone();
         durable.uploads.remove(0);
@@ -508,10 +519,10 @@ pub(crate) fn run_with_client(
         let operation = operation_lock(&store, summary.id);
         let guard = operation
             .lock()
-            .map_err(|_| "Remote session is unavailable")?;
+            .map_err(|_| tr("Remote session is unavailable"))?;
         let mut binding = locked(&store)?
             .remote_session(summary.id)?
-            .ok_or("Remote session no longer exists")?;
+            .ok_or(tr("Remote session no longer exists"))?;
         let action = settings
             .remote_action
             .take()
@@ -526,17 +537,19 @@ pub(crate) fn run_with_client(
         {
             return Err(recovery["error"]
                 .as_str()
-                .unwrap_or("Older pending requests need recovery in the original desktop app.")
+                .unwrap_or(tr(
+                    "Older pending requests need recovery in the original desktop app.",
+                ))
                 .into());
         }
         let machine = binding.machine(&client)?;
         if !attaching && !retrying {
             if !binding.outbox.is_empty() {
-                return Err("A remote command needs confirmation. Choose Retry before sending another message.".into());
+                return Err(tr("A remote command needs confirmation. Choose Retry before sending another message.").into());
             }
             if settings.operator || settings.orchestrator {
                 return Err(
-                    "Operator and orchestration are not available on remote projects".into(),
+                    tr("Operator and orchestration are not available on remote projects").into(),
                 );
             }
             if settings
@@ -571,9 +584,9 @@ pub(crate) fn run_with_client(
                 create["runtimeMode"] = json!(settings.access.id());
                 if let Some(path) = &settings.worktree_cwd {
                     let remote = natsu_core::remote::parse_remote_path(path)
-                        .ok_or("Invalid remote worktree")?;
+                        .ok_or(tr("Invalid remote worktree"))?;
                     if remote.environment_id != binding.project.environment_id {
-                        return Err("Worktree belongs to another machine".into());
+                        return Err(tr("Worktree belongs to another machine").into());
                     }
                     create["worktreeCwd"] = json!(remote.host_path);
                 }
@@ -602,7 +615,7 @@ pub(crate) fn run_with_client(
                     &settings.attachments,
                     send["commandId"]
                         .as_str()
-                        .ok_or("Remote command identity is missing")?,
+                        .ok_or(tr("Remote command identity is missing"))?,
                 )?;
                 send["attachments"] = json!(references);
                 binding.uploads.extend(uploads);
@@ -628,9 +641,9 @@ pub(crate) fn run_with_client(
                     .iter()
                     .any(|provider| provider.as_str() == Some(&summary.provider))
             }) {
-                return Err(format!(
-                    "{} is not installed on this machine",
-                    summary.provider
+                return Err(tr_fmt(
+                    "{provider} is not installed on this machine",
+                    &[("provider", &summary.provider)],
                 ));
             }
         }
@@ -642,7 +655,7 @@ pub(crate) fn run_with_client(
         let id = binding
             .session_id
             .clone()
-            .ok_or("No remote session has been started")?;
+            .ok_or(tr("No remote session has been started"))?;
         let mut known = None;
         let mut seen_approvals = HashSet::new();
         let mut seen_questions = HashSet::new();
@@ -717,7 +730,7 @@ pub(crate) fn run_with_client(
                 .as_u64()
                 .unwrap_or(binding.summary.updated_at);
             journal(&store, &binding)?;
-            tx.send_blocking(next).map_err(|_| "Window closed")?;
+            tx.send_blocking(next).map_err(|_| tr("Window closed"))?;
             last_revision = revision;
             if !running {
                 break;
@@ -726,7 +739,7 @@ pub(crate) fn run_with_client(
                 let run_id = snapshot["runId"]
                     .as_str()
                     .filter(|id| !id.is_empty())
-                    .ok_or("Running host session has no run identity")?;
+                    .ok_or(tr("Running host session has no run identity"))?;
                 let mut stop = command("cancel", Some(&id));
                 stop["runId"] = json!(run_id);
                 control_commands.push(stop);
@@ -739,7 +752,7 @@ pub(crate) fn run_with_client(
                     control
                         .id
                         .parse::<i64>()
-                        .map_err(|_| "Invalid host request ID")?
+                        .map_err(|_| tr("Invalid host request ID"))?
                 );
                 match control.decision {
                     Decision::Allow | Decision::Session => next["decision"] = json!("allow"),
@@ -756,13 +769,13 @@ pub(crate) fn run_with_client(
                         let question = current_question
                             .as_ref()
                             .filter(|q| q.id == control.id)
-                            .ok_or("Host question is no longer pending")?;
+                            .ok_or(tr("Host question is no longer pending"))?;
                         next["type"] = json!("answer");
                         next["reply"] = reply(question, answers);
                     }
                     Decision::KeepOpen => continue,
                     Decision::Steer(_) => {
-                        return Err("Steering is not supported by this remote host".into());
+                        return Err(tr("Steering is not supported by this remote host").into());
                     }
                 }
                 control_commands.push(next);

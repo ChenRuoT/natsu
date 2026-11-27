@@ -1,6 +1,7 @@
 //! File-action failures appear alongside the shell's other error cards.
 use crate::theme::*;
 use gpui::{Context, EventEmitter, Render, Window, div, prelude::*};
+use natsu_core::i18n::tr;
 
 pub(crate) enum FileActionErrorEvent {
     Dismiss,
@@ -34,7 +35,7 @@ impl Render for FileActionError {
             message.clone(),
             icon_button(
                 "dismiss-file-action-error",
-                "Dismiss file action error",
+                tr("Dismiss file action error"),
                 "close",
             )
             .debug_selector(|| "dismiss-file-action-error".into())

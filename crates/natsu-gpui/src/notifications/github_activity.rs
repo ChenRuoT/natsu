@@ -1,6 +1,7 @@
 //! Read-only GitHub polling for linked session notifications. No GitHub calls
 //! occur until the shell invokes poll; acknowledgment persistence stays in shell.
 use gpui::{Context, EventEmitter};
+use natsu_core::i18n::{tr, tr_fmt};
 use natsu_core::{
     session_groups::WorkItem,
     store::{Session, Store},
@@ -54,14 +55,21 @@ impl Card {
         ]
         .into_iter()
         .filter(|(n, _)| *n > 0)
-        .map(|(n, k)| format!("{n} new {k}{}", if n == 1 { "" } else { "s" }))
+        .map(|(n, k)| match (k, n == 1) {
+            ("commit", true) => tr_fmt("{count} new commit", &[("count", &n)]),
+            ("commit", false) => tr_fmt("{count} new commits", &[("count", &n)]),
+            ("review", true) => tr_fmt("{count} new review", &[("count", &n)]),
+            ("review", false) => tr_fmt("{count} new reviews", &[("count", &n)]),
+            (_, true) => tr_fmt("{count} new comment", &[("count", &n)]),
+            (_, false) => tr_fmt("{count} new comments", &[("count", &n)]),
+        })
         .collect::<Vec<_>>();
         if !parts.is_empty() {
             parts.join(" · ")
         } else if self.details_error {
-            "Updated on GitHub · details unavailable".into()
+            tr("Updated on GitHub · details unavailable").into()
         } else {
-            "Metadata or status changed".into()
+            tr("Metadata or status changed").into()
         }
     }
     pub(crate) fn terminal_label(&self) -> Option<&'static str> {
@@ -69,9 +77,9 @@ impl Card {
             self.item.kind.as_str(),
             self.state.to_ascii_lowercase().as_str(),
         ) {
-            ("pr", "merged") => Some("Pull request merged"),
-            ("pr", "closed") => Some("Pull request closed"),
-            ("issue", "closed") => Some("Issue closed"),
+            ("pr", "merged") => Some(tr("Pull request merged")),
+            ("pr", "closed") => Some(tr("Pull request closed")),
+            ("issue", "closed") => Some(tr("Issue closed")),
             _ => None,
         }
     }
@@ -252,7 +260,7 @@ fn timestamp(value: &str) -> i64 {
         .unwrap_or(0)
 }
 fn api(endpoint: &str) -> Result<Value, String> {
-    let binary = natsu_core::scm::resolve_gui_binary("gh").ok_or("GitHub CLI not found")?;
+    let binary = natsu_core::scm::resolve_gui_binary("gh").ok_or(tr("GitHub CLI not found"))?;
     let text = natsu_core::cli::output(
         &binary,
         &[

@@ -30,6 +30,7 @@ use gpui::{
     MouseMoveEvent, Role, ScrollHandle, SharedString, Subscription, Task, Window, div, prelude::*,
     px,
 };
+use natsu_core::i18n::tr;
 use std::{cell::RefCell, collections::HashMap, time::Duration};
 
 /// A session the Archive page lists.
@@ -157,14 +158,14 @@ impl SliderKind {
         }
     }
     fn label(self) -> &'static str {
-        match self {
+        tr(match self {
             SliderKind::Hue => "Hue",
             SliderKind::Saturation => "Saturation",
             SliderKind::DarkLightness => "Dark-mode lightness",
             SliderKind::SidebarOpacity => "Sidebar opacity",
             SliderKind::BackgroundEmpty => "Empty chat background visibility",
             SliderKind::BackgroundSession => "Session background visibility",
-        }
+        })
     }
     fn range(self) -> (u32, u32) {
         match self {
@@ -279,27 +280,32 @@ impl SettingsView {
             center.update(cx, |center, _| center.hide_emails());
         }
         let search = cx.new(|cx| {
-            let mut input = Input::field("Search settings", "Search settings", content(0.35), cx);
+            let mut input = Input::field(
+                tr("Search settings"),
+                tr("Search settings"),
+                content(0.35),
+                cx,
+            );
             input.set_font_size(12.);
             input
         });
         let keybinding_filter = cx.new(|cx| {
-            let mut input = Input::field("Filter keybindings", "Filter", content(0.35), cx);
+            let mut input = Input::field(tr("Filter keybindings"), tr("Filter"), content(0.35), cx);
             input.set_font_size(12.);
             input
         });
         let accent_custom = cx.new(|cx| {
-            let mut input = Input::field("Custom accent color", "#4da3f5", content(0.35), cx);
+            let mut input = Input::field(tr("Custom accent color"), "#4da3f5", content(0.35), cx);
             input.set_font_size(12.);
             input
         });
         let skill_filter = cx.new(|cx| {
-            let mut input = Input::field("Filter skills", "Filter", content(0.35), cx);
+            let mut input = Input::field(tr("Filter skills"), tr("Filter"), content(0.35), cx);
             input.set_font_size(12.);
             input
         });
         let select_filter = cx.new(|cx| {
-            let mut input = Input::field("Filter options", "Search", content(0.35), cx);
+            let mut input = Input::field(tr("Filter options"), tr("Search"), content(0.35), cx);
             input.set_font_size(12.);
             input
         });
@@ -630,7 +636,7 @@ impl SettingsView {
                         div()
                             .flex_shrink_0()
                             .text_color(content(0.45))
-                            .child("Settings"),
+                            .child(tr("Settings")),
                     )
                     .child(div().flex_shrink_0().text_color(content(0.25)).child("/"))
                     .child(
@@ -653,7 +659,7 @@ impl SettingsView {
                             div()
                                 .id("restore-defaults")
                                 .role(Role::Button)
-                                .aria_label("Restore defaults")
+                                .aria_label(tr("Restore defaults"))
                                 .flex()
                                 .flex_shrink_0()
                                 .items_center()
@@ -671,7 +677,7 @@ impl SettingsView {
                                         .text_color(gpui::transparent_black())
                                         .map(|i| i.text_color(content(0.5))),
                                 )
-                                .child("Restore defaults")
+                                .child(tr("Restore defaults"))
                                 .on_click(cx.listener(|this, _, _, cx| this.restore_defaults(cx))),
                         )
                     })
@@ -746,7 +752,7 @@ impl SettingsView {
                             div()
                                 .id("clear-settings-search")
                                 .role(Role::Button)
-                                .aria_label("Clear settings search")
+                                .aria_label(tr("Clear settings search"))
                                 .size_4()
                                 .flex_shrink_0()
                                 .flex()
@@ -823,7 +829,7 @@ impl SettingsView {
                         div()
                             .id("settings-search-list")
                             .role(Role::ListBox)
-                            .aria_label("Settings search results")
+                            .aria_label(tr("Settings search results"))
                             .flex()
                             .flex_col()
                             .when(results.is_empty(), |d| {
@@ -834,14 +840,14 @@ impl SettingsView {
                                         .text_size(px(12.))
                                         .line_height(px(16.))
                                         .text_color(content(0.45))
-                                        .child("No matching settings"),
+                                        .child(tr("No matching settings")),
                                 )
                             })
                             .children(results.into_iter().enumerate().map(|(ix, result)| {
                                 let tag = if result.setting.is_some() {
                                     result.section.label()
                                 } else {
-                                    "Page"
+                                    tr("Page")
                                 };
                                 let label = result.label;
                                 div()
@@ -946,7 +952,7 @@ pub(crate) fn nav(
         .id("settings-nav")
         .debug_selector(|| "settings-nav".into())
         .role(Role::Navigation)
-        .aria_label("Settings")
+        .aria_label(tr("Settings"))
         .size_full()
         .flex()
         .flex_col()
@@ -985,7 +991,7 @@ pub(crate) fn nav(
                                 .line_height(px(16.))
                                 .font_weight(gpui::FontWeight::SEMIBOLD)
                                 .text_color(content(0.35))
-                                .child(*group),
+                                .child(tr(group)),
                         )
                         .children(sections.iter().map(|&item| {
                             let select = select.clone();
@@ -1015,7 +1021,7 @@ pub(crate) fn nav(
                         .debug_selector(|| "settings-nav-back".into())
                         .group("settings-nav-back")
                         .role(Role::Button)
-                        .aria_label("Back to app")
+                        .aria_label(tr("Back to app"))
                         .flex()
                         .items_center()
                         // The nav rows' inset, icon column and gap, so the
@@ -1048,7 +1054,7 @@ pub(crate) fn nav(
                                 .text_size(px(13.))
                                 .line_height(px(16.))
                                 .font_weight(gpui::FontWeight::MEDIUM)
-                                .child("Back to app"),
+                                .child(tr("Back to app")),
                         )
                         .on_click(move |_, window, cx| back(window, cx)),
                 ),
@@ -1081,7 +1087,7 @@ impl Render for SettingsView {
             .id("settings-view")
             .debug_selector(|| "settings-view".into())
             .role(Role::Region)
-            .aria_label("Settings")
+            .aria_label(tr("Settings"))
             .track_focus(if self.recording.is_some() {
                 &self.recorder_focus
             } else {

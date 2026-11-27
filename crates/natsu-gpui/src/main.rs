@@ -320,6 +320,11 @@ fn main() {
         }
         return;
     }
+    // The interface language follows the desktop app's choice, then the system.
+    natsu_core::i18n::init_locale(
+        db.desktop_preferences()
+            .and_then(|preferences| preferences.get("natsu.language")),
+    );
     natsu_core::checkpoint::init(
         database
             .parent()

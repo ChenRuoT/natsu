@@ -4,6 +4,7 @@ use gpui::{
     App, Context, FocusHandle, Focusable, Render, Role, Window, canvas, div, fill, point,
     prelude::*, px, size,
 };
+use natsu_core::i18n::{tr, tr_fmt};
 use serde::Deserialize;
 use std::time::{Duration, Instant};
 #[derive(Clone, Default, Deserialize)]
@@ -305,12 +306,12 @@ impl Render for Arcade {
                     div()
                         .id(m)
                         .role(Role::Button)
-                        .aria_label(format!("Difficulty {m}"))
+                        .aria_label(tr_fmt("Difficulty {mode}", &[("mode", &tr(m))]))
                         .px_2()
                         .py_1()
                         .border_1()
                         .border_color(content(if mode == m { 0.4 } else { 0.1 }))
-                        .child(m)
+                        .child(tr(m))
                         .on_click(cx.listener(move |this, _, _, cx| {
                             this.mode = m;
                             cx.notify();
@@ -319,9 +320,9 @@ impl Render for Arcade {
             let release = div()
                 .id("release-arcade")
                 .role(Role::Button)
-                .aria_label("Release game")
+                .aria_label(tr("Release game"))
                 .cursor_pointer()
-                .child("esc · release")
+                .child(tr("esc · release"))
                 .on_click(cx.listener(|this, _, window, cx| this.release(window, cx)));
             root = root.child(
                 div()
@@ -335,14 +336,19 @@ impl Render for Arcade {
                     .justify_between()
                     .text_size(px(11.))
                     .font_family(crate::fonts::mono())
-                    .child(format!(
-                        "score {} {}",
-                        self.frame.score,
-                        if index == 0 {
-                            "•".repeat(self.frame.lives as usize)
-                        } else {
-                            String::new()
-                        }
+                    .child(tr_fmt(
+                        "score {score} {lives}",
+                        &[
+                            ("score", &self.frame.score),
+                            (
+                                "lives",
+                                &if index == 0 {
+                                    "•".repeat(self.frame.lives as usize)
+                                } else {
+                                    String::new()
+                                },
+                            ),
+                        ],
                     ))
                     .child(difficulties)
                     .child(release),
@@ -352,9 +358,9 @@ impl Render for Arcade {
                 .id("play-arcade")
                 .role(Role::Button)
                 .aria_label(if index == 0 {
-                    "Take control of Pac-man"
+                    tr("Take control of Pac-man")
                 } else {
-                    "Take control of Snake"
+                    tr("Take control of Snake")
                 })
                 .opacity(0.)
                 .group_hover("empty-session-arcade", |s| s.opacity(1.))
@@ -362,9 +368,9 @@ impl Render for Arcade {
                 .font_family(crate::fonts::mono())
                 .text_size(px(11.))
                 .child(if index == 0 {
-                    "[ take control · pac-man ]"
+                    tr("[ take control · pac-man ]")
                 } else {
-                    "[ take control · snake ]"
+                    tr("[ take control · snake ]")
                 })
                 .on_click(cx.listener(|this, _, window, cx| {
                     this.previous = window.focused(cx);

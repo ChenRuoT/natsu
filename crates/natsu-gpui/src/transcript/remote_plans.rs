@@ -2,6 +2,7 @@
 use super::*;
 use crate::conversation::remote_plans::Plan;
 use gpui::AnyElement;
+use natsu_core::i18n::tr;
 
 impl TranscriptView {
     pub(super) fn remote_plan_card(&self, plan: &Plan, cx: &mut Context<Self>) -> AnyElement {
@@ -64,11 +65,11 @@ impl TranscriptView {
                             .child(
                                 crate::settings::widgets::secondary_button(
                                     SharedString::from(format!("open-plan-{}", plan.id)),
-                                    "Open plan",
+                                    tr("Open plan"),
                                     false,
                                     false,
                                 )
-                                .child("Open")
+                                .child(tr("Open"))
                                 .on_click(cx.listener(
                                     move |_, _, _, cx| {
                                         cx.emit(ResponseRequest::RemotePlan {
@@ -82,7 +83,7 @@ impl TranscriptView {
                             .child(
                                 crate::settings::widgets::secondary_button(
                                     SharedString::from(format!("build-plan-{}", plan.id)),
-                                    "Build approved plan",
+                                    tr("Build approved plan"),
                                     false,
                                     !enabled,
                                 )

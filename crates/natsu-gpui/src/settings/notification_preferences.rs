@@ -11,12 +11,29 @@ use crate::{
 };
 use chrono::{Datelike, Local, NaiveDate, NaiveDateTime, TimeZone};
 use gpui::{AnyElement, Context, Entity, Role, Subscription, Task, Window, div, prelude::*, px};
+use natsu_core::i18n::{tr, tr_fmt};
 use serde_json::{Value, json};
 use std::{
     collections::HashSet,
     sync::mpsc::{Receiver, TryRecvError},
     time::Duration,
 };
+
+/// "1 hour (14:00)" and the like; "Tomorrow, " is part of the sentence, not a fragment.
+fn mute_hours_label(hours: i64, tomorrow: bool, time: &str) -> String {
+    match (hours == 1, tomorrow) {
+        (true, false) => tr_fmt("1 hour ({time})", &[("time", &time)]),
+        (false, false) => tr_fmt(
+            "{hours} hours ({time})",
+            &[("hours", &hours), ("time", &time)],
+        ),
+        (true, true) => tr_fmt("1 hour (Tomorrow, {time})", &[("time", &time)]),
+        (false, true) => tr_fmt(
+            "{hours} hours (Tomorrow, {time})",
+            &[("hours", &hours), ("time", &time)],
+        ),
+    }
+}
 
 pub(crate) const CATEGORIES: [(&str, &str); 5] = [
     ("pullRequests", "Pull requests / Merge requests"),
@@ -354,15 +371,15 @@ impl SettingsView {
                     .gap_2()
                     .text_size(px(12.))
                     .text_color(content(0.45))
-                    .child("Permission needed")
+                    .child(tr("Permission needed"))
                     .child(
                         secondary_button(
                             "notifications-system-settings",
-                            "Open System Settings",
+                            tr("Open System Settings"),
                             false,
                             false,
                         )
-                        .child("Open System Settings")
+                        .child(tr("Open System Settings"))
                         .on_click(cx.listener(|this, _, _, cx| {
                             let _ = platform::open_settings();
                             this.probe_notification_permission(false, cx);
@@ -374,7 +391,7 @@ impl SettingsView {
                 div()
                     .text_size(px(12.))
                     .text_color(content(0.45))
-                    .child("Not available on this platform")
+                    .child(tr("Not available on this platform"))
                     .into_any_element(),
             ],
             _ => Vec::new(),
@@ -450,26 +467,18 @@ impl SettingsView {
         let mut items = vec![];
         for hours in [1, 4, 8] {
             let at = now + chrono::Duration::hours(hours);
-            let day = if at.date_naive() == now.date_naive() {
-                ""
-            } else {
-                "Tomorrow, "
-            };
+            let tomorrow = at.date_naive() != now.date_naive();
             items.push(
                 MenuAction::new(
                     format!("mute:{hours}"),
-                    format!(
-                        "{hours} {} ({day}{})",
-                        if hours == 1 { "hour" } else { "hours" },
-                        at.format("%-H:%M")
-                    ),
+                    mute_hours_label(hours, tomorrow, &at.format("%-H:%M").to_string()),
                 )
                 .into(),
             );
         }
-        items.push(MenuAction::new("mute:indefinite", "Until resumed").into());
-        items.push(MenuAction::new("mute:custom", "Choose date and time").into());
-        let menu = cx.new(|cx| Menu::new("Mute notifications", items, window, cx).width(244.));
+        items.push(MenuAction::new("mute:indefinite", tr("Until resumed")).into());
+        items.push(MenuAction::new("mute:custom", tr("Choose date and time")).into());
+        let menu = cx.new(|cx| Menu::new(tr("Mute notifications"), items, window, cx).width(244.));
         let targets = ids.clone();
         let events = cx.subscribe(&menu, move |this, _, event: &MenuEvent, cx| {
             if let MenuEvent::Picked(id, _) = event {
@@ -488,7 +497,7 @@ impl SettingsView {
                         .map(|at| at.with_timezone(&Local).format("%H:%M").to_string())
                         .unwrap_or_default();
                     let field = cx.new(|cx| {
-                        let mut field = input::Input::field("Time", "HH:mm", content(0.4), cx);
+                        let mut field = input::Input::field(tr("Time"), "HH:mm", content(0.4), cx);
                         field.set_text(text, cx);
                         field
                     });
@@ -543,18 +552,24 @@ impl SettingsView {
         let status = if muted.is_empty() {
             String::new()
         } else if ids.len() > 1 {
-            format!("{} of {} projects muted", muted.len(), ids.len())
+            tr_fmt(
+                "{muted} of {total} projects muted",
+                &[("muted", &muted.len()), ("total", &ids.len())],
+            )
         } else {
             match self.prefs.project_notifications[&ids[0]]["mutedUntil"].as_u64() {
                 Some(at) => chrono::DateTime::from_timestamp_millis(at as i64)
                     .map(|at| {
-                        format!(
-                            "Muted until {}",
-                            at.with_timezone(&Local).format("%b %-d, %Y, %-H:%M")
+                        tr_fmt(
+                            "Muted until {time}",
+                            &[(
+                                "time",
+                                &at.with_timezone(&Local).format("%b %-d, %Y, %-H:%M"),
+                            )],
                         )
                     })
                     .unwrap_or_default(),
-                None => "Muted until resumed".into(),
+                None => tr("Muted until resumed").into(),
             }
         };
         let anchor = AnchorSlot::default();
@@ -579,11 +594,11 @@ impl SettingsView {
                 d.child(
                     secondary_button(
                         format!("resume-{key}"),
-                        "Resume notifications",
+                        tr("Resume notifications"),
                         false,
                         false,
                     )
-                    .child("Resume notifications")
+                    .child(tr("Resume notifications"))
                     .on_click(cx.listener(move |this, _, _, cx| {
                         this.update(cx, |p| {
                             p.mute_projects(&resume_ids, None, natsu_core::time::now_ms())
@@ -595,9 +610,9 @@ impl SettingsView {
                 secondary_button(
                     format!("mute-{key}"),
                     if muted.is_empty() {
-                        "Mute notifications"
+                        tr("Mute notifications")
                     } else {
-                        "Change mute duration"
+                        tr("Change mute duration")
                     },
                     false,
                     ids.is_empty(),
@@ -605,7 +620,11 @@ impl SettingsView {
                 .relative()
                 .child(anchor.probe())
                 .child(icon("bell-off", 14.))
-                .child(if muted.is_empty() { "Mute" } else { "Muted" })
+                .child(if muted.is_empty() {
+                    tr("Mute")
+                } else {
+                    tr("Muted")
+                })
                 .child(icon("chevron-down", 12.))
                 .on_click(cx.listener(move |this, _, window, cx| {
                     this.open_notification_mute(ids.clone(), trigger.clone(), window, cx)
@@ -642,14 +661,14 @@ impl SettingsView {
                     .child(
                         secondary_button(
                             "notification-select-all",
-                            "Select all projects",
+                            tr("Select all projects"),
                             false,
                             false,
                         )
                         .child(if selected.is_empty() {
-                            "Select all projects".into()
+                            tr("Select all projects").into()
                         } else {
-                            format!("{} selected", selected.len())
+                            tr_fmt("{count} selected", &[("count", &selected.len())])
                         })
                         .on_click(cx.listener(move |this, _, _, cx| {
                             if all_selected {
@@ -690,16 +709,19 @@ impl SettingsView {
                         .is_some_and(|values| values.iter().any(|v| v.as_str() == Some(cat)))
                 })
                 .count();
-            let status = if muted {
-                "All notifications paused".into()
+            let status: String = if muted {
+                tr("All notifications paused").into()
             } else if enabled_count == categories.len() {
-                "All categories enabled".into()
+                tr("All categories enabled").into()
             } else {
-                format!("{enabled_count} of {} enabled", categories.len())
+                tr_fmt(
+                    "{enabled} of {total} enabled",
+                    &[("enabled", &enabled_count), ("total", &categories.len())],
+                )
             };
             let mut category_rows = Vec::new();
             if muted {
-                category_rows.push(div().id("project-notification-accessible-2").role(Role::Status).py_3().text_size(px(12.)).text_color(content(0.45)).child("Your category choices apply when notifications resume. You can edit them while muted.").into_any_element());
+                category_rows.push(div().id("project-notification-accessible-2").role(Role::Status).py_3().text_size(px(12.)).text_color(content(0.45)).child(tr("Your category choices apply when notifications resume. You can edit them while muted.")).into_any_element());
             }
             for (cat, label) in categories {
                 let category = (*cat).to_owned();
@@ -716,14 +738,17 @@ impl SettingsView {
                         .py_3()
                         .text_size(px(12.))
                         .text_color(content(0.7))
-                        .child(*label)
+                        .child(tr(label))
                         .child(
                             div()
                                 .id(gpui::SharedString::from(format!(
                                     "notification-category-{id}-{cat}"
                                 )))
                                 .role(Role::Switch)
-                                .aria_label(format!("{label} for {}", project.name))
+                                .aria_label(tr_fmt(
+                                    "{category} for {project}",
+                                    &[("category", &tr(label)), ("project", &project.name)],
+                                ))
                                 .aria_toggled(if enabled {
                                     gpui::Toggled::True
                                 } else {
@@ -779,7 +804,7 @@ impl SettingsView {
                                 d.child(
                                     secondary_button(
                                         format!("select-notification-{id}"),
-                                        format!("Select {}", project.name),
+                                        tr_fmt("Select {project}", &[("project", &project.name)]),
                                         false,
                                         false,
                                     )
@@ -807,9 +832,9 @@ impl SettingsView {
                                         "expand-notification-{id}"
                                     )))
                                     .role(Role::Button)
-                                    .aria_label(format!(
-                                        "Notification categories for {} ({})",
-                                        project.name, project.detail
+                                    .aria_label(tr_fmt(
+                                        "Notification categories for {project} ({detail})",
+                                        &[("project", &project.name), ("detail", &project.detail)],
                                     ))
                                     .cursor_pointer()
                                     .flex_1()
@@ -834,14 +859,14 @@ impl SettingsView {
                                                     .mt_1()
                                                     .text_size(px(12.))
                                                     .text_color(content(0.45))
-                                                    .child(format!(
-                                                        "{}{status}",
-                                                        if project.kind == "local" {
-                                                            "Local project · "
-                                                        } else {
-                                                            ""
-                                                        }
-                                                    )),
+                                                    .child(if project.kind == "local" {
+                                                        tr_fmt(
+                                                            "Local project · {status}",
+                                                            &[("status", &status)],
+                                                        )
+                                                    } else {
+                                                        status.clone()
+                                                    }),
                                             ),
                                     )
                                     .child(icon(
@@ -876,10 +901,10 @@ impl SettingsView {
             );
         }
         if projects.is_empty() {
-            rows.push(div().id("project-notification-accessible-3").role(Role::Status).px_4().py(px(14.)).text_size(px(12.)).text_color(content(0.45)).child("Open a project or connect an Inbox provider to configure its notifications.").into_any_element());
+            rows.push(div().id("project-notification-accessible-3").role(Role::Status).px_4().py(px(14.)).text_size(px(12.)).text_color(content(0.45)).child(tr("Open a project or connect an Inbox provider to configure its notifications.")).into_any_element());
         }
-        self.group(Some("project-notifications"),true,"Project notifications",Some("Choose sounds, banners and sidebar indicators by category. Mute pauses them without changing your choices. Unread items stay marked in Inbox.".into()),
-            Some(secondary_button("notification-select-projects",if selecting {"Done"} else {"Select projects"},false,projects.is_empty()).child(if selecting {"Done"} else {"Select projects"})
+        self.group(Some("project-notifications"),true,tr("Project notifications"),Some(tr("Choose sounds, banners and sidebar indicators by category. Mute pauses them without changing your choices. Unread items stay marked in Inbox.").into()),
+            Some(secondary_button("notification-select-projects",if selecting {tr("Done")} else {tr("Select projects")},false,projects.is_empty()).child(if selecting {tr("Done")} else {tr("Select projects")})
                 .on_click(cx.listener(|this,_,_,cx| {this.notification_state.selecting = !this.notification_state.selecting;this.notification_state.selected.clear();cx.notify();})).into_any_element()),rows)
     }
     pub(super) fn notification_overlay(&self, cx: &mut Context<Self>) -> Vec<AnyElement> {
@@ -913,7 +938,7 @@ impl SettingsView {
                     div()
                         .id("project-notification-accessible-4")
                         .role(Role::Dialog)
-                        .aria_label("Mute project notifications")
+                        .aria_label(tr("Mute project notifications"))
                         .w(px(280.))
                         .p_3()
                         .rounded_lg()
@@ -926,7 +951,7 @@ impl SettingsView {
                                 .mb_3()
                                 .text_size(px(11.))
                                 .text_color(content(0.45))
-                                .child("Mute all notifications until"),
+                                .child(tr("Mute all notifications until")),
                         )
                         .child(self.mute_calendar(custom, cx))
                         .child(
@@ -934,7 +959,7 @@ impl SettingsView {
                                 .mt_3()
                                 .text_size(px(10.))
                                 .text_color(content(0.4))
-                                .child("Time · Local time, 24-hour"),
+                                .child(tr("Time · Local time, 24-hour")),
                         )
                         .child(
                             div()
@@ -967,11 +992,11 @@ impl SettingsView {
                                 .child(
                                     secondary_button(
                                         "cancel-custom-notification-mute",
-                                        "Cancel",
+                                        tr("Cancel"),
                                         false,
                                         false,
                                     )
-                                    .child("Cancel")
+                                    .child(tr("Cancel"))
                                     .on_click(cx.listener(
                                         |this, _, _, cx| {
                                             this.notification_state.custom = None;
@@ -982,11 +1007,11 @@ impl SettingsView {
                                 .child(
                                     secondary_button(
                                         "save-custom-notification-mute",
-                                        "Mute until then",
+                                        tr("Mute until then"),
                                         false,
                                         false,
                                     )
-                                    .child("Mute until then")
+                                    .child(tr("Mute until then"))
                                     .on_click(cx.listener(
                                         |this, _, _, cx| {
                                             let Some(custom) = &this.notification_state.custom
@@ -1017,17 +1042,17 @@ impl SettingsView {
                                                 }
                                                 _ => {
                                                     this.notification_state
-                                                        .custom
-                                                        .as_mut()
-                                                        .unwrap()
-                                                        .error = Some(
-                                                        if parsed.is_some() {
-                                                            "Choose a date and time in the future."
-                                                        } else {
-                                                            "Choose a valid date and time."
-                                                        }
-                                                        .into(),
-                                                    );
+                                                    .custom
+                                                    .as_mut()
+                                                    .unwrap()
+                                                    .error = Some(
+                                                    if parsed.is_some() {
+                                                        tr("Choose a date and time in the future.")
+                                                    } else {
+                                                        tr("Choose a valid date and time.")
+                                                    }
+                                                    .into(),
+                                                );
                                                 }
                                             }
                                             cx.notify();
@@ -1124,11 +1149,13 @@ impl SettingsView {
                     .flex()
                     .items_center()
                     .justify_between()
-                    .child(
-                        div()
-                            .text_size(px(12.))
-                            .child(month.format("%B %Y").to_string()),
-                    )
+                    .child(div().text_size(px(12.)).child(
+                        if natsu_core::i18n::locale() == natsu_core::i18n::Locale::ZhCn {
+                            format!("{}年{}月", month.year(), month.month())
+                        } else {
+                            month.format("%B %Y").to_string()
+                        },
+                    ))
                     .child(
                         div()
                             .flex()
@@ -1136,7 +1163,7 @@ impl SettingsView {
                             .child(
                                 secondary_button(
                                     "mute-previous-month",
-                                    "Previous month",
+                                    tr("Previous month"),
                                     false,
                                     previous_disabled,
                                 )
@@ -1155,7 +1182,7 @@ impl SettingsView {
                                 )),
                             )
                             .child(
-                                secondary_button("mute-next-month", "Next month", false, false)
+                                secondary_button("mute-next-month", tr("Next month"), false, false)
                                     .child(icon("chevron-right", 14.))
                                     .on_click(cx.listener(move |this, _, _, cx| {
                                         if let Some(custom) = &mut this.notification_state.custom {
@@ -1170,7 +1197,7 @@ impl SettingsView {
                 div()
                     .id("notification-mute-calendar")
                     .role(Role::Grid)
-                    .aria_label("Choose date")
+                    .aria_label(tr("Choose date"))
                     .track_focus(&custom.focus)
                     .tab_index(0)
                     .on_mouse_down(
@@ -1224,7 +1251,7 @@ impl SettingsView {
                                         .pb(px(6.))
                                         .text_size(px(10.))
                                         .text_color(content(0.4))
-                                        .child(day)
+                                        .child(tr(day))
                                 }),
                         ),
                     )

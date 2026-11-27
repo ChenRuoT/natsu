@@ -1,5 +1,6 @@
 use super::*;
 use crate::popover::{Anchor, Menu, MenuAction, MenuEvent, menu_popover};
+use natsu_core::i18n::tr;
 
 pub(super) struct EditingMenu {
     menu: Entity<Menu>,
@@ -34,20 +35,20 @@ impl Terminal {
             "Ctrl+Shift+"
         };
         let items = vec![
-            MenuAction::new("copy", "Copy")
+            MenuAction::new("copy", tr("Copy"))
                 .shortcut(format!("{modifier}C"))
                 .disabled(!selected)
                 .into(),
-            MenuAction::new("paste", "Paste")
+            MenuAction::new("paste", tr("Paste"))
                 .shortcut(format!("{modifier}V"))
                 .disabled(!clipboard || self.exited)
                 .into(),
             crate::popover::MenuItem::Separator,
-            MenuAction::new("select-all", "Select All")
+            MenuAction::new("select-all", tr("Select All"))
                 .shortcut(format!("{modifier}A"))
                 .into(),
         ];
-        let menu = cx.new(|cx| Menu::new("Terminal editing", items, window, cx));
+        let menu = cx.new(|cx| Menu::new(tr("Terminal editing"), items, window, cx));
         let events = cx.subscribe_in(&menu, window, |this, _, event, window, cx| {
             this.context_menu = None;
             if let MenuEvent::Picked(id, _) = event {

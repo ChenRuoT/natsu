@@ -13,6 +13,7 @@ use gpui::{
     FocusHandle, Focusable, FontWeight, MouseButton, Role, Subscription, Task, Window, div,
     prelude::*, px,
 };
+use natsu_core::i18n::{tr, tr_fmt};
 use natsu_core::notes::{self, Note};
 use std::{collections::HashMap, path::PathBuf, time::Duration};
 
@@ -61,10 +62,11 @@ impl Focusable for Notes {
 
 impl Notes {
     pub(crate) fn new(store: Database, cx: &mut Context<Self>) -> Self {
-        let query = cx.new(|cx| Input::field("Filter notes", "Filter notes", content(0.4), cx));
+        let query =
+            cx.new(|cx| Input::field(tr("Filter notes"), tr("Filter notes"), content(0.4), cx));
         query.update(cx, |input, _| input.set_font_size(12.));
         let title = cx.new(|cx| {
-            let mut input = Input::field("Note title", "Untitled", content(0.35), cx);
+            let mut input = Input::field(tr("Note title"), tr("Untitled"), content(0.35), cx);
             input.set_font_size(20.);
             input.set_max_chars(notes::MAX_TITLE);
             input
@@ -77,13 +79,13 @@ impl Notes {
             input
         });
         let tag = cx.new(|cx| {
-            let mut input = Input::field("Add note tag", "Add tag…", content(0.35), cx);
+            let mut input = Input::field(tr("Add note tag"), tr("Add tag…"), content(0.35), cx);
             input.set_font_size(11.);
             input.set_max_chars(notes::MAX_TAG_LENGTH + 1);
             input
         });
         let project_query =
-            cx.new(|cx| Input::field("Find project", "Find project…", content(0.4), cx));
+            cx.new(|cx| Input::field(tr("Find project"), tr("Find project…"), content(0.4), cx));
         let subscriptions = vec![
             cx.subscribe(&query, |_, _, _: &input::Changed, cx| cx.notify()),
             cx.subscribe(&title, |this, _, _: &input::Changed, cx| this.edited(cx)),
@@ -308,7 +310,9 @@ impl Notes {
                 self.dirty = false;
                 self.error = None;
             }
-            Err(error) => self.error = Some(format!("Could not save note: {error}")),
+            Err(error) => {
+                self.error = Some(tr_fmt("Could not save note: {error}", &[("error", &error)]))
+            }
         }
         cx.notify();
     }
@@ -497,9 +501,8 @@ impl Notes {
                 }
             }
             if images.is_empty() {
-                return Err(
-                    failure.unwrap_or_else(|| "Drop a PNG, JPG, GIF, WebP, or SVG image.".into())
-                );
+                return Err(failure
+                    .unwrap_or_else(|| tr("Drop a PNG, JPG, GIF, WebP, or SVG image.").into()));
             }
             Ok((id, images))
         });
@@ -622,13 +625,13 @@ impl Notes {
                     div()
                         .id("note-no-project")
                         .role(Role::Button)
-                        .aria_label("No project")
+                        .aria_label(tr("No project"))
                         .px_2()
                         .py_1p5()
                         .rounded_md()
                         .text_size(px(12.))
                         .hover(|style| style.bg(content(0.08)))
-                        .child("No project")
+                        .child(tr("No project"))
                         .on_click(cx.listener(|this, _, _, cx| this.move_project("~".into(), cx))),
                 )
                 .child(
@@ -672,7 +675,7 @@ impl Notes {
             .relative()
             .id("note-move-project")
             .role(Role::Button)
-            .aria_label("Move note to project")
+            .aria_label(tr("Move note to project"))
             .rounded_md()
             .px_1p5()
             .py_1()
@@ -689,7 +692,10 @@ impl Notes {
                             .map(|path| self.project_mark(path, 12.))
                             .unwrap_or_else(|| icon("folder", 12.).into_any_element()),
                     )
-                    .child(note.project_name().unwrap_or_else(|| "No project".into()))
+                    .child(
+                        note.project_name()
+                            .unwrap_or_else(|| tr("No project").into()),
+                    )
                     .child(icon("chevron-down", 11.)),
             )
             .on_click(cx.listener(|this, _, window, cx| {
@@ -707,7 +713,7 @@ impl Notes {
             .items_center()
             .gap_1p5()
             .text_size(px(11.))
-            .child(div().mr(px(2.)).text_color(content(0.45)).child("Tags"))
+            .child(div().mr(px(2.)).text_color(content(0.45)).child(tr("Tags")))
             .children(note.tags.iter().enumerate().map(|(ix, tag)| {
                 let tag = tag.clone();
                 div()
@@ -726,7 +732,7 @@ impl Notes {
                         div()
                             .id(("remove-note-tag", ix))
                             .role(Role::Button)
-                            .aria_label(format!("Remove #{tag}"))
+                            .aria_label(tr_fmt("Remove #{tag}", &[("tag", &tag)]))
                             .size(px(16.))
                             .flex()
                             .items_center()
@@ -754,7 +760,7 @@ impl Notes {
                 div()
                     .id("note-add-to-chat")
                     .role(Role::Button)
-                    .aria_label("Add to chat")
+                    .aria_label(tr("Add to chat"))
                     .h(px(28.))
                     .px_3()
                     .rounded_md()
@@ -782,13 +788,13 @@ impl Notes {
                             }
                         }
                     }))
-                    .child("Add to chat"),
+                    .child(tr("Add to chat")),
             )
             .child(
                 div()
                     .id("delete-note")
                     .role(Role::Button)
-                    .aria_label("Delete note")
+                    .aria_label(tr("Delete note"))
                     .h(px(28.))
                     .px_3()
                     .rounded_md()
@@ -801,7 +807,7 @@ impl Notes {
                     .cursor_pointer()
                     .hover(|style| style.bg(content(0.08)))
                     .child(icon("trash", 14.).text_color(danger))
-                    .child("Delete")
+                    .child(tr("Delete"))
                     .on_click(cx.listener(|this, _, _, cx| this.delete(cx))),
             )
             .when_some(source, |d, source| {
@@ -809,14 +815,14 @@ impl Notes {
                     div()
                         .id("note-source-session")
                         .role(Role::Button)
-                        .aria_label("Open source conversation")
+                        .aria_label(tr("Open source conversation"))
                         .rounded_md()
                         .px_2()
                         .py_1()
                         .text_size(px(12.))
                         .text_color(content(0.5))
                         .hover(|style| style.bg(content(0.08)))
-                        .child("Source conversation")
+                        .child(tr("Source conversation"))
                         .on_click(cx.listener(move |this, _, _, cx| {
                             this.flush(cx);
                             if this.dirty {
@@ -828,21 +834,22 @@ impl Notes {
                             {
                                 cx.emit(Event::OpenSource(id));
                             } else {
-                                this.error = Some("Source conversation no longer exists.".into());
+                                this.error =
+                                    Some(tr("Source conversation no longer exists.").into());
                                 cx.notify();
                             }
                         })),
                 )
             })
             .child(
-                icon_button("copy-note", "Copy note", "response-copy").on_click(move |_, _, cx| {
-                    cx.write_to_clipboard(ClipboardItem::new_string(body.clone()))
-                }),
+                icon_button("copy-note", tr("Copy note"), "response-copy").on_click(
+                    move |_, _, cx| cx.write_to_clipboard(ClipboardItem::new_string(body.clone())),
+                ),
             );
         let tabs = div()
             .id("note-sections")
             .role(Role::TabList)
-            .aria_label("Note sections")
+            .aria_label(tr("Note sections"))
             .h(px(36.))
             .flex()
             .items_stretch()
@@ -850,7 +857,7 @@ impl Notes {
             .border_b_1()
             .border_color(content(0.07))
             .children(
-                [(false, "Preview"), (true, "Source")].map(|(source, label)| {
+                [(false, tr("Preview")), (true, tr("Source"))].map(|(source, label)| {
                     div()
                         .id(if source {
                             "note-source"
@@ -939,9 +946,9 @@ impl Notes {
                         .text_size(px(12.))
                         .text_color(content(0.7))
                         .child(if self.image_busy {
-                            "Adding images…"
+                            tr("Adding images…")
                         } else {
-                            "Drop images here"
+                            tr("Drop images here")
                         }),
                 )
             });
@@ -974,7 +981,7 @@ impl Notes {
                                     .text_size(px(12.))
                                     .text_color(content(0.5))
                                     .child(icon("note", 14.))
-                                    .child("Note")
+                                    .child(tr("Note"))
                                     .child(div().min_w_0().truncate().child(note.slug.clone()))
                                     .child(project),
                             )
@@ -987,7 +994,10 @@ impl Notes {
                                 div()
                                     .text_size(px(12.))
                                     .text_color(content(0.5))
-                                    .child(format!("Updated {}", relative_time(note.updated_at))),
+                                    .child(tr_fmt(
+                                        "Updated {time}",
+                                        &[("time", &relative_time(note.updated_at))],
+                                    )),
                             )
                             .child(tags)
                             .child(actions),
@@ -1027,9 +1037,9 @@ impl gpui::Render for Notes {
         let list = div().relative().w(px(self.list_width)).h_full().flex_shrink_0().min_h_0().flex().flex_col().border_r_1().border_color(content(0.07))
             .child(div().h(px(36.)).flex_shrink_0().px_2().flex().items_center().gap_1().border_b_1().border_color(content(0.07)).child(icon("search", 12.))
                 .child(div().flex_1().min_w_0().child(self.query.clone()))
-                .child(icon_button("create-note", "New note", "plus").on_click(cx.listener(|this, _, window, cx| this.create(window, cx)))))
-            .child(div().id("notes-list").role(Role::ListBox).aria_label("Saved notes").flex_1().min_h_0().overflow_y_scroll().p(px(6.))
-                .when(visible.is_empty(), |d| d.child(div().px_1p5().py_2().text_size(px(12.)).text_color(content(0.5)).child(if self.loading { "Loading notes…" } else if !query.trim().is_empty() { "No matching notes" } else { "No notes yet. Save a turn from the transcript, or create one here." })))
+                .child(icon_button("create-note", tr("New note"), "plus").on_click(cx.listener(|this, _, window, cx| this.create(window, cx)))))
+            .child(div().id("notes-list").role(Role::ListBox).aria_label(tr("Saved notes")).flex_1().min_h_0().overflow_y_scroll().p(px(6.))
+                .when(visible.is_empty(), |d| d.child(div().px_1p5().py_2().text_size(px(12.)).text_color(content(0.5)).child(if self.loading { tr("Loading notes…") } else if !query.trim().is_empty() { tr("No matching notes") } else { tr("No notes yet. Save a turn from the transcript, or create one here.") })))
                 .children(visible.iter().enumerate().map(|(ix, note)| {
                     let id = note.id.clone();
                     let active = self.selected.as_ref() == Some(&id);
@@ -1045,7 +1055,7 @@ impl gpui::Render for Notes {
                             .when(note.tags.len() > 3, |d| d.child(div().text_size(px(10.)).text_color(content(0.4)).child(format!("+{}", note.tags.len() - 3))))))
                         .on_click(cx.listener(move |this, _, _, cx| this.select(id.clone(), cx)))
                 })))
-            .child(div().id("resize-notes-list").role(Role::Splitter).aria_label("Resize notes list").absolute().top_0().bottom_0().right(px(-3.)).w(px(6.)).cursor(CursorStyle::ResizeLeftRight).hover(|style| style.bg(content(0.1)))
+            .child(div().id("resize-notes-list").role(Role::Splitter).aria_label(tr("Resize notes list")).absolute().top_0().bottom_0().right(px(-3.)).w(px(6.)).cursor(CursorStyle::ResizeLeftRight).hover(|style| style.bg(content(0.1)))
                 .on_mouse_down(MouseButton::Left, cx.listener(|this, event: &gpui::MouseDownEvent, _, cx| { if event.click_count == 2 { this.list_width = 280.; } else { this.resize = Some((event.position.x.as_f32(), this.list_width)); } cx.notify(); })));
         let detail = if let Some(note) = self.draft(cx) {
             self.detail(note, cx)
@@ -1060,13 +1070,13 @@ impl gpui::Render for Notes {
                 .text_size(px(13.))
                 .text_color(content(0.45))
                 .child(icon("note", 24.))
-                .child("Select a note")
+                .child(tr("Select a note"))
                 .into_any_element()
         };
         div()
             .id("notes-view")
             .role(Role::Region)
-            .aria_label("Notes")
+            .aria_label(tr("Notes"))
             .size_full()
             .flex()
             .flex_col()
@@ -1149,9 +1159,9 @@ impl gpui::Render for Notes {
                             div()
                                 .id("retry-note-save")
                                 .role(Role::Button)
-                                .aria_label("Retry saving note")
+                                .aria_label(tr("Retry saving note"))
                                 .underline()
-                                .child("Retry")
+                                .child(tr("Retry"))
                                 .on_click(cx.listener(|this, _, _, cx| this.flush(cx))),
                         ),
                 )

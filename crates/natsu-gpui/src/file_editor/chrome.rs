@@ -5,6 +5,7 @@ use crate::{
     theme::*,
 };
 use gpui::{AnyElement, App, Context, Role, div, prelude::*, px};
+use natsu_core::i18n::{tr, tr_fmt};
 use std::path::{Component, Path};
 
 const HEADER_HEIGHT: f32 = 30.;
@@ -49,7 +50,7 @@ impl FileEditor {
             .id("file-breadcrumbs")
             .debug_selector(|| "file-breadcrumbs".into())
             .role(Role::Navigation)
-            .aria_label("File path")
+            .aria_label(tr("File path"))
             .aria_description(self.path.clone())
             .h(px(HEADER_HEIGHT))
             .flex_shrink_0()
@@ -100,8 +101,8 @@ impl FileEditor {
             .id("file-word-wrap")
             .debug_selector(|| "file-word-wrap".into())
             .role(Role::Button)
-            .aria_label("Word wrap")
-            .aria_description("Toggle word wrap (Alt+Z)")
+            .aria_label(tr("Word wrap"))
+            .aria_description(tr("Toggle word wrap (Alt+Z)"))
             .aria_toggled(if wrap {
                 gpui::Toggled::True
             } else {
@@ -119,7 +120,7 @@ impl FileEditor {
             .text_color(content(if wrap { 1. } else { 0.45 }))
             .when(wrap, |d| d.bg(content(0.15)))
             .hover(|s| s.bg(content(0.1)).text_color(content(1.)))
-            .child("Wrap")
+            .child(tr("Wrap"))
             .on_click(cx.listener(|this, _, _, cx| this.toggle_word_wrap(cx)))
             .into_any_element()
     }
@@ -128,7 +129,7 @@ impl FileEditor {
         div()
             .id("file-mode")
             .role(Role::TabList)
-            .aria_label("File view")
+            .aria_label(tr("File view"))
             .h(px(CONTROL_HEIGHT))
             .flex_shrink_0()
             .flex()
@@ -143,7 +144,7 @@ impl FileEditor {
                         div()
                             .id(label)
                             .role(Role::Tab)
-                            .aria_label(label)
+                            .aria_label(tr(label))
                             .aria_selected(self.preview == preview)
                             .cursor_pointer()
                             .h_full()
@@ -156,7 +157,7 @@ impl FileEditor {
                             .text_color(content(if self.preview == preview { 1. } else { 0.45 }))
                             .when(self.preview == preview, |d| d.bg(content(0.15)))
                             .hover(|s| s.bg(content(0.1)).text_color(content(1.)))
-                            .child(label)
+                            .child(tr(label))
                             .on_click(cx.listener(move |this, _, window, cx| {
                                 if this.preview != preview {
                                     this.toggle_preview(window, cx);
@@ -182,16 +183,37 @@ impl FileEditor {
         } else {
             "UTF-8"
         };
-        let position = format!("Ln {line}, Col {column}");
-        let details = format!(
-            "{lines} {} · {encoding} · {ending}",
-            if lines == 1 { "line" } else { "lines" }
+        let position = tr_fmt(
+            "Ln {line}, Col {column}",
+            &[("line", &line), ("column", &column)],
         );
+        let details = if lines == 1 {
+            tr_fmt(
+                "{lines} line · {encoding} · {ending}",
+                &[
+                    ("lines", &lines),
+                    ("encoding", &encoding),
+                    ("ending", &ending),
+                ],
+            )
+        } else {
+            tr_fmt(
+                "{lines} lines · {encoding} · {ending}",
+                &[
+                    ("lines", &lines),
+                    ("encoding", &encoding),
+                    ("ending", &ending),
+                ],
+            )
+        };
         div()
             .id("file-editor-status")
             .debug_selector(|| "file-editor-status".into())
             .role(Role::Status)
-            .aria_label(format!("{position} · {details}"))
+            .aria_label(tr_fmt(
+                "{position} · {details}",
+                &[("position", &position), ("details", &details)],
+            ))
             .h(px(24.))
             .flex_shrink_0()
             .min_w_0()

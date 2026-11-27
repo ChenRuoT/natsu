@@ -1,5 +1,6 @@
 use super::*;
 use gpui::App;
+use natsu_core::i18n::{tr, tr_fmt};
 use natsu_core::{
     accounts::Profile,
     usage::{self, Limit},
@@ -49,19 +50,18 @@ impl Conversation {
                 .items_center()
                 .gap_2()
                 .child(provider_icon(kind.id(), 20.))
-                .child(
-                    div()
-                        .flex_1()
-                        .child(format!("Sign in to {} to continue", kind.label())),
-                )
+                .child(div().flex_1().child(tr_fmt(
+                    "Sign in to {provider} to continue",
+                    &[("provider", &kind.label())],
+                )))
                 .child(
                     crate::settings::widgets::secondary_button(
                         "conversation-sign-in",
-                        "Sign in",
+                        tr("Sign in"),
                         true,
                         false,
                     )
-                    .child("Sign in")
+                    .child(tr("Sign in"))
                     .on_click(cx.listener(move |_, _, _, cx| {
                         if let Some(center) = crate::accounts::get(cx) {
                             center.update(cx, |center, cx| {
@@ -339,7 +339,7 @@ impl Conversation {
         self.catalog_epoch += 1;
         self.catalog.clear();
         self.status =
-            "This provider account is no longer signed in. Choose another account to continue."
+            tr("This provider account is no longer signed in. Choose another account to continue.")
                 .into();
         cx.notify();
     }
@@ -366,7 +366,7 @@ impl Conversation {
                 d.child(
                     usage_button(
                         "usage-model-picker",
-                        "Choose another model",
+                        tr("Choose another model"),
                         false,
                         switching,
                         true,
@@ -377,7 +377,7 @@ impl Conversation {
                     .font_weight(gpui::FontWeight::MEDIUM)
                     .text_color(content(1.))
                     .bg(content(0.1))
-                    .child("Choose another model")
+                    .child(tr("Choose another model"))
                     .child(icon("chevron-down", 11.).text_color(content(0.5)))
                     .when(!switching, |d| {
                         d.on_click(cx.listener(|this, _, window, cx| {
@@ -399,7 +399,7 @@ impl Conversation {
             controls = controls.child(
                 usage_button(
                     "usage-account-picker",
-                    "Choose another account",
+                    tr("Choose another account"),
                     false,
                     switching,
                     mono,
@@ -414,11 +414,11 @@ impl Conversation {
                 })
                 .child(self.account_anchor.probe())
                 .child(if switching {
-                    "Switching…"
+                    tr("Switching…")
                 } else if mono {
-                    "Choose another account"
+                    tr("Choose another account")
                 } else {
-                    "Switch account"
+                    tr("Switch account")
                 })
                 .child(icon("chevron-down", 12.).text_color(content(0.5)))
                 .when(!switching, |d| {
@@ -430,19 +430,19 @@ impl Conversation {
         }
         let resume = if waiting {
             if armed {
-                "Resuming at reset"
+                tr("Resuming at reset")
             } else {
-                "Resume at reset"
+                tr("Resume at reset")
             }
         } else {
-            "Resume"
+            tr("Resume")
         };
         controls = controls
             .child(
                 usage_button(
                     "resume-usage-limit",
                     if waiting && armed {
-                        "Cancel the automatic resume"
+                        tr("Cancel the automatic resume")
                     } else {
                         resume
                     },
@@ -478,7 +478,7 @@ impl Conversation {
                 controls.child(
                     usage_button(
                         "dismiss-usage-limit",
-                        "Dismiss usage limit notice",
+                        tr("Dismiss usage limit notice"),
                         false,
                         false,
                         false,
@@ -509,16 +509,19 @@ impl Conversation {
                     .text_size(px(12.))
                     .text_color(content(0.85))
                     .child(if mono {
-                        format!("{} usage limit reached", kind.label())
+                        tr_fmt(
+                            "{provider} usage limit reached",
+                            &[("provider", &kind.label())],
+                        )
                     } else {
-                        "Usage limit reached".into()
+                        tr("Usage limit reached").into()
                     }),
             );
         let notice = div()
             .id("usage-limit-notice")
             .debug_selector(|| "usage-limit-notice".into())
             .role(Role::Status)
-            .aria_label("Usage limit reached")
+            .aria_label(tr("Usage limit reached"))
             .text_size(px(12.))
             .line_height(px(16.))
             .text_color(content(if mono { 0.6 } else { 0.55 }));
@@ -527,7 +530,7 @@ impl Conversation {
                 .px(px(12.)).py(px(10.)).child(heading)
                 .child(div().pl(px(22.))
                     .child(div().mt(px(4.)).text_size(px(12.)).line_height(px(19.5)).text_color(content(0.6))
-                        .child("Your conversation is saved. Choose another model or account to keep going."))
+                        .child(tr("Your conversation is saved. Choose another model or account to keep going.")))
                     .children(reset.map(|label| div().mt(px(4.)).text_color(content(0.45)).child(label)))
                     .child(controls.mt(px(8.))))
                 .into_any_element()
@@ -605,7 +608,7 @@ fn usage_button(
 pub(super) fn usage_reset_label(limit: &Limit, now: i64) -> Option<String> {
     limit.resets_at.map(|at| {
         if at <= now {
-            return "Limit has reset".to_owned();
+            return tr("Limit has reset").to_owned();
         }
         let when = chrono::DateTime::from_timestamp_millis(at)
             .map(|d| {

@@ -1,6 +1,7 @@
 //! ColorPickerPopover.tsx's saturation/value surface, hue track and hex field.
 use super::*;
 use gpui::{DispatchPhase, canvas, linear_color_stop, linear_gradient};
+use natsu_core::i18n::tr;
 
 pub(super) struct Picked(pub u32);
 #[derive(Clone, Copy)]
@@ -64,7 +65,7 @@ impl EventEmitter<Picked> for ColorPicker {}
 impl ColorPicker {
     pub(super) fn new(color: u32, cx: &mut Context<Self>) -> Self {
         let hex = cx.new(|cx| {
-            let mut field = Input::field("Hex color", "#rrggbb", content(0.35), cx);
+            let mut field = Input::field(tr("Hex color"), "#rrggbb", content(0.35), cx);
             field.set_font_size(12.);
             field.set_line_height(18.);
             field.set_text(format!("#{color:06x}"), cx);
@@ -178,7 +179,7 @@ impl gpui::Render for ColorPicker {
                 div()
                     .id("mono-color-sv")
                     .role(Role::Slider)
-                    .aria_label("Saturation and brightness")
+                    .aria_label(tr("Saturation and brightness"))
                     .relative()
                     .h(px(112.))
                     .w_full()
@@ -215,7 +216,7 @@ impl gpui::Render for ColorPicker {
                 div()
                     .id("mono-color-hue")
                     .role(Role::Slider)
-                    .aria_label("Hue")
+                    .aria_label(tr("Hue"))
                     .relative()
                     .mt_2()
                     .h(px(12.))

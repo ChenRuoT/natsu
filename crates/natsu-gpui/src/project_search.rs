@@ -9,6 +9,7 @@ use gpui::{
     AnyElement, App, Context, Entity, EventEmitter, FocusHandle, Focusable, HighlightStyle, Role,
     ScrollHandle, StyledText, Subscription, Task, Window, div, point, prelude::*, px, rgb,
 };
+use natsu_core::i18n::{tr, tr_fmt};
 use natsu_core::search::project::{self, SearchMatch, SearchOptions};
 use std::{
     collections::HashMap,
@@ -83,17 +84,27 @@ impl Drop for ProjectSearch {
 impl ProjectSearch {
     pub(crate) fn new(cwd: String, active: bool, cx: &mut Context<Self>) -> Self {
         let query = cx.new(|cx| {
-            let mut input = Input::field("Search", "Search", content(0.35), cx);
+            let mut input = Input::field(tr("Search"), tr("Search"), content(0.35), cx);
             input.set_font_size(12.);
             input
         });
         let include = cx.new(|cx| {
-            let mut input = Input::field("files to include", "files to include", content(0.35), cx);
+            let mut input = Input::field(
+                tr("files to include"),
+                tr("files to include"),
+                content(0.35),
+                cx,
+            );
             input.set_font_size(11.);
             input
         });
         let exclude = cx.new(|cx| {
-            let mut input = Input::field("files to exclude", "files to exclude", content(0.35), cx);
+            let mut input = Input::field(
+                tr("files to exclude"),
+                tr("files to exclude"),
+                content(0.35),
+                cx,
+            );
             input.set_font_size(11.);
             input
         });
@@ -317,25 +328,40 @@ impl Render for ProjectSearch {
                 .py_2()
                 .text_size(px(12.))
                 .text_color(content(0.5))
-                .child("No project folder")
+                .child(tr("No project folder"))
                 .into_any_element();
         }
         let status = if self.loading {
-            "Searching…".to_owned()
+            tr("Searching…").to_owned()
         } else if let Some(error) = &self.error {
             error.clone()
         } else if self.query.read(cx).content.trim().is_empty() {
-            "Type to search across the project".to_owned()
+            tr("Type to search across the project").to_owned()
         } else if self.count == 0 {
-            "No results".to_owned()
+            tr("No results").to_owned()
         } else {
-            format!(
-                "{} result{} in {} file{}{}",
-                self.count,
-                if self.count == 1 { "" } else { "s" },
-                self.groups.len(),
-                if self.groups.len() == 1 { "" } else { "s" },
-                if self.truncated { " (limited)" } else { "" }
+            tr_fmt(
+                "{count} {results} in {files} {file_word}{limited}",
+                &[
+                    ("count", &self.count),
+                    (
+                        "results",
+                        &tr(if self.count == 1 { "result" } else { "results" }),
+                    ),
+                    ("files", &self.groups.len()),
+                    (
+                        "file_word",
+                        &tr(if self.groups.len() == 1 {
+                            "file"
+                        } else {
+                            "files"
+                        }),
+                    ),
+                    (
+                        "limited",
+                        &if self.truncated { tr(" (limited)") } else { "" },
+                    ),
+                ],
             )
         };
         let groups = self
@@ -448,7 +474,7 @@ impl Render for ProjectSearch {
             .id("explorer-project-search")
             .debug_selector(|| "explorer-project-search".into())
             .role(Role::TabPanel)
-            .aria_label("Search in files")
+            .aria_label(tr("Search in files"))
             .size_full()
             .min_h_0()
             .min_w_0()
@@ -486,7 +512,7 @@ impl Render for ProjectSearch {
                         div()
                             .id("project-search-back")
                             .role(Role::Button)
-                            .aria_label("Back to files")
+                            .aria_label(tr("Back to files"))
                             .size(px(28.))
                             .flex_shrink_0()
                             .flex()
@@ -505,7 +531,7 @@ impl Render for ProjectSearch {
                             .truncate()
                             .text_size(px(12.))
                             .text_color(content(0.55))
-                            .child("Search in files"),
+                            .child(tr("Search in files")),
                     ),
             )
             .child(
@@ -540,7 +566,7 @@ impl Render for ProjectSearch {
                             .child(
                                 Self::toggle(
                                     "project-search-case",
-                                    "Match case",
+                                    tr("Match case"),
                                     "case-sensitive",
                                     self.case_sensitive,
                                 )
@@ -554,7 +580,7 @@ impl Render for ProjectSearch {
                             .child(
                                 Self::toggle(
                                     "project-search-word",
-                                    "Match whole word",
+                                    tr("Match whole word"),
                                     "whole-word",
                                     self.whole_word,
                                 )
@@ -568,7 +594,7 @@ impl Render for ProjectSearch {
                             .child(
                                 Self::toggle(
                                     "project-search-regex",
-                                    "Use regular expression",
+                                    tr("Use regular expression"),
                                     "regex",
                                     self.regex,
                                 )

@@ -1,5 +1,6 @@
 //! Banked Codex resets are shared across footers so only one claim runs per account.
 use super::*;
+use natsu_core::i18n::{tr, tr_fmt};
 
 #[derive(Clone)]
 pub(crate) struct ResetRow {
@@ -27,14 +28,14 @@ pub(crate) fn rows(snapshot: Option<&Snapshot>) -> Vec<ResetRow> {
                 .title
                 .clone()
                 .filter(|s| !s.trim().is_empty())
-                .unwrap_or_else(|| format!("Banked reset {}", i + 1)),
+                .unwrap_or_else(|| tr_fmt("Banked reset {number}", &[("number", &(i + 1))])),
         })
         .collect();
     for i in rows.len()..credits.available_count as usize {
         rows.push(ResetRow {
             key: format!("unlisted:{i}"),
             credit: None,
-            title: format!("Banked reset {}", i + 1),
+            title: tr_fmt("Banked reset {number}", &[("number", &(i + 1))]),
         });
     }
     rows
@@ -53,11 +54,11 @@ impl ResetAction {
     pub(crate) fn message(&self) -> Option<&str> {
         Some(match self.result.as_ref()? {
             Ok(outcome) => match outcome.as_str() {
-                "reset" => "Codex usage was reset.",
-                "nothingToReset" => "There’s no active usage to reset.",
-                "noCredit" => "No banked resets are available.",
-                "alreadyRedeemed" => "That reset was already used.",
-                _ => "Codex returned an unknown reset result.",
+                "reset" => tr("Codex usage was reset."),
+                "nothingToReset" => tr("There’s no active usage to reset."),
+                "noCredit" => tr("No banked resets are available."),
+                "alreadyRedeemed" => tr("That reset was already used."),
+                _ => tr("Codex returned an unknown reset result."),
             },
             Err(error) => error,
         })

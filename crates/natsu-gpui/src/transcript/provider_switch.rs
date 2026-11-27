@@ -1,6 +1,7 @@
 //! AgentTranscript's HandoffDivider: a rule with the new provider's mark above
 //! the first prompt another provider answers.
 use super::*;
+use natsu_core::i18n::tr_fmt;
 
 impl TranscriptView {
     /// The provider that answered, or is answering, the prompt at `start`.
@@ -36,7 +37,7 @@ impl TranscriptView {
                 .id(SharedString::from(format!("provider-separator-{start}")))
                 .debug_selector(|| "provider-separator".into())
                 .role(Role::Label)
-                .aria_label(format!("Continued with {label}"))
+                .aria_label(tr_fmt("Continued with {label}", &[("label", &label)]))
                 .w_full()
                 .flex()
                 .justify_center()

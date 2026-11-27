@@ -67,7 +67,10 @@ impl Registration {
                 &mut handler,
             );
             if error != 0 {
-                return Err(format!("Could not register Quick composer ({error})."));
+                return Err(natsu_core::i18n::tr_fmt(
+                    "Could not register Quick composer ({error}).",
+                    &[("error", &error)],
+                ));
             }
             let error = RegisterEventHotKey(
                 code,
@@ -82,9 +85,10 @@ impl Registration {
             );
             if error != 0 {
                 RemoveEventHandler(handler);
-                return Err(
-                    "This shortcut is already in use. Choose another in Keybindings.".into(),
-                );
+                return Err(natsu_core::i18n::tr(
+                    "This shortcut is already in use. Choose another in Keybindings.",
+                )
+                .into());
             }
         }
         Ok((
@@ -118,7 +122,7 @@ fn parse(shortcut: &str) -> Result<(u32, u32), String> {
             v => key = Some(v),
         }
     }
-    let key = key.ok_or("Choose a key for Quick composer.")?;
+    let key = key.ok_or(natsu_core::i18n::tr("Choose a key for Quick composer."))?;
     let code = match key {
         "a" => 0,
         "s" => 1,
@@ -166,10 +170,14 @@ fn parse(shortcut: &str) -> Result<(u32, u32), String> {
         "right" => 124,
         "down" => 125,
         "up" => 126,
-        _ => return Err("This Quick composer shortcut is not supported.".into()),
+        _ => {
+            return Err(
+                natsu_core::i18n::tr("This Quick composer shortcut is not supported.").into(),
+            );
+        }
     };
     if modifiers == 0 {
-        return Err("Quick composer needs a modifier key.".into());
+        return Err(natsu_core::i18n::tr("Quick composer needs a modifier key.").into());
     }
     Ok((code, modifiers))
 }

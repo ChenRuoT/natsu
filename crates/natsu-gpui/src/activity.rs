@@ -3,6 +3,7 @@ use gpui::{
     AnyElement, App, Bounds, ContentMask, Element, ElementId, GlobalElementId, InspectorElementId,
     LayoutId, Pixels, StyledText, Window, point, prelude::*,
 };
+use natsu_core::i18n::{tr, tr_fmt};
 use natsu_core::tool::{ToolCall, ToolState};
 use std::collections::HashSet;
 
@@ -187,9 +188,9 @@ pub(crate) fn summary(tools: &[ToolCall], live: bool) -> (String, &'static str) 
     if failed_agents > 0 {
         return (
             if failed_agents == 1 {
-                "Subagent failed".into()
+                tr("Subagent failed").into()
             } else {
-                format!("{failed_agents} subagents failed")
+                tr_fmt("{count} subagents failed", &[("count", &failed_agents)])
             },
             "bot",
         );
@@ -205,8 +206,15 @@ pub(crate) fn summary(tools: &[ToolCall], live: bool) -> (String, &'static str) 
                 .unwrap_or("")
                 .to_owned()
         } else {
-            format!("{} files", paths.len())
+            tr_fmt("{count} files", &[("count", &paths.len())])
         }
+    };
+    // "{verb} {object}", e.g. "Read src/lib.rs" or "Ran 3 commands".
+    let verb_phrase = |verb: &'static str, object: String| {
+        tr_fmt(
+            "{verb} {object}",
+            &[("verb", &tr(verb)), ("object", &object)],
+        )
     };
     let title = order
         .iter()
@@ -214,68 +222,58 @@ pub(crate) fn summary(tools: &[ToolCall], live: bool) -> (String, &'static str) 
             let live = *kind == current;
             match *kind {
                 "research" if searches > 0 && !reads.is_empty() => if live {
-                    "Exploring the project"
+                    tr("Exploring the project")
                 } else {
-                    "Explored the project"
+                    tr("Explored the project")
                 }
                 .into(),
-                "research" if !reads.is_empty() => format!(
-                    "{} {}",
-                    if live { "Reading" } else { "Read" },
-                    file_label(&reads)
-                ),
+                "research" if !reads.is_empty() => {
+                    verb_phrase(if live { "Reading" } else { "Read" }, file_label(&reads))
+                }
                 "research" => if live {
-                    "Searching the project"
+                    tr("Searching the project")
                 } else {
-                    "Searched the project"
+                    tr("Searched the project")
                 }
                 .into(),
-                "edit" => format!(
-                    "{} {}",
-                    if live { "Editing" } else { "Edited" },
-                    file_label(&edits)
-                ),
-                "run" => format!(
-                    "{} {}",
+                "edit" => verb_phrase(if live { "Editing" } else { "Edited" }, file_label(&edits)),
+                "run" => verb_phrase(
                     if live { "Running" } else { "Ran" },
                     if commands == 1 {
-                        "a command".into()
+                        tr("a command").into()
                     } else {
-                        format!("{commands} commands")
-                    }
+                        tr_fmt("{count} commands", &[("count", &commands)])
+                    },
                 ),
                 "visual" if charts == 0 => if live {
-                    "Planning a chart"
+                    tr("Planning a chart")
                 } else {
-                    "Planned a chart"
+                    tr("Planned a chart")
                 }
                 .into(),
-                "visual" => format!(
-                    "{} {}",
+                "visual" => verb_phrase(
                     if live { "Drawing" } else { "Drew" },
                     if charts == 1 {
-                        "a chart".into()
+                        tr("a chart").into()
                     } else {
-                        format!("{charts} charts")
-                    }
+                        tr_fmt("{count} charts", &[("count", &charts)])
+                    },
                 ),
-                "agent" => format!(
-                    "{} {}",
+                "agent" => verb_phrase(
                     if live { "Running" } else { "Ran" },
                     if agents == 1 {
-                        "a subagent".into()
+                        tr("a subagent").into()
                     } else {
-                        format!("{agents} subagents")
-                    }
+                        tr_fmt("{count} subagents", &[("count", &agents)])
+                    },
                 ),
-                _ => format!(
-                    "{} {}",
+                _ => verb_phrase(
                     if live { "Running" } else { "Ran" },
                     if others == 1 {
-                        "a tool".into()
+                        tr("a tool").into()
                     } else {
-                        format!("{others} tools")
-                    }
+                        tr_fmt("{count} tools", &[("count", &others)])
+                    },
                 ),
             }
         })

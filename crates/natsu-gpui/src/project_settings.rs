@@ -10,6 +10,7 @@ use gpui::{
     MouseDownEvent, MouseMoveEvent, ObjectFit, PathPromptOptions, Role, SharedString, Subscription,
     Window, canvas, div, prelude::*, px, rgb,
 };
+use natsu_core::i18n::{tr, tr_fmt};
 use natsu_core::project_appearance::{
     Background, COLORS, Effect, MASCOTS, ProjectAppearance, Scope, import_image,
 };
@@ -186,13 +187,13 @@ impl AppearanceControls {
         cx: &mut Context<Self>,
     ) -> Self {
         let name = cx.new(|cx| {
-            let mut field = Input::field("Project name", "Project name", content(0.35), cx);
+            let mut field = Input::field(tr("Project name"), tr("Project name"), content(0.35), cx);
             field.set_text(appearance.label(&project), cx);
             field.select_range(0..field.content.len(), cx);
             field
         });
         let custom_color = cx.new(|cx| {
-            let mut field = Input::field("Custom project color", "#RRGGBB", content(0.35), cx);
+            let mut field = Input::field(tr("Custom project color"), "#RRGGBB", content(0.35), cx);
             field.set_text(format!("#{:06x}", appearance.color(&project)), cx);
             field
         });
@@ -255,7 +256,7 @@ impl AppearanceControls {
             files: true,
             directories: false,
             multiple: false,
-            prompt: Some("Choose project logo".into()),
+            prompt: Some(tr("Choose project logo").into()),
         });
         let project = self.project.clone();
         cx.spawn(async move |this, cx| {
@@ -275,7 +276,7 @@ impl AppearanceControls {
                         .await
                 }
                 Ok(Ok(_)) => Ok(None),
-                _ => Err("Could not open the image picker.".into()),
+                _ => Err(tr("Could not open the image picker.").into()),
             };
             let _ = this.update(cx, |this, cx| {
                 this.busy = false;
@@ -301,7 +302,7 @@ impl Render for AppearanceControls {
             .id("project-appearance-controls")
             .debug_selector(|| "project-appearance-controls".into())
             .role(Role::Group)
-            .aria_label("Project appearance")
+            .aria_label(tr("Project appearance"))
             .flex()
             .flex_col()
             .gap_2()
@@ -332,7 +333,7 @@ impl Render for AppearanceControls {
                                 .id("choose-project-logo")
                                 .debug_selector(|| "choose-project-logo".into())
                                 .role(Role::Button)
-                                .aria_label("Choose project logo")
+                                .aria_label(tr("Choose project logo"))
                                 .size(px(36.))
                                 .flex_shrink_0()
                                 .rounded_lg()
@@ -353,7 +354,7 @@ impl Render for AppearanceControls {
                                 .text_size(px(11.))
                                 .line_height(px(16.5))
                                 .text_color(content(0.5))
-                                .child("Project logo")
+                                .child(tr("Project logo"))
                                 .child(
                                     div()
                                         .truncate()
@@ -361,19 +362,25 @@ impl Render for AppearanceControls {
                                         .line_height(px(18.))
                                         .text_color(content(0.7))
                                         .child(if self.busy {
-                                            "Saving image…"
+                                            tr("Saving image…")
                                         } else {
-                                            "Shown in tabs and composer"
+                                            tr("Shown in tabs and composer")
                                         }),
                                 ),
                         )
                         .when(self.appearance.logo.is_some(), |d| {
                             d.child(
-                                icon_button("remove-project-logo", "Remove project logo", "trash")
-                                    .on_click(cx.listener(|this, _, _, cx| {
+                                icon_button(
+                                    "remove-project-logo",
+                                    tr("Remove project logo"),
+                                    "trash",
+                                )
+                                .on_click(cx.listener(
+                                    |this, _, _, cx| {
                                         this.appearance.logo = None;
                                         this.save(cx);
-                                    })),
+                                    },
+                                )),
                             )
                         }),
                 )
@@ -390,7 +397,10 @@ impl Render for AppearanceControls {
                             .id(("project-color", ix))
                             .debug_selector(move || format!("project-color-{ix}"))
                             .role(Role::Button)
-                            .aria_label(format!("Project color #{color:06x}"))
+                            .aria_label(tr_fmt(
+                                "Project color #{hex}",
+                                &[("hex", &format!("{color:06x}"))],
+                            ))
                             .aria_selected(current == color)
                             .size(px(20.))
                             .flex_shrink_0()
@@ -412,7 +422,7 @@ impl Render for AppearanceControls {
                         div()
                             .id("custom-project-color")
                             .role(Role::Button)
-                            .aria_label("Custom project color")
+                            .aria_label(tr("Custom project color"))
                             .size(px(20.))
                             .rounded_full()
                             .border_2()
@@ -452,7 +462,7 @@ impl Render for AppearanceControls {
                     .text_size(px(11.))
                     .line_height(px(16.5))
                     .text_color(content(0.5))
-                    .child("Mascot")
+                    .child(tr("Mascot"))
                     .child(
                         div()
                             .mt_1()
@@ -465,7 +475,7 @@ impl Render for AppearanceControls {
                                     .id(("project-mascot", ix))
                                     .debug_selector(move || format!("project-mascot-{ix}"))
                                     .role(Role::Button)
-                                    .aria_label(format!("Mascot {name}"))
+                                    .aria_label(tr_fmt("Mascot {name}", &[("name", &name)]))
                                     .aria_selected(ix == shown)
                                     .size(px(20.))
                                     .rounded_md()
@@ -567,7 +577,7 @@ impl BackgroundDialog {
             files: true,
             directories: false,
             multiple: false,
-            prompt: Some("Choose background image".into()),
+            prompt: Some(tr("Choose background image").into()),
         });
         let project = self.project.clone();
         cx.spawn(async move |this, cx| {
@@ -587,7 +597,7 @@ impl BackgroundDialog {
                         .await
                 }
                 Ok(Ok(_)) => Ok(None),
-                _ => Err("Could not open the image picker.".into()),
+                _ => Err(tr("Could not open the image picker.").into()),
             };
             let _ = this.update(cx, |this, cx| {
                 this.busy = false;
@@ -665,7 +675,7 @@ impl BackgroundDialog {
                 div()
                     .id("project-background-effect-options")
                     .role(Role::ListBox)
-                    .aria_label("Project background effect options")
+                    .aria_label(tr("Project background effect options"))
                     .track_focus(&self.effect_focus)
                     .flex()
                     .flex_col()
@@ -743,9 +753,9 @@ impl BackgroundDialog {
         let probe = bounds.clone();
         let focus = self.sliders[usize::from(!empty)].clone();
         let label = if empty {
-            "Empty chat visibility"
+            tr("Empty chat visibility")
         } else {
-            "Session visibility"
+            tr("Session visibility")
         };
         div()
             .debug_selector(move || {
@@ -902,7 +912,7 @@ impl BackgroundDialog {
                             // React's inline label sits in a 16px / 24px line box.
                             .line_height(px(24.))
                             .font_weight(gpui::FontWeight::MEDIUM)
-                            .child("Background effect"),
+                            .child(tr("Background effect")),
                     )
                     .child(
                         div()
@@ -919,7 +929,7 @@ impl BackgroundDialog {
                     .id("project-background-effect")
                     .debug_selector(|| "project-background-effect".into())
                     .role(Role::ComboBox)
-                    .aria_label("Project background effect")
+                    .aria_label(tr("Project background effect"))
                     .aria_value(self.background.effect.label())
                     .aria_expanded(self.effect_open)
                     .track_focus(&self.effect_trigger_focus)
@@ -974,7 +984,7 @@ impl BackgroundDialog {
                     .text_size(px(13.))
                     .line_height(px(19.5))
                     .font_weight(gpui::FontWeight::MEDIUM)
-                    .child("Show on"),
+                    .child(tr("Show on")),
             )
             .child(
                 div()
@@ -991,41 +1001,44 @@ impl BackgroundDialog {
                     .border_1()
                     .border_color(content(0.1))
                     .role(Role::RadioGroup)
-                    .aria_label("Show project background on")
+                    .aria_label(tr("Show project background on"))
                     .children(
-                        [(Scope::Empty, "Empty only"), (Scope::All, "All sessions")]
-                            .into_iter()
-                            .enumerate()
-                            .map(|(ix, (scope, label))| {
-                                div()
-                                    .id(("background-scope", ix))
-                                    .debug_selector(move || format!("project-settings-{label}"))
-                                    .role(Role::RadioButton)
-                                    .aria_label(label)
-                                    .aria_selected(self.background.scope == scope)
-                                    .h_full()
-                                    .flex_1()
-                                    .min_w_0()
-                                    .flex()
-                                    .items_center()
-                                    .justify_center()
-                                    .px(px(6.))
-                                    .rounded(px(5.))
-                                    .text_size(px(12.))
-                                    .line_height(px(18.))
-                                    .text_color(content(if self.background.scope == scope {
-                                        1.
-                                    } else {
-                                        0.5
-                                    }))
-                                    .when(self.background.scope == scope, |d| d.bg(content(0.1)))
-                                    .hover(|s| s.text_color(content(1.)))
-                                    .child(label)
-                                    .on_click(cx.listener(move |this, _, _, cx| {
-                                        this.background.scope = scope;
-                                        this.save(cx);
-                                    }))
-                            }),
+                        [
+                            (Scope::Empty, tr("Empty only")),
+                            (Scope::All, tr("All sessions")),
+                        ]
+                        .into_iter()
+                        .enumerate()
+                        .map(|(ix, (scope, label))| {
+                            div()
+                                .id(("background-scope", ix))
+                                .debug_selector(move || format!("project-settings-{label}"))
+                                .role(Role::RadioButton)
+                                .aria_label(label)
+                                .aria_selected(self.background.scope == scope)
+                                .h_full()
+                                .flex_1()
+                                .min_w_0()
+                                .flex()
+                                .items_center()
+                                .justify_center()
+                                .px(px(6.))
+                                .rounded(px(5.))
+                                .text_size(px(12.))
+                                .line_height(px(18.))
+                                .text_color(content(if self.background.scope == scope {
+                                    1.
+                                } else {
+                                    0.5
+                                }))
+                                .when(self.background.scope == scope, |d| d.bg(content(0.1)))
+                                .hover(|s| s.text_color(content(1.)))
+                                .child(label)
+                                .on_click(cx.listener(move |this, _, _, cx| {
+                                    this.background.scope = scope;
+                                    this.save(cx);
+                                }))
+                        }),
                     ),
             )
             .into_any_element()
@@ -1043,7 +1056,7 @@ impl Render for BackgroundDialog {
             .clone()
             .or_else(|| self.preview.read(cx).error.clone());
         div().id("project-background-dialog").debug_selector(||"project-background-dialog".into())
-            .role(Role::Dialog).aria_label("Background Image").track_focus(&self.focus)
+            .role(Role::Dialog).aria_label(tr("Background Image")).track_focus(&self.focus)
             .relative().min_h_0().max_h(px(window.viewport_size().height.as_f32()-34.))
             .flex().flex_col().text_color(content(1.))
             .child(self.bounds.layout_probe())
@@ -1056,24 +1069,24 @@ impl Render for BackgroundDialog {
             .on_mouse_up(MouseButton::Left,cx.listener(|this,_,_,_|this.dragging=None))
             .child(div().debug_selector(||"background-dialog-header".into()).flex_shrink_0().flex().items_start().gap_2().px_4().pt_3()
                 .child(div().min_w_0().flex_1().pt(px(2.)).flex().flex_col()
-                    .child(div().debug_selector(||"background-dialog-title".into()).text_size(px(16.)).line_height(px(20.)).font_weight(gpui::FontWeight::SEMIBOLD).child("Background Image"))
-                    .child(div().mt(px(2.)).min_w_0().truncate().text_size(px(12.)).line_height(px(16.5)).text_color(content(0.5)).child(format!("Choose a background image for {}",self.appearance.label(&self.project)))))
-                .child(icon_button("close-project-background","Close background settings","close").size(px(28.)).on_click(cx.listener(|_,_,_,cx|cx.emit(Event::Close)))))
+                    .child(div().debug_selector(||"background-dialog-title".into()).text_size(px(16.)).line_height(px(20.)).font_weight(gpui::FontWeight::SEMIBOLD).child(tr("Background Image")))
+                    .child(div().mt(px(2.)).min_w_0().truncate().text_size(px(12.)).line_height(px(16.5)).text_color(content(0.5)).child(tr_fmt("Choose a background image for {project}", &[("project", &self.appearance.label(&self.project))]))))
+                .child(icon_button("close-project-background",tr("Close background settings"),"close").size(px(28.)).on_click(cx.listener(|_,_,_,cx|cx.emit(Event::Close)))))
             .child(div().id("background-dialog-body").debug_selector(||"background-dialog-body".into())
                 .min_h_0().overflow_y_scroll().flex().flex_col().gap_5().p_4()
                 .child(div().flex_shrink_0().flex().flex_col()
                     .child(div().debug_selector(||"background-dialog-preview".into()).h(px(162.)).flex_shrink_0().overflow_hidden().rounded(px(12.)).border_1().border_color(content(0.1))
                         .bg(if self.background.effect==Effect::GradientBlur {rgb(0x171717).into()} else {content(0.05)})
-                        .child(div().relative().h(px(160.)).child(self.preview.clone()).when(!has_image,|d|d.flex().items_center().justify_center().child(div().text_size(px(12.)).text_color(content(0.4)).child("No background selected")))))
-                    .child(button("choose-project-background",if self.busy{"Saving image…"}else if has_image{"Change image"}else{"Choose image"})
+                        .child(div().relative().h(px(160.)).child(self.preview.clone()).when(!has_image,|d|d.flex().items_center().justify_center().child(div().text_size(px(12.)).text_color(content(0.4)).child(tr("No background selected"))))))
+                    .child(button("choose-project-background",if self.busy{tr("Saving image…")}else if has_image{tr("Change image")}else{tr("Choose image")})
                         .mt_2().flex_shrink_0().on_click(cx.listener(|this,_,_,cx|this.choose(cx))))
                     .child(div().mt(px(6.)).text_size(px(11.)).line_height(px(17.875)).text_color(content(0.45))
-                        .child(if has_image{"This image overrides the global background for this project."}else{"No background selected for this project."}))
+                        .child(if has_image{tr("This image overrides the global background for this project.")}else{tr("No background selected for this project.")}))
                     .when_some(error,|d,error|d.child(div().mt(px(6.)).text_size(px(12.)).line_height(px(18.)).text_color(rgb(0xff6467)).child(error))))
                 .when(has_image,|d|d.child(self.effect_row(cx)))
                 .child(self.scope_row(cx))
                 .child(self.slider(true,cx)).child(self.slider(false,cx))
-                .when(has_image,|d|d.child(button("remove-project-background","Remove background image").flex_shrink_0().text_color(rgb(0xff6467))
+                .when(has_image,|d|d.child(button("remove-project-background",tr("Remove background image")).flex_shrink_0().text_color(rgb(0xff6467))
                     .on_click(cx.listener(|this,_,_,cx|{this.background=Background::default();this.effect_open=false;this.error=None;this.save(cx);}))))
             )
             .children(self.effect_popup(cx))

@@ -9,6 +9,7 @@ use gpui::{
     Context, EventEmitter, FontWeight, Role, SharedString, Task, Window, div, prelude::*, px, rgb,
 };
 use natsu_core::checkpoint::{CheckpointFile, CheckpointStatus};
+use natsu_core::i18n::{tr, tr_fmt};
 
 /// The card shows this many files until expanded.
 const COLLAPSED: usize = 3;
@@ -257,7 +258,7 @@ impl SessionReview {
                         .text_size(px(12.))
                         .font_weight(FontWeight::MEDIUM)
                         .text_color(content(0.8))
-                        .child("Couldn’t record changes"),
+                        .child(tr("Couldn’t record changes")),
                 )
                 .child(
                     div()
@@ -331,13 +332,13 @@ impl SessionReview {
                     .items_center()
                     .gap(px(2.))
                     .child(
-                        text_button("session-review-undo", "Undo", !disabled && can_undo)
+                        text_button("session-review-undo", tr("Undo"), !disabled && can_undo)
                             .aria_label(if can_undo {
-                                "Undo the recorded changes"
+                                tr("Undo the recorded changes")
                             } else if self.undo_locked {
-                                "Undo is unavailable while another session is running in this project"
+                                tr("Undo is unavailable while another session is running in this project")
                             } else {
-                                "Undo is unavailable because the workspace was shared, the branch moved, or a recorded file changed afterward"
+                                tr("Undo is unavailable because the workspace was shared, the branch moved, or a recorded file changed afterward")
                             })
                             .when(!disabled && can_undo, |d| {
                                 d.on_click(
@@ -346,8 +347,8 @@ impl SessionReview {
                             }),
                     )
                     .child(
-                        text_button("session-review-keep", "Keep", !disabled)
-                            .aria_label("Keep the recorded changes and dismiss this card")
+                        text_button("session-review-keep", tr("Keep"), !disabled)
+                            .aria_label(tr("Keep the recorded changes and dismiss this card"))
                             .when(!disabled, |d| {
                                 d.on_click(
                                     cx.listener(|this, _, _, cx| this.run(Action::Keep, cx)),
@@ -358,7 +359,7 @@ impl SessionReview {
                         div()
                             .id("session-review-open")
                             .role(Role::Button)
-                            .aria_label("Review changes")
+                            .aria_label(tr("Review changes"))
                             .h(px(28.))
                             .px(px(10.))
                             .flex()
@@ -370,7 +371,7 @@ impl SessionReview {
                             .text_color(content(0.75))
                             .cursor_pointer()
                             .hover(|s| s.bg(content(0.12)).text_color(content(1.)))
-                            .child("Review")
+                            .child(tr("Review"))
                             .on_click(cx.listener(|_, _, _, cx| {
                                 cx.emit(SessionReviewEvent::Open { path: None })
                             })),
@@ -418,7 +419,7 @@ impl SessionReview {
                         .text_size(px(11.))
                         .font_weight(FontWeight::MEDIUM)
                         .text_color(content(0.45))
-                        .child("Diff unavailable")
+                        .child(tr("Diff unavailable"))
                         .into_any_element()
                 })
                 .on_click(cx.listener(move |_, _, _, cx| {
@@ -472,12 +473,11 @@ impl SessionReview {
                             .group_hover("session-review-more", |s| s.text_color(content(0.7))),
                         )
                         .child(if expanded {
-                            "Show fewer files".to_string()
+                            tr("Show fewer files").to_string()
+                        } else if hidden == 1 {
+                            tr_fmt("Show {count} more file", &[("count", &hidden)])
                         } else {
-                            format!(
-                                "Show {hidden} more {}",
-                                if hidden == 1 { "file" } else { "files" }
-                            )
+                            tr_fmt("Show {count} more files", &[("count", &hidden)])
                         })
                         .on_click(cx.listener(|this, _, _, cx| {
                             this.expanded = !this.expanded;

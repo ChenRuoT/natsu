@@ -1,3 +1,4 @@
+use natsu_core::i18n::{tr, tr_fmt};
 mod accounts;
 mod approvals;
 mod attachment_drop;
@@ -428,13 +429,13 @@ impl Conversation {
                                 content(0.45)
                             })
                             .child(if self.needs_approval() {
-                                "Needs approval".to_owned()
+                                tr("Needs approval").to_owned()
                             } else if self.busy {
-                                "Working…".to_owned()
+                                tr("Working…").to_owned()
                             } else if done {
-                                "Done".to_owned()
+                                tr("Done").to_owned()
                             } else if self.loading {
-                                "Loading…".to_owned()
+                                tr("Loading…").to_owned()
                             } else {
                                 natsu_core::time::relative(
                                     self.summary.updated_at,
@@ -464,10 +465,14 @@ impl Conversation {
                     .flex_col()
                     .gap_1p5()
                     .when_some(self.branch.clone(), |d, branch| {
-                        d.child(detail("Branch", branch))
+                        d.child(detail(tr("Branch"), branch))
                     })
                     .child(detail(
-                        if linked { "Worktree" } else { "Directory" },
+                        if linked {
+                            tr("Worktree")
+                        } else {
+                            tr("Directory")
+                        },
                         directory,
                     )),
             )
@@ -626,7 +631,7 @@ impl Conversation {
             orchestration_plan: None,
             orchestration_error: None,
             orchestration_progress: None,
-            status: "Loading conversation…".into(),
+            status: tr("Loading conversation…").into(),
             loaded: false,
             history_unloaded: false,
             history_actions: Default::default(),
@@ -912,7 +917,7 @@ impl Conversation {
             return;
         }
         if self.settings.worktree_removed {
-            self.status = "Select a branch or worktree to continue this conversation.".into();
+            self.status = tr("Select a branch or worktree to continue this conversation.").into();
             cx.notify();
             return;
         }
@@ -1022,9 +1027,9 @@ impl Conversation {
         let mode = self.settings.orchestrator || self.settings.plan || self.settings.operator;
         Some(
             if self.busy && !mode && self.steers_follow_up(alternate, cx) {
-                ("Steer", "queue-steer")
+                (tr("Steer"), "queue-steer")
             } else {
-                ("Queue", "queue-list")
+                (tr("Queue"), "queue-list")
             },
         )
     }
@@ -1100,7 +1105,7 @@ impl Conversation {
         self.status = if self.settings.pending_provider_switch.is_some() {
             "Preparing handoff…"
         } else {
-            "Connecting…"
+            tr("Connecting…")
         }
         .into();
         self.cancel = Arc::new(AtomicBool::new(false));
@@ -1163,7 +1168,7 @@ impl Conversation {
         self.preparing_worktree = settings.new_worktree && settings.worktree_cwd.is_none();
         if self.preparing_worktree {
             settings.worktree_base = settings.worktree_base.or(self.branch.clone());
-            self.status = "Creating worktree…".into();
+            self.status = tr("Creating worktree…").into();
         }
         if settings.mono.is_none()
             && settings
@@ -1404,7 +1409,7 @@ impl Conversation {
                                             .is_err()
                                     }) {
                                         this.status =
-                                            "The provider is no longer waiting for this answer"
+                                            tr("The provider is no longer waiting for this answer")
                                                 .into();
                                         cx.notify();
                                         return;
@@ -1413,11 +1418,11 @@ impl Conversation {
                                         this.question_overlay.release(card, cx);
                                     }
                                     this.status = if !this.approvals.is_empty() {
-                                        "Waiting for approval"
+                                        tr("Waiting for approval")
                                     } else if !this.questions.is_empty() {
-                                        "Waiting for your answer"
+                                        tr("Waiting for your answer")
                                     } else {
-                                        "Working…"
+                                        tr("Working…")
                                     }
                                     .into();
                                     if before != this.needs_approval() {
@@ -1440,12 +1445,12 @@ impl Conversation {
                                 },
                             );
                             this.questions.push_back((card, vec![events, keep_open]));
-                            this.status = "Waiting for your answer".into();
+                            this.status = tr("Waiting for your answer").into();
                         }
                         if !finished && !this.approvals.is_empty() {
-                            this.status = "Waiting for approval".into();
+                            this.status = tr("Waiting for approval").into();
                         } else if !finished && !this.questions.is_empty() {
-                            this.status = "Waiting for your answer".into();
+                            this.status = tr("Waiting for your answer").into();
                         }
                         if finished {
                             if this.is_remote() {
@@ -1482,7 +1487,7 @@ impl Conversation {
                             if let Some(id) = this.follow_ups.sending.clone() {
                                 this.fail_follow_up(
                                     &id,
-                                    "The turn ended before this message was accepted".into(),
+                                    tr("The turn ended before this message was accepted").into(),
                                     cx,
                                 );
                             }
@@ -1740,7 +1745,7 @@ impl Conversation {
         self.summary = summary;
         self.settings = settings;
         self.context = None;
-        self.status = "Worktree deleted".into();
+        self.status = tr("Worktree deleted").into();
         self.refresh_git(cx);
         cx.emit(SessionChanged);
         cx.notify();
@@ -1803,7 +1808,7 @@ impl Conversation {
     }
     fn prepare_worktree(&mut self, cx: &mut Context<Self>) {
         self.preparing_worktree = true;
-        self.status = "Creating worktree…".into();
+        self.status = tr("Creating worktree…").into();
         let cwd = self.summary.cwd.clone();
         let base = self
             .settings
@@ -2142,9 +2147,9 @@ impl Conversation {
     }
     fn effort_setting_label(&self) -> &'static str {
         if Kind::from_id(&self.summary.provider) == Kind::Codex {
-            "Reasoning"
+            tr("Reasoning")
         } else {
-            "Effort"
+            tr("Effort")
         }
     }
     fn selected_tier(&self) -> Option<&str> {
@@ -2474,7 +2479,7 @@ impl Conversation {
                             .collect()
                     })
                     .unwrap_or_default();
-                ("Switch account", items, 250., MenuStyle::Explorer)
+                (tr("Switch account"), items, 250., MenuStyle::Explorer)
             }
             ComposerMenu::Workspace => {
                 let picker = cx.new(|cx| {
@@ -2501,21 +2506,21 @@ impl Conversation {
                 ));
                 let focus = picker.read(cx).focus(cx);
                 (
-                    "Workspace",
+                    tr("Workspace"),
                     vec![
-                        MenuItem::Header("Workspace".into()),
-                        MenuAction::new("workspace:current", "Current checkout")
+                        MenuItem::Header(tr("Workspace").into()),
+                        MenuAction::new("workspace:current", tr("Current checkout"))
                             .icon("folder")
                             .checked(
                                 !self.settings.new_worktree && self.settings.worktree_cwd.is_none(),
                             )
                             .into(),
-                        MenuAction::new("workspace:new", "New worktree")
+                        MenuAction::new("workspace:new", tr("New worktree"))
                             .icon("folder-tree")
                             .checked(self.settings.new_worktree)
                             .into(),
                         MenuItem::Separator,
-                        MenuAction::new("workspace:existing", "Existing worktrees")
+                        MenuAction::new("workspace:existing", tr("Existing worktrees"))
                             .icon("folder-tree")
                             .flyout(Flyout {
                                 view: picker.into(),
@@ -2534,30 +2539,30 @@ impl Conversation {
             }
             // Composer.tsx's plus menu with native mode and attachment actions.
             ComposerMenu::Add => {
-                let mut items = vec![MenuItem::Header("Add to message".into())];
+                let mut items = vec![MenuItem::Header(tr("Add to message").into())];
                 items.extend(
                     [
-                        MenuAction::new("upload", "Upload file")
+                        MenuAction::new("upload", tr("Upload file"))
                             .icon("file-add")
-                            .description("Attach files or images"),
-                        MenuAction::new("plan", "Plan mode")
+                            .description(tr("Attach files or images")),
+                        MenuAction::new("plan", tr("Plan mode"))
                             .icon("ai-idea")
                             .icon_color(tint(YELLOW_300, 0.8))
-                            .description("Review a plan before building"),
+                            .description(tr("Review a plan before building")),
                         MenuAction::new("operator", "Operator")
                             .disabled(self.is_remote())
                             .icon("cursor-magic")
                             .icon_color(tint(SKY_300, 0.8))
-                            .description("Give this thread access to Natsu"),
-                        MenuAction::new("orchestrator", "Orchestrator")
+                            .description(tr("Give this thread access to Natsu")),
+                        MenuAction::new("orchestrator", tr("Orchestrator"))
                             .disabled(self.is_remote())
                             .icon("share")
                             .icon_color(tint(FUCHSIA_300, 0.65))
                             .badge("v1")
-                            .description("Plan and coordinate agent work"),
-                        MenuAction::new("draft", "Draft")
+                            .description(tr("Plan and coordinate agent work")),
+                        MenuAction::new("draft", tr("Draft"))
                             .icon("circle-dashed-hi")
-                            .description("Save this message without starting the agent")
+                            .description(tr("Save this message without starting the agent"))
                             .disabled(self.busy || self.follow_ups.state.draft.is_some()),
                     ]
                     .into_iter()
@@ -2572,15 +2577,15 @@ impl Conversation {
                         action.checked(checked).into()
                     }),
                 );
-                ("Add to message", items, 250., MenuStyle::Composer)
+                (tr("Add to message"), items, 250., MenuStyle::Composer)
             }
             ComposerMenu::GitActions => (
-                "Git actions",
+                tr("Git actions"),
                 self.git_action_menu_items(cx),
                 250.,
                 MenuStyle::Composer,
             ),
-            // ModelPicker: a "Model" row whose flyout lists the models.
+            // ModelPicker: a tr("Model") row whose flyout lists the models.
             ComposerMenu::Model => {
                 let list = cx.new(|cx| {
                     let hidden = cx
@@ -2616,7 +2621,7 @@ impl Conversation {
                     Vec::new()
                 };
                 items.push(
-                    MenuAction::new("model", "Model")
+                    MenuAction::new("model", tr("Model"))
                         .value_image(provider.id())
                         .value(self.model_info().map_or_else(
                             || model_name(provider, self.model.as_deref()),
@@ -2633,17 +2638,17 @@ impl Conversation {
                         })
                         .into(),
                 );
-                ("Model and settings", items, 250., MenuStyle::Settings)
+                (tr("Model and settings"), items, 250., MenuStyle::Settings)
             }
             ComposerMenu::Recent => (
-                "Recently used models",
+                tr("Recently used models"),
                 self.recent_model_items(cx),
                 250.,
                 MenuStyle::Recent,
             ),
             ComposerMenu::Access => {
                 let items = self.mono_access_options();
-                ("Access", items, 288., MenuStyle::Access)
+                (tr("Access"), items, 288., MenuStyle::Access)
             }
             ComposerMenu::Setting(ix) => self.mono_setting_menu(ix),
         }
@@ -2843,7 +2848,7 @@ impl Conversation {
             .child(self.background_shelf(window, cx))
             .child(self.message_queue(window, cx))
             .children(if self.is_remote() { None } else { self.auth_notice(cx) })
-            .when(self.settings.worktree_removed,|d|d.child(div().mb_2().p_3().rounded_lg().border_1().border_color(content(0.1)).flex().items_center().gap_3().text_size(px(12.)).child(div().flex_1().child("Worktree deleted. Select a branch or worktree to continue this conversation.")).child(tool_pill("reattach-worktree","Select worktree").child("Select worktree").on_click(cx.listener(|this,_,window,cx|this.open_git(GitMode::Worktree,window,cx))))))
+            .when(self.settings.worktree_removed,|d|d.child(div().mb_2().p_3().rounded_lg().border_1().border_color(content(0.1)).flex().items_center().gap_3().text_size(px(12.)).child(div().flex_1().child(tr("Worktree deleted. Select a branch or worktree to continue this conversation."))).child(tool_pill("reattach-worktree",tr("Select worktree")).child(tr("Select worktree")).on_click(cx.listener(|this,_,window,cx|this.open_git(GitMode::Worktree,window,cx))))))
             .when_some(self.settings.handoff.clone(), |d, handoff| {
                 d.child(
                     div()
@@ -2858,12 +2863,12 @@ impl Conversation {
                         .text_size(px(12.))
                         .text_color(content(0.7))
                         .child(icon("response-handoff", 14.))
-                        .child(div().min_w_0().flex_1().child(format!(
-                            "Handoff from {} · Add your next instruction below",
-                            Kind::from_id(&handoff.from).label()
+                        .child(div().min_w_0().flex_1().child(tr_fmt(
+                            "Handoff from {provider} · Add your next instruction below",
+                            &[("provider", &Kind::from_id(&handoff.from).label())],
                         )))
                         .child(
-                            tool_pill("dismiss-handoff", "Dismiss handoff")
+                            tool_pill("dismiss-handoff", tr("Dismiss handoff"))
                                 .child(icon("close", 12.))
                                 .on_click(cx.listener(|this, _, _, cx| {
                                     this.settings.handoff = None;
@@ -2942,7 +2947,7 @@ impl Conversation {
                             .px_2()
                             .pb(px(10.))
                             .child(
-                                tool_pill("composer-add", "Add files or choose a mode")
+                                tool_pill("composer-add", tr("Add files or choose a mode"))
                                     .aria_expanded(self.menu_is(ComposerMenu::Add))
                                     .when(self.menu_is(ComposerMenu::Add), |d| d.bg(content(0.2)))
                                     .child(self.add_anchor.probe())
@@ -2969,7 +2974,7 @@ impl Conversation {
                                     .items_center()
                                     .gap_1()
                                     .child(
-                                        tool_pill("composer-model", "Model")
+                                        tool_pill("composer-model", tr("Model"))
                                             .min_w_0()
                                             .max_w(px(220.))
                                             .flex_shrink(1.)
@@ -2979,7 +2984,7 @@ impl Conversation {
                                                 self.model_label(),
                                                 trigger_effort
                                                     .as_ref()
-                                                    .map(|effort| format!(", effort {effort}"))
+                                                    .map(|effort| tr_fmt(", effort {effort}", &[("effort", &effort)]))
                                                     .unwrap_or_default()
                                             ))
                                             .child(self.model_anchor.probe())
@@ -3013,10 +3018,10 @@ impl Conversation {
                                     )
                                     .children(controls)
                                     .child(
-                                        tool_pill("composer-access", "Access")
-                                            .aria_label(format!(
-                                                "Access, {}",
-                                                self.settings.access.label()
+                                        tool_pill("composer-access", tr("Access"))
+                                            .aria_label(tr_fmt(
+                                                "Access, {access}",
+                                                &[("access", &tr(self.settings.access.label()))],
                                             ))
                                             .aria_expanded(self.menu_is(ComposerMenu::Access))
                                             .child(self.access_anchor.probe())
@@ -3045,7 +3050,7 @@ impl Conversation {
                                                     },
                                                 ),
                                             )
-                                            .child(pill_label(self.settings.access.label()))
+                                            .child(pill_label(tr(self.settings.access.label())))
                                             .child(icon("chevron-down", 12.)),
                                     ),
                             )
@@ -3066,11 +3071,11 @@ impl Conversation {
             self.git.as_ref().is_some_and(|s| s.linked) || self.settings.worktree_cwd.is_some();
         let new = draft && self.settings.new_worktree;
         let label = if new {
-            "New worktree"
+            tr("New worktree")
         } else if linked {
-            "Worktree"
+            tr("Worktree")
         } else {
-            "Current checkout"
+            tr("Current checkout")
         };
         let enabled = !self.busy && !self.preparing_worktree && self.git.is_some();
         // Still reading git is not unavailable: don't dim, then brighten.
@@ -3085,7 +3090,7 @@ impl Conversation {
                 },
                 label.into(),
             )
-            .aria_label(format!("Workspace {label}"))
+            .aria_label(tr_fmt("Workspace {label}", &[("label", &label)]))
             .aria_expanded(self.menu_is(ComposerMenu::Workspace))
             .child(self.workspace_anchor.probe())
             .when(dimmed, |d| d.opacity(0.4))
@@ -3101,7 +3106,7 @@ impl Conversation {
             div()
                 .id("composer-workspace")
                 .role(Role::Group)
-                .aria_label(format!("Workspace {label}"))
+                .aria_label(tr_fmt("Workspace {label}", &[("label", &label)]))
                 .flex_shrink_0()
                 .h(px(24.))
                 .ml(px(-6.))
@@ -3126,13 +3131,23 @@ impl Conversation {
         let ratio = self.context.and_then(|usage| usage.ratio());
         let show_context = ratio.is_some() || draft;
         let headline = ratio
-            .map(|r| format!("{:.0}% context used", r * 100.))
-            .unwrap_or_else(|| "No context used yet".into());
+            .map(|r| {
+                tr_fmt(
+                    "{percent}% context used",
+                    &[("percent", &format!("{:.0}", r * 100.))],
+                )
+            })
+            .unwrap_or_else(|| tr("No context used yet").into());
         let detail = self.context.map(|usage| {
-            format!(
-                "{} / {} tokens",
-                natsu_core::context::format_tokens(usage.used),
-                natsu_core::context::format_tokens(usage.window.unwrap_or(0))
+            tr_fmt(
+                "{used} / {window} tokens",
+                &[
+                    ("used", &natsu_core::context::format_tokens(usage.used)),
+                    (
+                        "window",
+                        &natsu_core::context::format_tokens(usage.window.unwrap_or(0)),
+                    ),
+                ],
             )
         });
         div()
@@ -3146,7 +3161,7 @@ impl Conversation {
             .when_some(branch, |d, branch| {
                 let detached = !new && self.git.as_ref().is_some_and(|s| s.detached);
                 let label = if detached {
-                    format!("detached {branch}")
+                    tr_fmt("detached {branch}", &[("branch", &branch)])
                 } else {
                     branch
                 };
@@ -3154,7 +3169,11 @@ impl Conversation {
                     bar_trigger("composer-branch", "git-branch", label.clone().into())
                         .aria_label(format!(
                             "{} {label}",
-                            if new { "Worktree base" } else { "Branch" }
+                            if new {
+                                tr("Worktree base")
+                            } else {
+                                tr("Branch")
+                            }
                         ))
                         .aria_description(self.execution_cwd().to_owned())
                         .max_w(px(256.))
@@ -3183,10 +3202,10 @@ impl Conversation {
                             div()
                                 .id("cancel-edit-last-turn")
                                 .role(Role::Button)
-                                .aria_label("Cancel editing")
+                                .aria_label(tr("Cancel editing"))
                                 .text_size(px(11.))
                                 .text_color(content(0.6))
-                                .child("Cancel edit")
+                                .child(tr("Cancel edit"))
                                 .on_click(cx.listener(|this, _, _, cx| {
                                     this.cancel_edit_last_turn(cx);
                                 })),
@@ -3285,11 +3304,11 @@ impl Conversation {
         // empty or stopping, it rests as a square.
         let face = crate::send_morph::Face {
             label: if busy {
-                "Stop"
+                tr("Stop")
             } else if draft {
-                "Save draft"
+                tr("Save draft")
             } else {
-                follow_up.map_or("Send", |(label, _)| label)
+                follow_up.map_or(tr("Send"), |(label, _)| label)
             },
             glyph: follow_up.map_or("send", |(_, glyph)| glyph),
             stop: busy,
@@ -3416,9 +3435,12 @@ impl Conversation {
                                 .line_height(px(28.))
                                 .text_color(content(1.))
                                 .truncate()
-                                .child(format!(
-                                    "What should we work on in {}?",
-                                    self.project_appearance.label(&self.summary.cwd)
+                                .child(tr_fmt(
+                                    "What should we work on in {project}?",
+                                    &[(
+                                        "project",
+                                        &self.project_appearance.label(&self.summary.cwd),
+                                    )],
                                 )),
                         )
                     })
@@ -3499,13 +3521,13 @@ pub(crate) fn preferred_effort(provider: &str, cx: &gpui::App) -> Option<String>
 }
 pub(crate) fn effort_name(value: &str) -> String {
     match value {
-        "default" => "Default",
-        "none" => "None",
-        "minimal" => "Minimal",
-        "low" => "Low",
-        "medium" => "Medium",
-        "high" => "High",
-        "xhigh" => "Extra High",
+        "default" => tr("Default"),
+        "none" => tr("None"),
+        "minimal" => tr("Minimal"),
+        "low" => tr("Low"),
+        "medium" => tr("Medium"),
+        "high" => tr("High"),
+        "xhigh" => tr("Extra High"),
         "max" => "Max",
         "ultra" => "Ultra",
         "ultracode" => "Ultracode",

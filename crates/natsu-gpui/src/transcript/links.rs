@@ -3,6 +3,7 @@ use super::*;
 use crate::popover::{Menu, MenuAction, MenuEvent, MenuItem, menu_popover};
 use gpui::{AnyElement, Entity, Point, Subscription};
 use natsu_core::files;
+use natsu_core::i18n::{tr, tr_fmt};
 use std::path::Path;
 
 #[derive(Default)]
@@ -51,26 +52,28 @@ impl Target {
     fn items(&self) -> Vec<MenuItem> {
         match self {
             Self::Web(_) => vec![
-                MenuAction::new("open-web", "Open Link").into(),
-                MenuAction::new("copy-link", "Copy Link Address").into(),
+                MenuAction::new("open-web", tr("Open Link")).into(),
+                MenuAction::new("copy-link", tr("Copy Link Address")).into(),
             ],
             Self::File { base, .. } => {
                 let reveal = if cfg!(target_os = "macos") {
-                    "Reveal in Finder"
+                    tr("Reveal in Finder")
                 } else if cfg!(target_os = "windows") {
-                    "Reveal in File Explorer"
+                    tr("Reveal in File Explorer")
                 } else {
-                    "Open Containing Folder"
+                    tr("Open Containing Folder")
                 };
                 let mut items = vec![
-                    MenuAction::new("open-natsu", "Open in Natsu").into(),
-                    MenuAction::new("open-default", "Open in Default App").into(),
+                    MenuAction::new("open-natsu", tr("Open in Natsu")).into(),
+                    MenuAction::new("open-default", tr("Open in Default App")).into(),
                     MenuAction::new("reveal", reveal).into(),
                     MenuItem::Separator,
-                    MenuAction::new("copy-path", "Copy Path").into(),
+                    MenuAction::new("copy-path", tr("Copy Path")).into(),
                 ];
                 if base.is_some() {
-                    items.push(MenuAction::new("copy-relative-path", "Copy Relative Path").into());
+                    items.push(
+                        MenuAction::new("copy-relative-path", tr("Copy Relative Path")).into(),
+                    );
                 }
                 items
             }
@@ -96,9 +99,9 @@ impl TranscriptView {
             window.focus(focus, cx);
         }
         let label = if matches!(&target, Target::File { .. }) {
-            "File link actions"
+            tr("File link actions")
         } else {
-            "Link actions"
+            tr("Link actions")
         };
         let menu = cx.new(|cx| Menu::new(label, target.items(), window, cx));
         let events = cx.subscribe_in(
@@ -163,7 +166,10 @@ impl TranscriptView {
                             } else {
                                 "complete the file action"
                             };
-                            this.links.error = Some(format!("Could not {action}: {error}"));
+                            this.links.error = Some(tr_fmt(
+                                "Could not {action}: {error}",
+                                &[("action", &tr(action)), ("error", &error)],
+                            ));
                             cx.notify();
                         });
                     }
@@ -208,10 +214,10 @@ impl TranscriptView {
                             div()
                                 .id("dismiss-link-error")
                                 .role(Role::Button)
-                                .aria_label("Dismiss file action error")
+                                .aria_label(tr("Dismiss file action error"))
                                 .flex_shrink_0()
                                 .cursor_pointer()
-                                .child("Dismiss")
+                                .child(tr("Dismiss"))
                                 .on_click(cx.listener(|this, _, _, cx| {
                                     this.links.error = None;
                                     cx.notify();

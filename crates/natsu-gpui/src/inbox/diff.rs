@@ -1,6 +1,7 @@
 //! Provider patches use the same virtualized native review as local changes.
 use crate::diff_view::DiffFile;
 use gpui::SharedString;
+use natsu_core::i18n::tr;
 use natsu_core::{
     diff::{Block, Line, LineKind},
     inbox::Diff,
@@ -100,7 +101,7 @@ pub(super) fn models(diff: &Diff) -> Vec<DiffFile> {
                 binary,
                 too_large: diff.truncated && section.is_empty(),
                 empty_message: if section.is_empty() && !diff.truncated {
-                    Some("No textual diff".into())
+                    Some(tr("No textual diff").into())
                 } else {
                     None
                 },

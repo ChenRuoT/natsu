@@ -6,6 +6,7 @@ use super::*;
 use crate::pane_motion::PaneSlide;
 use crate::right_panel::{DIFF_ADD, DIFF_DEL, format_integer, tabular};
 use gpui::rgb;
+use natsu_core::i18n::{tr, tr_fmt};
 use std::{cell::RefCell, time::Instant};
 
 const SQUARES: usize = 5;
@@ -74,9 +75,14 @@ impl Conversation {
             return None;
         };
         let open = self.changes.open;
-        let label: SharedString = format!(
-            "{count} changed {}: {additions} additions, {deletions} deletions",
-            if count == 1 { "file" } else { "files" }
+        let label: SharedString = tr_fmt(
+            "{count} changed {kind}: {additions} additions, {deletions} deletions",
+            &[
+                ("count", &count),
+                ("kind", &if count == 1 { tr("file") } else { tr("files") }),
+                ("additions", &additions),
+                ("deletions", &deletions),
+            ],
         )
         .into();
         let squares = squares(additions, deletions);

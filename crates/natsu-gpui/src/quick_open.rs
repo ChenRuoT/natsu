@@ -4,6 +4,7 @@ use gpui::{
     Context, Entity, EventEmitter, FocusHandle, Focusable, Role, Subscription, Window, div,
     prelude::*, px,
 };
+use natsu_core::i18n::tr;
 use natsu_core::{composer, files::ProjectFile};
 use std::sync::{
     Arc,
@@ -81,8 +82,8 @@ impl QuickOpen {
     pub(crate) fn new(cwd: String, palette: bool, cx: &mut Context<Self>) -> Self {
         let search = cx.new(|cx| {
             input::Input::field(
-                "Go to file or run a command",
-                "Search files by name…  (> for commands)",
+                tr("Go to file or run a command"),
+                tr("Search files by name…  (> for commands)"),
                 content(0.35),
                 cx,
             )
@@ -137,7 +138,7 @@ impl QuickOpen {
                         (
                             score,
                             Row {
-                                label: (*label).into(),
+                                label: tr(label).into(),
                                 detail: if cfg!(target_os = "macos") {
                                     (*hint).into()
                                 } else {
@@ -236,7 +237,7 @@ impl Render for QuickOpen {
         div()
             .id("quick-open")
             .role(Role::Dialog)
-            .aria_label("Go to file or run a command")
+            .aria_label(tr("Go to file or run a command"))
             .w_full()
             .flex()
             .flex_col()
@@ -272,7 +273,7 @@ impl Render for QuickOpen {
                 div()
                     .id("quick-open-results")
                     .role(Role::ListBox)
-                    .aria_label("Results")
+                    .aria_label(tr("Results"))
                     .p_1p5()
                     .max_h(px(380.))
                     .overflow_y_scroll()
@@ -286,9 +287,11 @@ impl Render for QuickOpen {
                                 .text_size(px(13.))
                                 .text_color(content(0.45))
                                 .child(if self.loading {
-                                    "Loading project files…".to_owned()
+                                    tr("Loading project files…").to_owned()
                                 } else {
-                                    self.error.clone().unwrap_or_else(|| "No results".into())
+                                    self.error
+                                        .clone()
+                                        .unwrap_or_else(|| tr("No results").into())
                                 }),
                         )
                     }),
@@ -301,7 +304,7 @@ impl Render for QuickOpen {
                     .border_color(content(0.07))
                     .text_size(px(10.))
                     .text_color(content(0.35))
-                    .child("↑ ↓ navigate    ↵ open    Esc close    > commands"),
+                    .child(tr("↑ ↓ navigate    ↵ open    Esc close    > commands")),
             )
     }
 }

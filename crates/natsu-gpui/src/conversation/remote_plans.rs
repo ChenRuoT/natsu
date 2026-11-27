@@ -1,5 +1,6 @@
 //! Host-owned plan previews and their read-only Markdown reader.
 use super::*;
+use natsu_core::i18n::tr;
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 use std::collections::HashMap;
@@ -22,9 +23,9 @@ impl Plan {
     }
     pub(crate) fn build_label(&self) -> &'static str {
         match self.status.as_str() {
-            "building" => "Building…",
-            "built" => "Built",
-            _ => "Build",
+            "building" => tr("Building…"),
+            "built" => tr("Built"),
+            _ => tr("Build"),
         }
     }
     pub(crate) fn title(&self) -> String {
@@ -45,7 +46,7 @@ impl Plan {
                     .find(|line| !line.is_empty() && !line.starts_with("```") && *line != "---")
                     .map(str::to_owned)
             })
-            .unwrap_or_else(|| "Plan".into())
+            .unwrap_or_else(|| tr("Plan").into())
             .chars()
             .take(80)
             .collect()
@@ -151,13 +152,13 @@ impl Conversation {
             || self.stopping
         {
             self.status =
-                "Reconnect and wait for the remote turn to finish before building this plan."
+                tr("Reconnect and wait for the remote turn to finish before building this plan.")
                     .into();
             cx.notify();
             return;
         }
         if !self.remote_state.capabilities.contains("sessions.plan") {
-            self.status = "Update Natsu Host in Connections settings to build plans.".into();
+            self.status = tr("Update Natsu Host in Connections settings to build plans.").into();
             cx.notify();
             return;
         }
@@ -192,7 +193,7 @@ impl Conversation {
             .plans
             .get(&id)
             .map(Plan::title)
-            .unwrap_or_else(|| "Plan".into());
+            .unwrap_or_else(|| tr("Plan").into());
         let mut fill = pane_fill();
         fill.a = 1.;
         Some(
@@ -218,11 +219,11 @@ impl Conversation {
                         .child(
                             crate::settings::widgets::secondary_button(
                                 "remote-reader-build",
-                                "Build approved plan",
+                                tr("Build approved plan"),
                                 false,
                                 !build,
                             )
-                            .child("Build")
+                            .child(tr("Build"))
                             .on_click(cx.listener(
                                 move |this, _, _, cx| {
                                     if build {
@@ -232,7 +233,7 @@ impl Conversation {
                             )),
                         )
                         .child(
-                            icon_button("close-remote-plan", "Close plan", "x").on_click(
+                            icon_button("close-remote-plan", tr("Close plan"), "x").on_click(
                                 cx.listener(|this, _, _, cx| {
                                     this.remote_plans.reader = None;
                                     cx.notify();

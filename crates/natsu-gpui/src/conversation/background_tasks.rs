@@ -2,6 +2,7 @@
 //! commands or subagents still going, they sit on the composer's ledge above
 //! the message queue until they finish or the agent picks the thread back up.
 use super::*;
+use natsu_core::i18n::{tr, tr_fmt};
 use natsu_core::provider::BackgroundTask;
 
 const ROW_HEIGHT: f32 = 38.;
@@ -59,9 +60,9 @@ impl Conversation {
         let collapsible = count > 1;
         let collapsed = collapsible && self.background.collapsed;
         let title = if count == 1 {
-            "Running in background".to_owned()
+            tr("Running in background").to_owned()
         } else {
-            format!("{count} tasks running in background")
+            tr_fmt("{count} tasks running in background", &[("count", &count)])
         };
         let agent = Kind::from_id(&self.summary.provider).label();
         let header = div()
@@ -113,7 +114,7 @@ impl Conversation {
                             .collect::<Vec<_>>()
                             .join(" · ")
                     } else {
-                        format!("{agent} continues when they finish")
+                        tr_fmt("{agent} continues when they finish", &[("agent", &agent)])
                     }),
             )
             .when_some(single, |d, task| d.child(live_clock(task)))
@@ -148,7 +149,7 @@ impl Conversation {
             }));
         let card = composer_shelf::card("background-tasks-card", self.classic_layout)
             .role(Role::Group)
-            .aria_label("Background tasks")
+            .aria_label(tr("Background tasks"))
             .child(header)
             .when(!collapsed && single.is_none(), |d| d.child(rows));
         composer_shelf::shelf("background-tasks")
@@ -166,7 +167,10 @@ fn background_row(task: &BackgroundTask) -> gpui::Stateful<gpui::Div> {
             move || format!("background-task-{id}")
         })
         .role(Role::Group)
-        .aria_label(format!("Background task: {}", task.description))
+        .aria_label(tr_fmt(
+            "Background task: {description}",
+            &[("description", &task.description)],
+        ))
         .min_h(px(ROW_HEIGHT))
         .flex()
         .items_center()

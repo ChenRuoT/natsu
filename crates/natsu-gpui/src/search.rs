@@ -10,6 +10,7 @@ use gpui::{
     MouseButton, MouseMoveEvent, Pixels, Point, Render, Role, ScrollHandle, StyledText,
     Subscription, Task, Window, canvas, div, fill, point, prelude::*, px, relative, size,
 };
+use natsu_core::i18n::{tr, tr_fmt};
 use natsu_core::{
     search::{self, Hit, Scope, Target},
     store::Session,
@@ -93,9 +94,13 @@ impl SearchView {
     ) -> Self {
         let input = cx.new(|cx| {
             if sources.panel {
-                Input::command_field("Search", "Search conversations, files, projects…", cx)
+                Input::command_field(
+                    tr("Search"),
+                    tr("Search conversations, files, projects…"),
+                    cx,
+                )
             } else {
-                Input::field("Search", "Search everything...", content(0.4), cx)
+                Input::field(tr("Search"), tr("Search everything..."), content(0.4), cx)
             }
         });
         let changed = cx.subscribe(&input, |this, _, _: &input::Changed, cx| {
@@ -492,7 +497,7 @@ fn empty_state() -> AnyElement {
                         .max_w(px(320.))
                         .text_center()
                         .text_color(content(0.45))
-                        .child("Find files, conversations, messages, and projects."),
+                        .child(tr("Find files, conversations, messages, and projects.")),
                 ),
         )
         .into_any_element()
@@ -500,13 +505,13 @@ fn empty_state() -> AnyElement {
 /// The heading a result sits under; consecutive hits share one.
 fn section(target: &Target, suggesting: bool) -> &'static str {
     match (target, suggesting) {
-        (Target::Conversation(_), true) => "Recent conversations",
-        (Target::Conversation(_), false) => "Conversations",
-        (Target::Message { .. }, _) => "Messages",
-        (Target::File { location: None, .. }, true) => "Recent files",
-        (Target::File { location: None, .. }, false) => "Files",
-        (Target::File { .. }, _) => "In file contents",
-        (Target::Project(_), _) => "Projects",
+        (Target::Conversation(_), true) => tr("Recent conversations"),
+        (Target::Conversation(_), false) => tr("Conversations"),
+        (Target::Message { .. }, _) => tr("Messages"),
+        (Target::File { location: None, .. }, true) => tr("Recent files"),
+        (Target::File { location: None, .. }, false) => tr("Files"),
+        (Target::File { .. }, _) => tr("In file contents"),
+        (Target::Project(_), _) => tr("Projects"),
     }
 }
 fn keycap(text: impl Into<gpui::SharedString>) -> gpui::Div {
@@ -868,7 +873,7 @@ impl SearchView {
             .id("app-search")
             .key_context("Workspace")
             .debug_selector(|| "app-search".into())
-            .aria_label("Search")
+            .aria_label(tr("Search"))
             .size_full()
             .min_h_0()
             .min_w_0()
@@ -952,7 +957,7 @@ impl SearchView {
                                     .debug_selector(move || format!("app-search-scope-{ix}"))
                                     .role(Role::Button)
                                     .aria_label(label)
-                                    .child(label)
+                                    .child(tr(label))
                                     .aria_selected(self.scope == scope)
                                     .rounded_md()
                                     .px_2()
@@ -974,7 +979,7 @@ impl SearchView {
                 div()
                     .id("app-search-results")
                     .role(Role::ListBox)
-                    .aria_label("Search results")
+                    .aria_label(tr("Search results"))
                     .flex_1()
                     .min_h_0()
                     .p_1p5()
@@ -987,7 +992,7 @@ impl SearchView {
                                 .py_1()
                                 .text_size(px(11.))
                                 .text_color(content(0.45))
-                                .child("Results limited to the first matches"),
+                                .child(tr("Results limited to the first matches")),
                         )
                     })
                     .children(rows)
@@ -998,7 +1003,11 @@ impl SearchView {
                                 .py_1p5()
                                 .text_size(px(12.))
                                 .text_color(content(0.5))
-                                .child(self.error.clone().unwrap_or_else(|| "No results".into())),
+                                .child(
+                                    self.error
+                                        .clone()
+                                        .unwrap_or_else(|| tr("No results").into()),
+                                ),
                         )
                     })
                     .into_any_element()
@@ -1014,7 +1023,7 @@ impl SearchView {
                     .pt_1()
                     .text_size(px(11.))
                     .text_color(content(0.4))
-                    .child("Showing the first matches")
+                    .child(tr("Showing the first matches"))
                     .into_any_element(),
             );
         }
@@ -1047,7 +1056,7 @@ impl SearchView {
             .key_context("Workspace")
             .debug_selector(|| "app-search".into())
             .role(Role::Dialog)
-            .aria_label("Search")
+            .aria_label(tr("Search"))
             .w_full()
             .flex()
             .flex_col()
@@ -1160,7 +1169,7 @@ impl SearchView {
                                     } else {
                                         content(0.45)
                                     }))
-                                    .child(label)
+                                    .child(tr(label))
                                     .on_click(cx.listener(move |this, _, _, cx| {
                                         this.select_scope(scope, cx);
                                     }))
@@ -1171,7 +1180,7 @@ impl SearchView {
                 div()
                     .id("app-search-results")
                     .role(Role::ListBox)
-                    .aria_label("Search results")
+                    .aria_label(tr("Search results"))
                     .h(px(400.))
                     .px(px(8.))
                     .py(px(6.))
@@ -1183,13 +1192,13 @@ impl SearchView {
                     .when(self.hits.is_empty() && !(loading && !suggesting), |d| {
                         d.child(empty_message(if suggesting {
                             match self.scope {
-                                Scope::Projects => "No projects yet".into(),
-                                _ => "Type to search conversations, files and projects".into(),
+                                Scope::Projects => tr("No projects yet").into(),
+                                _ => tr("Type to search conversations, files and projects").into(),
                             }
                         } else {
-                            self.error
-                                .clone()
-                                .unwrap_or_else(|| format!("No results for “{}”", self.query))
+                            self.error.clone().unwrap_or_else(|| {
+                                tr_fmt("No results for “{query}”", &[("query", &self.query)])
+                            })
                         }))
                     }),
             )
@@ -1205,14 +1214,20 @@ impl SearchView {
                     .gap(px(14.))
                     .text_size(px(11.))
                     .text_color(content(0.45))
-                    .child(hint(&["↑", "↓"], "Navigate"))
-                    .child(hint(&["↵"], "Open"))
-                    .child(hint(&["⇥"], "Switch scope"))
+                    .child(hint(&["↑", "↓"], tr("Navigate")))
+                    .child(hint(&["↵"], tr("Open")))
+                    .child(hint(&["⇥"], tr("Switch scope")))
                     .child(div().flex_1())
                     .when(!suggesting && count > 0, |d| {
-                        d.child(format!(
-                            "{count} result{}",
-                            if count == 1 { "" } else { "s" }
+                        d.child(tr_fmt(
+                            "{count} {results}",
+                            &[
+                                ("count", &count),
+                                (
+                                    "results",
+                                    &tr(if count == 1 { "result" } else { "results" }),
+                                ),
+                            ],
                         ))
                     }),
             )

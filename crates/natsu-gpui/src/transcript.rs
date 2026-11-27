@@ -1,3 +1,4 @@
+use natsu_core::i18n::{tr, tr_fmt};
 pub(crate) mod attachments;
 pub(crate) mod burst;
 pub(crate) mod dates;
@@ -99,13 +100,17 @@ fn work_title(model: Option<&str>, elapsed_ms: Option<u64>, live: bool) -> Strin
     let model = model.map(str::trim).filter(|model| !model.is_empty());
     let verb = match (live, model.is_some()) {
         (true, true) => "working",
-        (true, false) => "Working",
+        (true, false) => tr("Working"),
         (false, true) => "worked",
-        (false, false) => "Worked",
+        (false, false) => tr("Worked"),
     };
     let title = model.map_or_else(|| verb.to_owned(), |model| format!("{model} {verb}"));
     let Some(ms) = elapsed_ms else {
-        return if live { format!("{title}…") } else { title };
+        return if live {
+            tr_fmt("{title}…", &[("title", &title)])
+        } else {
+            title
+        };
     };
     let seconds = ms.saturating_add(500).saturating_div(1000).max(1);
     let duration = if seconds < 60 {
@@ -115,7 +120,10 @@ fn work_title(model: Option<&str>, elapsed_ms: Option<u64>, live: bool) -> Strin
     } else {
         format!("{}m {}s", seconds / 60, seconds % 60)
     };
-    format!("{title} for {duration}")
+    tr_fmt(
+        "{title} for {duration}",
+        &[("title", &title), ("duration", &duration)],
+    )
 }
 
 struct Message {
@@ -217,7 +225,7 @@ const PROMPT_TEXT_SIZE: Pixels = px(14.);
 const PROMPT_BUBBLE_MAX: Pixels = px(576.);
 /// Horizontal padding on both sides together.
 const PROMPT_PAD_X: Pixels = px(24.);
-/// Text width that leaves room for "Show less" on a blank last chunk.
+/// Text width that leaves room for tr("Show less") on a blank last chunk.
 const PROMPT_DISCLOSURE_MIN: Pixels = px(72.);
 /// `.turn-actions-hover`'s 120ms opacity transition, in seconds.
 const HOVER_FADE: f32 = 0.12;
@@ -532,15 +540,15 @@ pub(crate) fn mono_work_label(source: &[Row], group: usize) -> String {
     }
     let Some(tool) = latest.and_then(|at| serde_json::from_str::<ToolCall>(&message(at)).ok())
     else {
-        return THINKING[thought.saturating_sub(1) % THINKING.len()].into();
+        return tr(THINKING[thought.saturating_sub(1) % THINKING.len()]).into();
     };
     if tool.is_milestone() {
         return if tool.state != ToolState::Running {
-            "Thinking…".into()
+            tr("Thinking…").into()
         } else if tool.is_handoff() {
             format!("{}…", tool.summary().0)
         } else {
-            "Compacting context…".into()
+            tr("Compacting context…").into()
         };
     }
     tool_status(&tool)
@@ -584,27 +592,27 @@ fn tool_status(tool: &ToolCall) -> String {
             }
             command_status(shown.command.as_deref().unwrap_or("")).into()
         }
-        "Edit" | "Write" => "Editing file…".into(),
-        "Read" => "Reading file…".into(),
-        "Search" => "Searching the web…".into(),
-        "Find" | "List" | "Glob" | "Grep" => "Exploring project…".into(),
-        "Agent" | "Task" => "Running agent…".into(),
-        _ => mcp_status(&tool.name).unwrap_or_else(|| "Using tool…".into()),
+        "Edit" | "Write" => tr("Editing file…").into(),
+        "Read" => tr("Reading file…").into(),
+        "Search" => tr("Searching the web…").into(),
+        "Find" | "List" | "Glob" | "Grep" => tr("Exploring project…").into(),
+        "Agent" | "Task" => tr("Running agent…").into(),
+        _ => mcp_status(&tool.name).unwrap_or_else(|| tr("Using tool…").into()),
     }
 }
 /// A status for a shell command the model did not describe.
 fn command_status(command: &str) -> &'static str {
     let mut words = command.split_whitespace();
     match (words.next().unwrap_or(""), words.next().unwrap_or("")) {
-        ("gh", "pr") => "Looking at pull requests…",
-        ("gh", "issue") => "Looking at issues…",
-        ("gh", "run" | "workflow") => "Checking CI…",
-        ("gh", "search" | "repo") => "Searching GitHub…",
-        ("gh", _) => "Checking GitHub…",
-        ("git", _) => "Checking git…",
-        ("curl" | "wget", _) => "Fetching from the web…",
-        ("npm" | "bun" | "pnpm" | "yarn" | "cargo" | "make", _) => "Running a build…",
-        _ => "Running command…",
+        ("gh", "pr") => tr("Looking at pull requests…"),
+        ("gh", "issue") => tr("Looking at issues…"),
+        ("gh", "run" | "workflow") => tr("Checking CI…"),
+        ("gh", "search" | "repo") => tr("Searching GitHub…"),
+        ("gh", _) => tr("Checking GitHub…"),
+        ("git", _) => tr("Checking git…"),
+        ("curl" | "wget", _) => tr("Fetching from the web…"),
+        ("npm" | "bun" | "pnpm" | "yarn" | "cargo" | "make", _) => tr("Running a build…"),
+        _ => tr("Running command…"),
     }
 }
 /// `mcp__github__search_repositories` → "Search repositories…".
@@ -1073,7 +1081,11 @@ impl TranscriptView {
                     response_actions::button(
                         turn,
                         "mono-copy-response",
-                        if copied { "Copied" } else { "Copy response" },
+                        if copied {
+                            tr("Copied")
+                        } else {
+                            tr("Copy response")
+                        },
                         if copied { "check" } else { "response-copy" },
                         false,
                     )
@@ -1101,11 +1113,11 @@ impl TranscriptView {
                         turn,
                         "mono-note-response",
                         if saved {
-                            "Saved to Notes"
+                            tr("Saved to Notes")
                         } else if pending {
-                            "Saving note…"
+                            tr("Saving note…")
                         } else {
-                            "Save as note"
+                            tr("Save as note")
                         },
                         if saved { "check" } else { "response-note" },
                         false,
@@ -1127,7 +1139,7 @@ impl TranscriptView {
                     response_actions::button(
                         turn,
                         "mono-quote-response",
-                        "Quote response",
+                        tr("Quote response"),
                         "comment-add",
                         false,
                     )
@@ -1143,7 +1155,7 @@ impl TranscriptView {
             response_actions::button(
                 turn,
                 "mono-response-activity",
-                "Show activity",
+                tr("Show activity"),
                 "list-bullet",
                 false,
             )
@@ -1212,7 +1224,7 @@ impl TranscriptView {
         Some((
             group,
             if typing {
-                "Typing…".into()
+                tr("Typing…").into()
             } else {
                 mono_work_label(&self.source, group)
             },
@@ -1276,11 +1288,11 @@ impl TranscriptView {
                                 )
                             })
                             .when(turn < self.source.len(), |d| {
-                                d.role(Role::Button).aria_label("Show activity").on_click(
-                                    cx.listener(move |_, _, _, cx| {
+                                d.role(Role::Button)
+                                    .aria_label(tr("Show activity"))
+                                    .on_click(cx.listener(move |_, _, _, cx| {
                                         cx.emit(MonoResponseAction::Activity(turn))
-                                    }),
-                                )
+                                    }))
                             }),
                     )
             })
@@ -1316,7 +1328,7 @@ impl TranscriptView {
                 .text_size(px(11. * scale))
                 .line_height(px(11. * scale))
                 .opacity(opacity)
-                .aria_label(format!("Reacted {emoji}"))
+                .aria_label(tr_fmt("Reacted {emoji}", &[("emoji", &emoji)]))
                 .child(emoji.clone())
                 .into_any_element(),
         )
@@ -1360,7 +1372,11 @@ impl TranscriptView {
                 response_actions::button(
                     start,
                     "mono-copy-message",
-                    if copied { "Copied" } else { "Copy message" },
+                    if copied {
+                        tr("Copied")
+                    } else {
+                        tr("Copy message")
+                    },
                     if copied { "check" } else { "response-copy" },
                     false,
                 )
@@ -1388,7 +1404,7 @@ impl TranscriptView {
                         response_actions::button(
                             start,
                             "edit-last-message",
-                            "Edit last message",
+                            tr("Edit last message"),
                             "pencil",
                             false,
                         )
@@ -2032,7 +2048,7 @@ impl TranscriptView {
                                             message.id
                                         )))
                                         .role(Role::Alert)
-                                        .child(format!("Not sent · {error}")),
+                                        .child(tr_fmt("Not sent · {error}", &[("error", &error)])),
                                 )
                                 .child(
                                     div()
@@ -2045,7 +2061,7 @@ impl TranscriptView {
                                         .py(px(2.))
                                         .text_color(content(0.7))
                                         .hover(|s| s.bg(content(0.08)))
-                                        .child("Retry")
+                                        .child(tr("Retry"))
                                         .on_click(cx.listener(move |_, _, _, cx| {
                                             cx.emit(MonoResponseAction::Queue {
                                                 id: retry.clone(),
@@ -2064,7 +2080,7 @@ impl TranscriptView {
                                         .py(px(2.))
                                         .text_color(content(0.7))
                                         .hover(|s| s.bg(content(0.08)))
-                                        .child("Discard")
+                                        .child(tr("Discard"))
                                         .on_click(cx.listener(move |_, _, _, cx| {
                                             cx.emit(MonoResponseAction::Queue {
                                                 id: discard.clone(),
@@ -2082,7 +2098,11 @@ impl TranscriptView {
                         .max_w(px(COLUMN))
                         .min_w_0()
                         .px(px(COLUMN_PAD))
-                        .child(self.mono_header(self.source.len(), Some("Thinking…".into()), cx)),
+                        .child(self.mono_header(
+                            self.source.len(),
+                            Some(tr("Thinking…").into()),
+                            cx,
+                        )),
                 )
             })
             .into_any_element()
@@ -2201,7 +2221,11 @@ impl TranscriptView {
             .flex_shrink_0()
             .w(px(strip_width));
         if !output.is_empty() {
-            let copy_label = if copied { "Copied" } else { "Copy response" };
+            let copy_label = if copied {
+                tr("Copied")
+            } else {
+                tr("Copy response")
+            };
             let anchor = self
                 .action_anchors
                 .entry((turn, "copy"))
@@ -2250,11 +2274,11 @@ impl TranscriptView {
                     turn,
                     "response-note",
                     if saved {
-                        "Saved to Notes"
+                        tr("Saved to Notes")
                     } else if pending {
-                        "Saving note…"
+                        tr("Saving note…")
                     } else {
-                        "Save as note"
+                        tr("Save as note")
                     },
                     if saved { "check" } else { "response-note" },
                     false,
@@ -2282,13 +2306,13 @@ impl TranscriptView {
         for (action, label, glyph, kind) in [
             (
                 "handoff",
-                "Handoff",
+                tr("Handoff"),
                 "response-handoff",
                 natsu_core::response::TransferKind::Handoff,
             ),
             (
                 "opinion",
-                "Second opinion",
+                tr("Second opinion"),
                 "response-opinion",
                 natsu_core::response::TransferKind::SecondOpinion,
             ),
@@ -2329,7 +2353,7 @@ impl TranscriptView {
                 response_actions::button(
                     turn,
                     "response-metrics",
-                    "Turn metrics",
+                    tr("Turn metrics"),
                     "response-metrics",
                     false,
                 )
@@ -2374,39 +2398,57 @@ impl TranscriptView {
                     .id(("note-save-error", turn))
                     .role(Role::Alert)
                     .text_size(px(11.))
-                    .child(format!("Could not save note. {error}")),
+                    .child(tr_fmt("Could not save note. {error}", &[("error", &error)])),
             );
         }
         if let Some((hover_turn, action)) = self.hovered_action
             && hover_turn == turn
         {
             let (headline, detail) = match action {
-                "copy" => (if copied { "Copied" } else { "Copy response" }.into(), None),
-                "note" => (
-                    if saved {
-                        "Saved to Notes"
+                "copy" => (
+                    if copied {
+                        tr("Copied")
                     } else {
-                        "Save as note"
+                        tr("Copy response")
                     }
                     .into(),
                     None,
                 ),
-                "handoff" => ("Handoff".into(), None),
-                "opinion" => ("Second opinion".into(), None),
+                "note" => (
+                    if saved {
+                        tr("Saved to Notes")
+                    } else {
+                        tr("Save as note")
+                    }
+                    .into(),
+                    None,
+                ),
+                "handoff" => (tr("Handoff").into(), None),
+                "opinion" => (tr("Second opinion").into(), None),
                 _ => {
                     let metrics = metrics.unwrap_or_default();
                     let mut summary = Vec::new();
                     if let Some(hit) = metrics.cache_hit_percent {
-                        summary.push(format!("Cache hit {hit:.0}%"));
+                        summary.push(tr_fmt(
+                            "Cache hit {percent}%",
+                            &[("percent", &format!("{hit:.0}"))],
+                        ));
                     }
                     if info.duration_ms > 0 && metrics.output_tokens > 0 {
-                        summary.push(format!(
-                            "Output {:.0} tok/s",
-                            metrics.output_tokens as f64 / (info.duration_ms as f64 / 1000.)
+                        summary.push(tr_fmt(
+                            "Output {rate} tok/s",
+                            &[(
+                                "rate",
+                                &format!(
+                                    "{:.0}",
+                                    metrics.output_tokens as f64
+                                        / (info.duration_ms as f64 / 1000.)
+                                ),
+                            )],
                         ));
                     }
                     let headline = if summary.is_empty() {
-                        "Turn tokens".into()
+                        tr("Turn tokens").into()
                     } else {
                         summary.join(" · ")
                     };
@@ -2626,7 +2668,7 @@ impl TranscriptView {
             {
                 tool.state = ToolState::Cancelled;
                 if tool.output.is_empty() {
-                    tool.output = "Cancelled".into();
+                    tool.output = tr("Cancelled").into();
                 }
                 let previous_bytes = row.text.len();
                 row.text = serde_json::to_string(&tool).unwrap_or_else(|_| row.text.clone());
@@ -3421,7 +3463,15 @@ impl TranscriptView {
             {
                 let group = phase.unwrap();
                 let (title, icon) = if group.calls.is_empty() {
-                    (if active { "Thinking…" } else { "Thought" }.into(), "minus")
+                    (
+                        if active {
+                            tr("Thinking…")
+                        } else {
+                            tr("Thought")
+                        }
+                        .into(),
+                        "minus",
+                    )
                 } else {
                     crate::activity::summary(&group.calls, active)
                 };
@@ -3486,7 +3536,7 @@ impl TranscriptView {
                 if !elsewhere {
                     let body = match document {
                         Some(document) => Body::Visual(Arc::new(document)),
-                        None => Body::Plain("This visual could not be loaded.".into()),
+                        None => Body::Plain(tr("This visual could not be loaded.").into()),
                     };
                     self.rows.push(UiRow {
                         key: (0, 0),
@@ -4155,7 +4205,7 @@ impl TranscriptView {
         let source = &self.source;
         let windowed = &self.windowed_phases;
         let keep_old = |row: &UiRow, motions: &mut HashMap<_, Motion>| -> bool {
-            // "Show less" hides the rest of a message at once, as in React.
+            // tr("Show less") hides the rest of a message at once, as in React.
             if matches!(row.body, Body::Plain(_))
                 && wanted.contains(&(row.key.0, 16))
                 && source.get(row.key.0).is_some_and(|r| r.role == "user")
@@ -4552,7 +4602,11 @@ impl TranscriptView {
                         .child(
                             icon_button(
                                 "copy-code",
-                                if copied { "Copied" } else { "Copy code" },
+                                if copied {
+                                    tr("Copied")
+                                } else {
+                                    tr("Copy code")
+                                },
                                 if copied { "check" } else { "copy" },
                             )
                             .on_click(cx.listener(
@@ -4817,16 +4871,19 @@ impl TranscriptView {
                                 div()
                                     .id(("interjection-label", message_start))
                                     .role(Role::Group)
-                                    .aria_label(format!("Interjection: {}", note.label()))
+                                    .aria_label(tr_fmt(
+                                        "Interjection: {label}",
+                                        &[("label", &note.label())],
+                                    ))
                                     .text_size(px(12.))
                                     .text_color(content(0.55))
                                     .child(note.label().to_owned()),
                             )
                             .when_some(severity, |d, severity| {
                                 let label = match severity {
-                                    "blocker" => "Blocker",
-                                    "concern" => "Concern",
-                                    "nit" => "Nit",
+                                    "blocker" => tr("Blocker"),
+                                    "concern" => tr("Concern"),
+                                    "nit" => tr("Nit"),
                                     value => value,
                                 };
                                 d.child(
@@ -4857,7 +4914,11 @@ impl TranscriptView {
                                 .aria_expanded(open)
                                 .text_size(px(11.))
                                 .text_color(content(0.5))
-                                .child(if open { "Show less" } else { "Show more" })
+                                .child(if open {
+                                    tr("Show less")
+                                } else {
+                                    tr("Show more")
+                                })
                                 .on_click(cx.listener(move |this, _, _, cx| {
                                     this.toggle(message_start, cx);
                                 })),
@@ -4918,9 +4979,9 @@ impl TranscriptView {
                     .unwrap_or(!self.fold_work);
                 let label = if expandable {
                     if open {
-                        "Hide the work".into()
+                        tr("Hide the work").into()
                     } else {
-                        "Show the work".into()
+                        tr("Show the work").into()
                     }
                 } else {
                     title.clone()
@@ -5037,9 +5098,12 @@ impl TranscriptView {
                 div()
                     .id(("phase", group))
                     .role(Role::Button)
-                    .aria_label(format!(
-                        "{} the steps for {title}",
-                        if open { "Hide" } else { "Show" }
+                    .aria_label(tr_fmt(
+                        "{action} the steps for {title}",
+                        &[
+                            ("action", &if open { tr("Hide") } else { tr("Show") }),
+                            ("title", &title),
+                        ],
                     ))
                     .aria_expanded(open)
                     .group("activity-phase")
@@ -5148,7 +5212,7 @@ impl TranscriptView {
                     .flat_map(|block| markdown::rows(&block.block))
                     .map(|row| markdown::row_text(&row))
                     .find(|text| !text.trim().is_empty())
-                    .unwrap_or_else(|| "Thinking…".into())
+                    .unwrap_or_else(|| tr("Thinking…").into())
                     .split_whitespace()
                     .collect::<Vec<_>>()
                     .join(" ");
@@ -5157,9 +5221,12 @@ impl TranscriptView {
                     .id(("thinking", message_start))
                     .debug_selector(move || format!("thinking-{message_start}"))
                     .role(Role::Button)
-                    .aria_label(format!(
-                        "{} thinking: {summary}",
-                        if open { "Hide" } else { "Show" }
+                    .aria_label(tr_fmt(
+                        "{action} thinking: {summary}",
+                        &[
+                            ("action", &if open { tr("Hide") } else { tr("Show") }),
+                            ("summary", &summary),
+                        ],
                     ))
                     .aria_expanded(open)
                     .flex()
@@ -5172,7 +5239,7 @@ impl TranscriptView {
                     .hover(|s| s.text_color(content(0.8)))
                     .when(!nested_phase, |d| d.child(icon("minus", 14.)))
                     .child(div().min_w_0().flex_1().truncate().child(if open {
-                        "Thinking".into()
+                        tr("Thinking").into()
                     } else {
                         summary
                     }))
@@ -5421,7 +5488,11 @@ impl TranscriptView {
                                     .line_height(px(16.))
                                     .text_color(content(0.6))
                                     .hover(|s| s.bg(content(0.08)).text_color(content(1.)))
-                                    .child(if collapsed { "Show more" } else { "Show less" })
+                                    .child(if collapsed {
+                                        tr("Show more")
+                                    } else {
+                                        tr("Show less")
+                                    })
                                     .on_mouse_down(gpui::MouseButton::Left, |_, _, cx| {
                                         cx.stop_propagation()
                                     })
@@ -5782,7 +5853,7 @@ impl TranscriptView {
         self.list.pause_following_tail();
         self.rebuild(start, cx);
     }
-    /// "Show more" opens a message in place, without a transition.
+    /// tr("Show more") opens a message in place, without a transition.
     fn toggle_prompt(&mut self, start: usize, cx: &mut Context<Self>) {
         if !self.expanded_prompts.remove(&start) {
             self.expanded_prompts.insert(start);
@@ -5907,9 +5978,9 @@ impl Render for TranscriptView {
             .on_mouse_up_out(gpui::MouseButton::Left, cx.listener(Self::finish_selection))
             .role(Role::Log)
             .aria_label(if self.document {
-                "Note body"
+                tr("Note body")
             } else {
-                "Conversation transcript"
+                tr("Conversation transcript")
             })
             .relative()
             .size_full()
@@ -6011,7 +6082,7 @@ impl Render for TranscriptView {
                                         .id("jump-to-bottom")
                                         .child(self.jump_anchor.probe())
                                         .role(Role::Button)
-                                        .aria_label("Scroll to bottom")
+                                        .aria_label(tr("Scroll to bottom"))
                                         .relative()
                                         .flex()
                                         .items_center()

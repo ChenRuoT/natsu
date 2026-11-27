@@ -1,6 +1,7 @@
 //! OS bridge. Call initialization and Dock updates on the UI thread. All other
 //! results are channels so authorization/dispatch never block the UI thread.
 
+use natsu_core::i18n::tr;
 use std::sync::mpsc::{self, Receiver};
 
 use super::delivery::{Permission, Target};
@@ -34,9 +35,10 @@ pub fn request_permission() -> Receiver<Permission> {
 }
 #[cfg(not(target_os = "macos"))]
 pub fn show(_: Notification) -> Receiver<Result<(), String>> {
-    resolved(Err(
-        "Native notifications are unavailable on this platform".into()
-    ))
+    resolved(Err(tr(
+        "Native notifications are unavailable on this platform",
+    )
+    .into()))
 }
 #[cfg(not(target_os = "macos"))]
 pub fn drain_clicks() -> Vec<Target> {
@@ -48,7 +50,7 @@ pub fn set_dock_badge(_: usize) {}
 pub fn dismiss(_: &str) {}
 #[cfg(not(target_os = "macos"))]
 pub fn open_settings() -> Result<(), String> {
-    Err("Notification settings are unavailable on this platform".into())
+    Err(tr("Notification settings are unavailable on this platform").into())
 }
 
 fn resolved<T>(value: T) -> Receiver<T> {

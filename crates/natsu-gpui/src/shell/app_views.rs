@@ -4,6 +4,16 @@ use crate::{automations, inbox, notes};
 
 pub(super) use crate::workspace::AppView;
 
+/// The English name of an app view, for element ids and test hooks; the
+/// visible label is translated.
+fn app_view_id(view: AppView) -> &'static str {
+    match view {
+        AppView::Inbox => "Inbox",
+        AppView::Notes => "Notes",
+        AppView::Automations => "Automations",
+    }
+}
+
 impl Shell {
     pub(super) fn app_view_open(&self) -> bool {
         self.active_app_view.is_some()
@@ -11,9 +21,9 @@ impl Shell {
 
     pub(super) fn app_view_label(&self) -> Option<&'static str> {
         self.active_app_view.map(|view| match view {
-            AppView::Inbox => "Inbox",
-            AppView::Notes => "Notes",
-            AppView::Automations => "Automations",
+            AppView::Inbox => tr("Inbox"),
+            AppView::Notes => tr("Notes"),
+            AppView::Automations => tr("Automations"),
         })
     }
 
@@ -28,9 +38,9 @@ impl Shell {
         div()
             .id(SharedString::from(format!(
                 "app-title-tab-{}",
-                view.label()
+                app_view_id(view)
             )))
-            .debug_selector(move || format!("app-title-tab-{}", view.label()))
+            .debug_selector(move || format!("app-title-tab-{}", app_view_id(view)))
             .group("app-title-tab")
             .role(Role::Tab)
             .aria_label(view.label())
@@ -74,11 +84,11 @@ impl Shell {
                     div()
                         .id(SharedString::from(format!(
                             "close-app-tab-{}",
-                            view.label()
+                            app_view_id(view)
                         )))
-                        .debug_selector(move || format!("close-app-tab-{}", view.label()))
+                        .debug_selector(move || format!("close-app-tab-{}", app_view_id(view)))
                         .role(Role::Button)
-                        .aria_label(format!("Close {}", view.label()))
+                        .aria_label(tr_fmt("Close {view}", &[("view", &view.label())]))
                         .absolute()
                         .right_1()
                         .top(px(10.))
@@ -486,7 +496,7 @@ impl Shell {
         let revision = self.navigation_revision;
         let work = cx.background_executor().spawn(async move {
             if !std::path::Path::new(&cwd).is_dir() {
-                return Err("Choose a project folder before starting work on this item".into());
+                return Err(tr("Choose a project folder before starting work on this item").into());
             }
             let store = locked(&store)?;
             let mut summary = store.create(kind.id(), &cwd)?;

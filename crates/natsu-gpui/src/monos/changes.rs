@@ -2,6 +2,7 @@
 //! per checkout. Only the selected checkout owns a live Git poller.
 use super::*;
 use crate::popover::{MenuAction, MenuItem};
+use natsu_core::i18n::{tr, tr_fmt};
 use std::{path::Path, time::Instant};
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -531,7 +532,7 @@ impl Monos {
                 .into()
             })
             .collect();
-        let menu = cx.new(|cx| Menu::new("Working copies", items, window, cx).width(280.));
+        let menu = cx.new(|cx| Menu::new(tr("Working copies"), items, window, cx).width(280.));
         let event = cx.subscribe(&menu, move |this, _, event: &MenuEvent, cx| {
             this.picker = None;
             if let MenuEvent::Picked(action, _) = event
@@ -576,9 +577,9 @@ impl Monos {
                 .py_4()
                 .text_size(px(12.))
                 .text_color(content(0.45))
-                .child(format!(
-                    "Give {} a project to work on, and its changes show up here to commit.",
-                    mono.label()
+                .child(tr_fmt(
+                    "Give {mono} a project to work on, and its changes show up here to commit.",
+                    &[("mono", &mono.label())],
                 ))
                 .into_any_element();
         }
@@ -587,7 +588,7 @@ impl Monos {
             .id("mono-changes-projects")
             .debug_selector(|| "mono-changes-projects".into())
             .role(Role::TabList)
-            .aria_label("Projects")
+            .aria_label(tr("Projects"))
             .h(px(36.))
             .flex_shrink_0()
             .flex()
@@ -634,10 +635,17 @@ impl Monos {
                     .clone();
                 let mono_id = mono.id.clone();
                 let path = project.path.clone();
-                let title = format!(
-                    "{label}, {count} pending changes{}",
-                    if active { ", selected" } else { "" }
-                );
+                let title = if active {
+                    tr_fmt(
+                        "{label}, {count} pending changes, selected",
+                        &[("label", &label), ("count", &count)],
+                    )
+                } else {
+                    tr_fmt(
+                        "{label}, {count} pending changes",
+                        &[("label", &label), ("count", &count)],
+                    )
+                };
                 let checkouts = project.checkouts.clone();
                 let picker_mono = mono.id.clone();
                 let picker_project = project.path.clone();
@@ -684,7 +692,7 @@ impl Monos {
                             div()
                                 .id(("mono-changes-checkouts", ix))
                                 .role(Role::Button)
-                                .aria_label("Switch project working copy")
+                                .aria_label(tr("Switch project working copy"))
                                 .size(px(18.))
                                 .mr_1()
                                 .flex()
@@ -732,7 +740,10 @@ impl Monos {
                             .py_2()
                             .text_size(px(12.))
                             .text_color(rgb(0xff6467))
-                            .child(format!("Couldn’t load repositories: {error}")),
+                            .child(tr_fmt(
+                                "Couldn’t load repositories: {error}",
+                                &[("error", &error)],
+                            )),
                     )
                 },
             )

@@ -5,6 +5,7 @@
 //! Once a step lands the pill moves on: staged work offers Commit, and an
 //! unpushed commit offers Push.
 use super::*;
+use natsu_core::i18n::{tr, tr_fmt};
 
 /// Read older pages without installing their transcript payload in the UI.
 pub(super) fn restored_session_edits(
@@ -59,18 +60,18 @@ impl GitAction {
     }
     pub(crate) fn label(self) -> &'static str {
         match self {
-            Self::Stage => "Stage",
-            Self::Commit => "Commit",
-            Self::CommitPush => "Commit & push",
-            Self::Push => "Push",
+            Self::Stage => tr("Stage"),
+            Self::Commit => tr("Commit"),
+            Self::CommitPush => tr("Commit & push"),
+            Self::Push => tr("Push"),
         }
     }
     fn description(self) -> &'static str {
         match self {
-            Self::Stage => "Stage only this session's changes",
-            Self::Commit => "Stage and commit with a written message",
-            Self::CommitPush => "Commit, then push the branch",
-            Self::Push => "Push this session's commits",
+            Self::Stage => tr("Stage only this session's changes"),
+            Self::Commit => tr("Stage and commit with a written message"),
+            Self::CommitPush => tr("Commit, then push the branch"),
+            Self::Push => tr("Push this session's commits"),
         }
     }
     pub(crate) fn icon(self) -> &'static str {
@@ -87,10 +88,10 @@ impl GitAction {
     /// What the transcript shows for the turn.
     pub(crate) fn message(self) -> &'static str {
         match self {
-            Self::Stage => "Stage your changes",
-            Self::Commit => "Commit your changes",
-            Self::CommitPush => "Commit and push your changes",
-            Self::Push => "Push your commits",
+            Self::Stage => tr("Stage your changes"),
+            Self::Commit => tr("Commit your changes"),
+            Self::CommitPush => tr("Commit and push your changes"),
+            Self::Push => tr("Push your commits"),
         }
     }
     /// What the agent receives instead.
@@ -305,12 +306,15 @@ impl Conversation {
         }
         if !self.git_actions_ready() {
             self.status = if self.busy || !self.follow_ups.state.messages.is_empty() {
-                format!(
-                    "Wait for the current turn and queued messages before /{}.",
-                    action.id()
+                tr_fmt(
+                    "Wait for the current turn and queued messages before /{command}.",
+                    &[("command", &action.id())],
                 )
             } else {
-                format!("/{} is not available in this session.", action.id())
+                tr_fmt(
+                    "/{command} is not available in this session.",
+                    &[("command", &action.id())],
+                )
             };
             cx.notify();
             return true;
@@ -365,7 +369,7 @@ impl Conversation {
             .child(div().text_size(px(12.)).child(current.label()))
             .on_click(cx.listener(move |this, _, _, cx| this.run_git_action(current, cx)));
         let chevron = segment("git-action-menu")
-            .aria_label("Git actions")
+            .aria_label(tr("Git actions"))
             .aria_expanded(menu_open)
             .relative()
             .px(px(7.))
@@ -380,7 +384,7 @@ impl Conversation {
                 .id("git-actions")
                 .debug_selector(|| "git-actions".into())
                 .role(Role::Group)
-                .aria_label("Git actions")
+                .aria_label(tr("Git actions"))
                 .relative()
                 .h(px(30.))
                 .flex()

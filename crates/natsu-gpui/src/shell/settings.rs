@@ -345,6 +345,7 @@ impl Shell {
         .detach();
     }
     pub(super) fn apply_preferences(&mut self, cx: &mut Context<Self>) {
+        natsu_core::i18n::apply_preference(&self.workspace.preferences.language);
         self.refresh_notification_permission();
         self.configure_quick_composer(cx);
         // Switching search styles closes an open search of the other style.
@@ -421,9 +422,9 @@ impl Shell {
                     Err(error) => {
                         let prompt = window.prompt(
                             gpui::PromptLevel::Critical,
-                            "Cannot use this image",
+                            tr("Cannot use this image"),
                             Some(&error),
-                            &["OK"],
+                            &[tr("OK")],
                             cx,
                         );
                         cx.spawn(async move |_, _| {
@@ -461,7 +462,7 @@ impl Shell {
             .any(|t| is_equal_or_inside(&t.read(cx).cwd, &path))
         {
             self.finish_worktree_action(
-                Err("Close the terminals using this worktree first.".into()),
+                Err(tr("Close the terminals using this worktree first.").into()),
                 cx,
             );
             return;
@@ -477,7 +478,7 @@ impl Shell {
             .any(|id| self.sessions.get(id).is_some_and(|v| v.read(cx).busy))
         {
             self.finish_worktree_action(
-                Err("Stop the running sessions using this worktree first.".into()),
+                Err(tr("Stop the running sessions using this worktree first.").into()),
                 cx,
             );
             return;
@@ -501,7 +502,7 @@ impl Shell {
             let work=cx.background_executor().spawn(async move{
                 if delete_sessions {let store=locked(&store)?;let paths=store.session_worktrees()?;if store.sessions()?.iter().any(|s|is_equal_or_inside(paths.get(&s.id).and_then(|p|p.as_deref()).unwrap_or(&s.cwd),&worker_path)){return Err("Some sessions could not be deleted, so the worktree was kept.".into());}}
                 let snapshot=natsu_core::git::snapshot(Path::new(&worker_cwd))?;
-                let main=snapshot.worktrees.first().ok_or("No main working copy found")?;
+                let main=snapshot.worktrees.first().ok_or(tr("No main working copy found"))?;
                 natsu_core::worktree_management::remove(Path::new(&main.path),Path::new(&worker_path))?;
                 locked(&store)?.detach_worktree(&worker_path,&main.path)
             });let result=work.await;
@@ -512,9 +513,9 @@ impl Shell {
     fn delete_from_settings(&mut self, id: i64, window: &mut Window, cx: &mut Context<Self>) {
         let prompt = window.prompt(
             gpui::PromptLevel::Warning,
-            "Delete this conversation permanently?",
-            Some("Its messages and saved settings will be removed."),
-            &["Delete", "Cancel"],
+            tr("Delete this conversation permanently?"),
+            Some(tr("Its messages and saved settings will be removed.")),
+            &[tr("Delete"), tr("Cancel")],
             cx,
         );
         cx.spawn(async move |this, cx| {

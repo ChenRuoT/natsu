@@ -9,6 +9,7 @@ use natsu_core::git::{
     CommitFile,
     report::{self, Report, Run, Step},
 };
+use natsu_core::i18n::{tr, tr_fmt};
 
 /// The card shows this many files before a "more" line.
 const FILES: usize = 4;
@@ -73,12 +74,12 @@ pub(crate) fn latest_commit(rows: &[Row]) -> Option<String> {
 
 fn live_label(action: GitAction, step: Step) -> &'static str {
     match step {
-        Step::Push => "Pushing…",
-        Step::Commit => "Committing…",
-        Step::Stage => "Staging…",
+        Step::Push => tr("Pushing…"),
+        Step::Commit => tr("Committing…"),
+        Step::Stage => tr("Staging…"),
         Step::Review => match action {
-            GitAction::Push => "Getting ready to push…",
-            _ => "Checking your changes…",
+            GitAction::Push => tr("Getting ready to push…"),
+            _ => tr("Checking your changes…"),
         },
     }
 }
@@ -190,12 +191,15 @@ impl TranscriptView {
         let has_counts = additions + deletions > 0;
         let title: SharedString = match (commit, push) {
             (Some(commit), _) => commit.subject.clone().into(),
-            (None, Some(push)) if push.up_to_date => "Already up to date".into(),
-            (None, Some(push)) if !push.ok => "Push didn’t go through".into(),
+            (None, Some(push)) if push.up_to_date => tr("Already up to date").into(),
+            (None, Some(push)) if !push.ok => tr("Push didn’t go through").into(),
             (None, Some(push)) => push
                 .branch
                 .as_ref()
-                .map_or_else(|| "Pushed".into(), |branch| format!("Pushed {branch}"))
+                .map_or_else(
+                    || tr("Pushed").into(),
+                    |branch| tr_fmt("Pushed {branch}", &[("branch", &branch)]),
+                )
                 .into(),
             (None, None) => format!(
                 "Staged {}",
@@ -232,9 +236,9 @@ impl TranscriptView {
                     .id(("git-card-hash", message_start))
                     .role(Role::Button)
                     .aria_label(if copied {
-                        "Copied the commit hash".to_string()
+                        tr("Copied the commit hash").to_string()
                     } else {
-                        format!("Copy commit {}", commit.hash)
+                        tr_fmt("Copy commit {hash}", &[("hash", &commit.hash)])
                     })
                     .flex_shrink_0()
                     .flex()
@@ -256,7 +260,7 @@ impl TranscriptView {
                     } else {
                         div().child(commit.hash.clone()).into_any_element()
                     })
-                    .when(copied, |d| d.child("Copied"))
+                    .when(copied, |d| d.child(tr("Copied")))
                     .on_mouse_down(gpui::MouseButton::Left, |_, _, cx| cx.stop_propagation())
                     .on_click(cx.listener(move |this, _, _, cx| {
                         cx.write_to_clipboard(ClipboardItem::new_string(hash.clone()));
@@ -321,19 +325,22 @@ impl TranscriptView {
                         ),
                     )
                     .child(div().truncate().child(if push_failed {
-                        "Push rejected".to_string()
+                        tr("Push rejected").to_string()
                     } else if commit.is_none() {
-                        push.repo.clone().unwrap_or_else(|| "Remote updated".into())
-                    } else {
                         push.repo
-                            .as_ref()
-                            .map_or_else(|| "Pushed".into(), |repo| format!("Pushed to {repo}"))
+                            .clone()
+                            .unwrap_or_else(|| tr("Remote updated").into())
+                    } else {
+                        push.repo.as_ref().map_or_else(
+                            || tr("Pushed").into(),
+                            |repo| tr_fmt("Pushed to {repo}", &[("repo", &repo)]),
+                        )
                     })),
             );
         }
         if commit.is_none() && push.is_none() {
             parts += 1;
-            subtitle = subtitle.child(div().child("Ready to commit"));
+            subtitle = subtitle.child(div().child(tr("Ready to commit")));
         }
         if has_counts {
             if parts > 0 {
@@ -346,13 +353,13 @@ impl TranscriptView {
         let link = push.filter(|push| push.ok).and_then(|push| {
             push.pull_request
                 .clone()
-                .map(|url| ("Open pull request", "git-pull-request", url))
+                .map(|url| (tr("Open pull request"), "git-pull-request", url))
                 .or_else(|| {
                     let web = push.web.as_ref()?;
                     let commit = commit?;
                     web.starts_with("https://github.com/").then(|| {
                         (
-                            "View commit",
+                            tr("View commit"),
                             "external-link",
                             format!("{web}/commit/{}", commit.hash),
                         )
@@ -465,7 +472,10 @@ impl TranscriptView {
             div()
                 .id(("git-card-file", message_start * 64 + ix))
                 .role(Role::Link)
-                .aria_label(SharedString::from(format!("Open {}", file.path)))
+                .aria_label(SharedString::from(tr_fmt(
+                    "Open {path}",
+                    &[("path", &file.path)],
+                )))
                 .h(px(30.))
                 .w_full()
                 .min_w_0()
@@ -541,9 +551,9 @@ impl TranscriptView {
                                             .items_center()
                                             .text_size(px(11.))
                                             .text_color(content(0.4))
-                                            .child(format!(
-                                                "+{} more",
-                                                plural(hidden, "file", "files")
+                                            .child(tr_fmt(
+                                                "+{count} more",
+                                                &[("count", &plural(hidden, "file", "files"))],
                                             )),
                                     )
                                 }),

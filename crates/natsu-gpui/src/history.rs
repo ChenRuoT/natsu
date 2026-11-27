@@ -12,6 +12,7 @@ use gpui::{
     ScrollStrategy, SharedString, Subscription, UniformListScrollHandle, Window, actions, canvas,
     div, fill, point, prelude::*, px, rgb, size, uniform_list,
 };
+use natsu_core::i18n::tr;
 use natsu_core::scm::{self, HistoryCommit};
 use std::{collections::HashMap, path::PathBuf};
 
@@ -66,7 +67,12 @@ pub(crate) struct History {
 impl History {
     pub(crate) fn new(git: Entity<ProjectGit>, _: &mut Window, cx: &mut Context<Self>) -> Self {
         let search = cx.new(|cx| {
-            let mut input = Input::field("Search commits", "Search history…", content(0.35), cx);
+            let mut input = Input::field(
+                tr("Search commits"),
+                tr("Search history…"),
+                content(0.35),
+                cx,
+            );
             input.set_font_size(12.);
             input
         });
@@ -265,12 +271,12 @@ impl History {
         let label: SharedString = branch
             .clone()
             .or_else(|| head.map(|h| h.commit.short_sha.clone()))
-            .unwrap_or_else(|| "History".into())
+            .unwrap_or_else(|| tr("History").into())
             .into();
         let can_refresh = self.available() && !self.loading;
         div()
             .flex_shrink_0()
-            .child(pane_header("history-toolbar", "History").map(|d| {
+            .child(pane_header("history-toolbar", tr("History")).map(|d| {
                 if self.search_open {
                     d.key_context("HistorySearch")
                         .on_action(cx.listener(|this, _: &CloseSearch, window, cx| {
@@ -288,7 +294,7 @@ impl History {
                         .child(
                             header_action(
                                 "history-close-search",
-                                "Close history search",
+                                tr("Close history search"),
                                 "x",
                                 12.,
                                 true,
@@ -318,7 +324,7 @@ impl History {
                             .child(
                                 header_action(
                                     "history-search",
-                                    "Search history",
+                                    tr("Search history"),
                                     "search",
                                     14.,
                                     true,
@@ -331,7 +337,7 @@ impl History {
                             .child(
                                 header_action(
                                     "history-refresh",
-                                    "Refresh history",
+                                    tr("Refresh history"),
                                     "refresh-cw",
                                     14.,
                                     can_refresh,
@@ -691,20 +697,20 @@ impl Focusable for History {
 impl Render for History {
     fn render(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         let empty: Option<(&'static str, bool)> = if !self.available() {
-            Some(("No project folder", false))
+            Some((tr("No project folder"), false))
         } else if self.error.is_some() && self.items.is_empty() {
             None
         } else if self.items.is_empty() {
             Some((
                 if self.loading {
-                    "Loading history…"
+                    tr("Loading history…")
                 } else {
-                    "No commits yet"
+                    tr("No commits yet")
                 },
                 false,
             ))
         } else if self.visible.is_empty() {
-            Some(("No matching commits", true))
+            Some((tr("No matching commits"), true))
         } else {
             None
         };
@@ -713,7 +719,7 @@ impl Render for History {
         div()
             .id("history")
             .role(Role::TabPanel)
-            .aria_label("History")
+            .aria_label(tr("History"))
             .track_focus(&self.focus)
             .size_full()
             .min_h_0()

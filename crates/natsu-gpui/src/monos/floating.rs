@@ -3,6 +3,7 @@
 //! touching the workspace window's selection.
 use super::*;
 use gpui::{Bounds, WindowBounds, WindowKind, WindowOptions, point, size};
+use natsu_core::i18n::{tr, tr_fmt};
 /// A 384pt conversation plus the 56pt Mono rail beside it.
 #[cfg_attr(not(target_os = "macos"), allow(dead_code))]
 const WIDTH: f32 = 440.;
@@ -44,9 +45,9 @@ fn header_button(
 }
 fn status_label(state: &str) -> &'static str {
     match state {
-        "working" => "Working",
-        "needs-you" => "Needs you",
-        _ => "Idle",
+        "working" => tr("Working"),
+        "needs-you" => tr("Needs you"),
+        _ => tr("Idle"),
     }
 }
 /// MonoStatusDot and MonoStatus's dot: accent when it needs you, the Mono's
@@ -101,7 +102,7 @@ impl Floating {
         div()
             .id("floating-mono-rail")
             .role(Role::Navigation)
-            .aria_label("Monos")
+            .aria_label(tr("Monos"))
             .w(px(56.))
             .h_full()
             .flex_shrink_0()
@@ -181,7 +182,7 @@ impl Floating {
                 div()
                     .id("floating-new-mono")
                     .role(Role::Button)
-                    .aria_label("New mono")
+                    .aria_label(tr("New mono"))
                     .size(px(32.))
                     .flex_shrink_0()
                     .rounded_lg()
@@ -275,12 +276,12 @@ impl Floating {
             )
             .when(busy, |d| {
                 d.child(
-                    header_button("floating-stop", "Stop reply", "square")
+                    header_button("floating-stop", tr("Stop reply"), "square")
                         .on_click(cx.listener(|this, _, _, cx| this.stop(cx))),
                 )
             })
             .child(
-                header_button("floating-reveal", "Open in Natsu", "external-link").on_click(
+                header_button("floating-reveal", tr("Open in Natsu"), "external-link").on_click(
                     cx.listener(|this, _, window, cx| {
                         let id = this.selected.clone();
                         let owner = this.owner.clone();
@@ -302,7 +303,7 @@ impl Floating {
                 ),
             )
             .child(
-                header_button("floating-close", "Hide chat", "close")
+                header_button("floating-close", tr("Hide chat"), "close")
                     .on_click(cx.listener(|this, _, window, cx| this.close(window, cx))),
             )
     }
@@ -398,7 +399,7 @@ impl gpui::Render for Floating {
                                                 .text_color(content(0.5))
                                                 .text_center()
                                                 .child(failure.unwrap_or_else(|| {
-                                                    "Loading conversation…".into()
+                                                    tr("Loading conversation…").into()
                                                 })),
                                         ),
                                 ),
@@ -454,16 +455,19 @@ impl Monos {
                     .text_size(px(13.))
                     .text_color(content(0.5))
                     .text_center()
-                    .child(format!("{} is open in a floating chat.", mono.label())),
+                    .child(tr_fmt(
+                        "{mono} is open in a floating chat.",
+                        &[("mono", &mono.label())],
+                    )),
             )
             .child(
                 crate::settings::widgets::secondary_button(
                     "floating-show-here",
-                    "Show here",
+                    tr("Show here"),
                     false,
                     false,
                 )
-                .child("Show here")
+                .child(tr("Show here"))
                 .on_click(cx.listener(move |this, _, window, cx| {
                     this.hide_floating(&id, cx);
                     this.focus_active(window, cx);

@@ -1,5 +1,6 @@
 //! Port of src/features/settings/model/settings.ts: the pages, their rail
 //! groups and the index Settings search jumps through.
+use natsu_core::i18n::tr;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -78,6 +79,10 @@ impl Section {
         }
     }
     pub(crate) fn label(self) -> &'static str {
+        tr(self.english_label())
+    }
+    /// The English name, which is the translation key.
+    fn english_label(self) -> &'static str {
         match self {
             Section::General => "General",
             Section::Connections => "Connections",
@@ -96,31 +101,35 @@ impl Section {
     pub(crate) fn description(self) -> &'static str {
         match self {
             Section::General => {
-                "The build you are running, how Natsu reaches you, and the panels it shows."
+                tr("The build you are running, how Natsu reaches you, and the panels it shows.")
             }
-            Section::Connections => "Connect your machines and run agents remotely through SSH.",
+            Section::Connections => {
+                tr("Connect your machines and run agents remotely through SSH.")
+            }
             Section::Appearance => {
-                "Theme, tint, translucency, workspace layout, and conversation backgrounds."
+                tr("Theme, tint, translucency, workspace layout, and conversation backgrounds.")
             }
             Section::Keybindings => {
-                "Every shortcut the workspace handles, from the app menu and the key handler."
+                tr("Every shortcut the workspace handles, from the app menu and the key handler.")
             }
-            Section::Chat => {
-                "How transcripts read, what the composer does with a follow-up, how files save, and how diffs open."
-            }
-            Section::Providers => {
-                "Provider accounts, agent CLIs Natsu can drive, and the model new sessions start with."
-            }
-            Section::Mcp => "Find MCP servers across providers and manage their connections.",
+            Section::Chat => tr(
+                "How transcripts read, what the composer does with a follow-up, how files save, and how diffs open.",
+            ),
+            Section::Providers => tr(
+                "Provider accounts, agent CLIs Natsu can drive, and the model new sessions start with.",
+            ),
+            Section::Mcp => tr("Find MCP servers across providers and manage their connections."),
             Section::Skills => {
-                "Discover and manage file skills from project, personal, and harness folders."
+                tr("Discover and manage file skills from project, personal, and harness folders.")
             }
-            Section::Monos => "The resident agent beside your tabs, and which projects have one.",
+            Section::Monos => {
+                tr("The resident agent beside your tabs, and which projects have one.")
+            }
             Section::Inbox => {
-                "Manage Inbox services and notification preferences for each project."
+                tr("Manage Inbox services and notification preferences for each project.")
             }
-            Section::Archive => "Projects and conversations you have archived.",
-            Section::Worktrees => "Manage additional worktrees for each project.",
+            Section::Archive => tr("Projects and conversations you have archived."),
+            Section::Worktrees => tr("Manage additional worktrees for each project."),
         }
     }
     fn keywords(self) -> &'static str {
@@ -307,6 +316,12 @@ pub(crate) const INDEX: &[(&str, Section, &str, &str)] = &[
         Section::Appearance,
         "Accent color",
         "highlight bubble send button tint",
+    ),
+    (
+        "language",
+        Section::Appearance,
+        "Language",
+        "locale translation english chinese interface 语言 中文 简体 英语",
     ),
     (
         "diff-colors",
@@ -553,6 +568,12 @@ fn score(needle: &str, label: &str, keywords: &str) -> Option<f32> {
     }
 }
 
+/// Matches the English label, the shown label and the English keywords, so
+/// both the English and the translated names can find a setting.
+fn score_either(needle: &str, english: &str, shown: &str, keywords: &str) -> Option<f32> {
+    score(needle, shown, keywords).or_else(|| score(needle, english, keywords))
+}
+
 /// searchSettings: individual settings first, then whole sections.
 pub(crate) fn search(query: &str, compositor: &str) -> Vec<SearchResult> {
     let needle = query.trim().to_lowercase();
@@ -564,20 +585,22 @@ pub(crate) fn search(query: &str, compositor: &str) -> Vec<SearchResult> {
         if id == "wayland-window-decorations" && compositor != "Wayland" {
             continue;
         }
-        if let Some(s) = score(&needle, label, keywords) {
+        let shown = tr(label);
+        if let Some(s) = score_either(&needle, label, shown, keywords) {
             scored.push((
                 s,
                 SearchResult {
                     section,
                     setting: Some(id),
-                    label,
+                    label: shown,
                 },
             ));
         }
     }
     for section in Section::ALL {
         let keywords = format!("{} {}", section.description(), section.keywords());
-        if let Some(s) = score(&needle, section.label(), &keywords) {
+        if let Some(s) = score_either(&needle, section.english_label(), section.label(), &keywords)
+        {
             scored.push((
                 s + 0.5,
                 SearchResult {

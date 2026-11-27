@@ -1,6 +1,7 @@
 //! Dismissible app errors use the same glass card as pending approvals.
 use crate::theme::*;
 use gpui::{Div, FontWeight, Hsla, Role, Stateful, div, prelude::*, px, rgb};
+use natsu_core::i18n::tr;
 
 pub(crate) fn card(id: &'static str, message: String, dismiss: impl IntoElement) -> Stateful<Div> {
     let rose: Hsla = rgb(0xf43f5e).into();
@@ -33,7 +34,7 @@ pub(crate) fn card(id: &'static str, message: String, dismiss: impl IntoElement)
                                 .min_w_0()
                                 .text_size(px(13.))
                                 .font_weight(FontWeight::SEMIBOLD)
-                                .child("Error"),
+                                .child(tr("Error")),
                         )
                         .child(dismiss),
                 )

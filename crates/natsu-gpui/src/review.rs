@@ -16,6 +16,7 @@ use gpui::{
     FontWeight, MouseButton, MouseDownEvent, MouseMoveEvent, Pixels, Point, Role, ScrollHandle,
     SharedString, Subscription, Task, Window, div, prelude::*, px, rgb,
 };
+use natsu_core::i18n::{tr, tr_fmt};
 use natsu_core::{
     diff,
     scm::{self, ChangedFile, FileDiff, FileDiffVersion},
@@ -75,9 +76,9 @@ impl ReviewTab {
                 .map_or_else(|| path.clone(), |p| p.to_string_lossy().into_owned()),
             Self::Changes { staged, .. } => {
                 if *staged == Some(true) {
-                    "Staged Changes".into()
+                    tr("Staged Changes").into()
                 } else {
-                    "Changes".into()
+                    tr("Changes").into()
                 }
             }
             Self::Commit {
@@ -90,7 +91,7 @@ impl ReviewTab {
                     subject.into()
                 }
             }
-            Self::Session { .. } => "Session Changes".into(),
+            Self::Session { .. } => tr("Session Changes").into(),
         }
     }
     /// `editorTabKey`: one Changes tab per checkout and side, one per commit.
@@ -328,7 +329,7 @@ fn entries(files: &[ChangedFile], staged: Option<bool>) -> Vec<(String, bool, Ch
 /// SessionChangesDiff's list: the recorded turn's files, as a commit lists them.
 type Listed = (Vec<ChangedFile>, Option<HashMap<String, FileDiffVersion>>);
 fn session_files(cwd: &str, session: i64) -> Result<Listed, String> {
-    let store = natsu_core::checkpoint::store().ok_or("Session changes are unavailable")?;
+    let store = natsu_core::checkpoint::store().ok_or(tr("Session changes are unavailable"))?;
     let status = store.exclusive(|s| s.status(&session.to_string(), cwd))?;
     Ok((
         status
@@ -348,7 +349,7 @@ fn session_files(cwd: &str, session: i64) -> Result<Listed, String> {
     ))
 }
 fn session_file_diff(cwd: &str, session: i64, relative: &str) -> Result<FileDiff, String> {
-    let store = natsu_core::checkpoint::store().ok_or("Session changes are unavailable")?;
+    let store = natsu_core::checkpoint::store().ok_or(tr("Session changes are unavailable"))?;
     store.exclusive(|s| s.file_diff(&session.to_string(), cwd, relative))
 }
 
@@ -688,9 +689,9 @@ impl ReviewPane {
             .join(", ");
         let answer = window.prompt(
             gpui::PromptLevel::Warning,
-            &format!("Save changes to {names}?"),
-            Some("Your unsaved edits will be lost if you discard them."),
-            &["Save", "Discard", "Cancel"],
+            &tr_fmt("Save changes to {names}?", &[("names", &names)]),
+            Some(tr("Your unsaved edits will be lost if you discard them.")),
+            &[tr("Save"), tr("Discard"), tr("Cancel")],
             cx,
         );
         cx.spawn_in(window, async move |this, cx| {
@@ -1227,10 +1228,12 @@ impl ReviewPane {
                     let index_counts = loaded.is_some_and(|l| l.error.is_none())
                         && !(file.staged && file.unstaged);
                     let label = if file.staged && file.unstaged {
-                        format!(
-                            "{} ({})",
-                            file.relative,
-                            if kind { "Staged" } else { "Unstaged" }
+                        tr_fmt(
+                            "{path} ({side})",
+                            &[
+                                ("path", &file.relative),
+                                ("side", &if kind { tr("Staged") } else { tr("Unstaged") }),
+                            ],
                         )
                     } else {
                         file.relative.clone()
@@ -1242,16 +1245,16 @@ impl ReviewPane {
                         binary: loaded.is_some_and(|l| l.diff.binary),
                         too_large: loaded.is_some_and(|l| l.diff.too_large),
                         empty_message: match loaded {
-                            None => Some("Loading…".into()),
-                            Some(l) if l.error.is_some() => Some(format!(
-                                "Couldn’t load diff: {}",
-                                l.error.clone().unwrap_or_default()
+                            None => Some(tr("Loading…").into()),
+                            Some(l) if l.error.is_some() => Some(tr_fmt(
+                                "Couldn’t load diff: {error}",
+                                &[("error", &l.error.clone().unwrap_or_default())],
                             )),
                             _ if unchanged => Some(
                                 if kind {
-                                    "No staged changes"
+                                    tr("No staged changes")
                                 } else {
-                                    "No unstaged changes"
+                                    tr("No unstaged changes")
                                 }
                                 .into(),
                             ),
@@ -1299,10 +1302,10 @@ impl ReviewPane {
                         binary: loaded.is_some_and(|l| l.diff.binary),
                         too_large: loaded.is_some_and(|l| l.diff.too_large),
                         empty_message: match loaded {
-                            None => Some("Loading…".into()),
-                            Some(l) if l.error.is_some() => Some(format!(
-                                "Couldn’t load diff: {}",
-                                l.error.clone().unwrap_or_default()
+                            None => Some(tr("Loading…").into()),
+                            Some(l) if l.error.is_some() => Some(tr_fmt(
+                                "Couldn’t load diff: {error}",
+                                &[("error", &l.error.clone().unwrap_or_default())],
                             )),
                             Some(l)
                                 if l.unified.is_some()
@@ -1310,7 +1313,7 @@ impl ReviewPane {
                                     && l.deletions == 0
                                     && !l.diff.binary =>
                             {
-                                Some("No textual diff".into())
+                                Some(tr("No textual diff").into())
                             }
                             _ => None,
                         },
@@ -1451,12 +1454,12 @@ impl ReviewPane {
         cx: &mut Context<Self>,
     ) {
         let items = vec![
-            MenuAction::new("close", "Close").into(),
-            MenuAction::new("close-others", "Close Others")
+            MenuAction::new("close", tr("Close")).into(),
+            MenuAction::new("close-others", tr("Close Others"))
                 .disabled(self.sources.len() < 2)
                 .into(),
         ];
-        let menu = cx.new(|cx| Menu::new("File tab actions", items, window, cx));
+        let menu = cx.new(|cx| Menu::new(tr("File tab actions"), items, window, cx));
         let events = cx.subscribe(&menu, move |this, _, event: &MenuEvent, cx| {
             this.menu = None;
             if let MenuEvent::Picked(id, _) = event {
@@ -1570,7 +1573,7 @@ impl ReviewPane {
                         .id("drag-file-pane")
                         .debug_selector(|| "drag-file-pane".into())
                         .role(Role::Button)
-                        .aria_label("Drag to reorder pane")
+                        .aria_label(tr("Drag to reorder pane"))
                         .w(px(20.))
                         .h(px(TAB_PLATE_HEIGHT))
                         .ml(px(6.))
@@ -1596,7 +1599,7 @@ impl ReviewPane {
                 div()
                     .id("review-tabs")
                     .role(Role::TabList)
-                    .aria_label("Files")
+                    .aria_label(tr("Files"))
                     .flex_1()
                     .min_w_0()
                     .h_full()
@@ -1720,7 +1723,10 @@ impl ReviewPane {
                         div()
                             .id(("review-tab-close", ix))
                             .role(Role::Button)
-                            .aria_label(SharedString::from(format!("Close {label}")))
+                            .aria_label(SharedString::from(tr_fmt(
+                                "Close {label}",
+                                &[("label", &label)],
+                            )))
                             .absolute()
                             .right_1()
                             .top(gpui::relative(0.5))
@@ -1809,7 +1815,7 @@ impl Render for ReviewPane {
                     centered()
                         .text_size(px(13.))
                         .text_color(content(0.45))
-                        .child("No project folder")
+                        .child(tr("No project folder"))
                         .into_any_element()
                 } else if let Some(error) = &source.error {
                     centered()
@@ -1819,11 +1825,11 @@ impl Render for ReviewPane {
                         .child(icon("circle-alert", 20.).mb_3().text_color(rgb(RED_400)))
                         .child(div().text_size(px(13.)).text_color(content(1.)).child(
                             match source.tab {
-                                ReviewTab::File { .. } => "Couldn’t open file",
+                                ReviewTab::File { .. } => tr("Couldn’t open file"),
                                 ReviewTab::Changes { .. } | ReviewTab::Session { .. } => {
-                                    "Couldn’t load changes"
+                                    tr("Couldn’t load changes")
                                 }
-                                ReviewTab::Commit { .. } => "Couldn’t load commit",
+                                ReviewTab::Commit { .. } => tr("Couldn’t load commit"),
                             },
                         ))
                         .child(

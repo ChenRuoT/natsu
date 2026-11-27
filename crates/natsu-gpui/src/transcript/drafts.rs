@@ -1,6 +1,7 @@
 use super::*;
 use gpui::{PathBuilder, point};
 use natsu_core::follow_up::Message as Draft;
+use natsu_core::i18n::tr;
 
 impl TranscriptView {
     /// Saving a new draft is a user submission, even though no provider starts.
@@ -159,7 +160,7 @@ impl TranscriptView {
                                             .text_size(px(12.))
                                             .text_color(content(0.5))
                                             .child(icon("circle-dashed-hi", 14.))
-                                            .child("Draft"),
+                                            .child(tr("Draft")),
                                     )
                                     .child(
                                         div()
@@ -169,28 +170,29 @@ impl TranscriptView {
                                             .child(
                                                 draft_button(
                                                     "remove-message-draft",
-                                                    "Remove draft",
+                                                    tr("Remove draft"),
                                                 )
                                                 .px_2()
                                                 .text_color(content(0.55))
                                                 .child(icon("trash", 14.))
-                                                .child("Remove")
+                                                .child(tr("Remove"))
                                                 .on_click(cx.listener(|_, _, _, cx| {
                                                     cx.emit(ResponseRequest::Draft { send: false })
                                                 })),
                                             )
                                             .child(
-                                                draft_button("send-message-draft", "Send draft")
-                                                    .px(px(10.))
-                                                    .bg(white(1.))
-                                                    .text_color(black(1.))
-                                                    .child("Send")
-                                                    .child(icon("send", 14.).text_color(black(1.)))
-                                                    .on_click(cx.listener(|_, _, _, cx| {
-                                                        cx.emit(ResponseRequest::Draft {
-                                                            send: true,
-                                                        })
-                                                    })),
+                                                draft_button(
+                                                    "send-message-draft",
+                                                    tr("Send draft"),
+                                                )
+                                                .px(px(10.))
+                                                .bg(white(1.))
+                                                .text_color(black(1.))
+                                                .child(tr("Send"))
+                                                .child(icon("send", 14.).text_color(black(1.)))
+                                                .on_click(cx.listener(|_, _, _, cx| {
+                                                    cx.emit(ResponseRequest::Draft { send: true })
+                                                })),
                                             ),
                                     ),
                             ),

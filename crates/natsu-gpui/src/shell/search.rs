@@ -69,7 +69,7 @@ impl Shell {
             .debug_selector(|| "search-title-tab".into())
             .group("search-title-tab")
             .role(Role::Tab)
-            .aria_label("Search")
+            .aria_label(tr("Search"))
             .aria_selected(active)
             .cursor_pointer()
             .w(px(width))
@@ -102,7 +102,7 @@ impl Shell {
                             .flex_1()
                             .truncate()
                             .text_size(px(TITLE_TAB_TEXT_SIZE))
-                            .child("Search"),
+                            .child(tr("Search")),
                     ),
             )
             .when(close, |d| {
@@ -111,7 +111,7 @@ impl Shell {
                         .id("close-search-tab")
                         .debug_selector(|| "close-search-tab".into())
                         .role(Role::Button)
-                        .aria_label("Close Search")
+                        .aria_label(tr("Close Search"))
                         .absolute()
                         .right_1()
                         .top(px(10.))
@@ -353,7 +353,7 @@ impl Shell {
                 .sessions()?
                 .into_iter()
                 .find(|s| s.id == id)
-                .ok_or_else(|| "Conversation no longer exists".to_owned())
+                .ok_or_else(|| tr("Conversation no longer exists").to_owned())
         });
         cx.spawn(async move |this, cx| {
             let result = work.await;

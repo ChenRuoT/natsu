@@ -325,7 +325,7 @@ impl Render for ProjectBackground {
             .id("project-chat-background")
             .debug_selector(|| "project-chat-background".into())
             .role(Role::Image)
-            .aria_label("Project background")
+            .aria_label(natsu_core::i18n::tr("Project background"))
             .absolute()
             .size_full()
             .overflow_hidden()

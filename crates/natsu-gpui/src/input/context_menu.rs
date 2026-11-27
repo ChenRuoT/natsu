@@ -2,6 +2,7 @@
 //! GPUI draws these fields itself, so there is no webview editing menu.
 use super::*;
 use crate::popover::{Anchor, Menu, MenuAction, MenuEvent, MenuItem, menu_popover};
+use natsu_core::i18n::tr;
 
 pub(super) struct EditingMenu {
     menu: Entity<Menu>,
@@ -26,10 +27,10 @@ impl Input {
         let mut items = Vec::new();
         if self.code.is_some() {
             items.extend([
-                action("undo", "Undo", "Z", self.history_available(false)),
+                action("undo", tr("Undo"), "Z", self.history_available(false)),
                 action(
                     "redo",
-                    "Redo",
+                    tr("Redo"),
                     if cfg!(target_os = "macos") {
                         "⇧Z"
                     } else {
@@ -41,13 +42,18 @@ impl Input {
             ]);
         }
         items.extend([
-            action("cut", "Cut", "X", selected && !self.read_only),
-            action("copy", "Copy", "C", selected),
+            action("cut", tr("Cut"), "X", selected && !self.read_only),
+            action("copy", tr("Copy"), "C", selected),
             // Dispatch Paste through the focused field's ancestors, just as
             // the shortcut does: composers also accept clipboard images.
-            action("paste", "Paste", "V", clipboard && !self.read_only),
+            action("paste", tr("Paste"), "V", clipboard && !self.read_only),
             MenuItem::Separator,
-            action("select-all", "Select All", "A", !self.content.is_empty()),
+            action(
+                "select-all",
+                tr("Select All"),
+                "A",
+                !self.content.is_empty(),
+            ),
         ]);
         items
     }
@@ -69,7 +75,7 @@ impl Input {
             self.move_to(index, cx);
         }
         let items = self.editing_menu_items(cx.read_from_clipboard().is_some());
-        let menu = cx.new(|cx| Menu::new("Text editing", items, window, cx));
+        let menu = cx.new(|cx| Menu::new(tr("Text editing"), items, window, cx));
         let events = cx.subscribe_in(&menu, window, |this, _, event, window, cx| {
             this.context_menu = None;
             if let MenuEvent::Picked(id, _) = event {

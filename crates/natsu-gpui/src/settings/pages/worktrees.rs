@@ -7,17 +7,18 @@ use crate::{
     theme::*,
 };
 use gpui::{AnyElement, Context, SharedString, div, prelude::*, px};
+use natsu_core::i18n::{tr, tr_fmt};
 impl SettingsView {
     pub(super) fn worktrees_page(&mut self, cx: &mut Context<Self>) -> Vec<AnyElement> {
         let project = self.project_picker(cx);
         let ready = !self.discovery_loading
             && self.discovery.worktrees.error.is_none()
             && !self.discovery.worktrees.main.is_empty();
-        let mut page=vec![div().relative().child(self.reveal_probe("project-worktrees")).flex().items_center().gap_1().child(project).child(secondary_button("create-settings-worktree","Create worktree",false,!ready).child(icon("plus",12.)).child("Create worktree").on_click(cx.listener(move|this,_,window,cx|{if ready{this.open_management(Target::Worktree,window,cx);}}))).into_any_element(),div().mt_4().flex().items_center().justify_between().gap_3().child(div().min_w_0().flex_1().text_size(px(12.)).line_height(px(18.)).text_color(content(0.5)).child("Sessions can share a worktree. Deleting one keeps its sessions by default and discards uncommitted changes. Its branch and commits are kept.")).child(self.refresh_button("refresh-settings-worktrees","Refresh",cx)).into_any_element()];
+        let mut page=vec![div().relative().child(self.reveal_probe("project-worktrees")).flex().items_center().gap_1().child(project).child(secondary_button("create-settings-worktree",tr("Create worktree"),false,!ready).child(icon("plus",12.)).child(tr("Create worktree")).on_click(cx.listener(move|this,_,window,cx|{if ready{this.open_management(Target::Worktree,window,cx);}}))).into_any_element(),div().mt_4().flex().items_center().justify_between().gap_3().child(div().min_w_0().flex_1().text_size(px(12.)).line_height(px(18.)).text_color(content(0.5)).child(tr("Sessions can share a worktree. Deleting one keeps its sessions by default and discards uncommitted changes. Its branch and commits are kept."))).child(self.refresh_button("refresh-settings-worktrees",tr("Refresh"),cx)).into_any_element()];
         if self.selected_project.is_empty() {
-            page.push(note("Add a project to manage its worktrees."));
+            page.push(note(tr("Add a project to manage its worktrees.")));
         } else if self.discovery_loading {
-            page.push(note("Loading worktrees…"));
+            page.push(note(tr("Loading worktrees…")));
         } else if let Some(error) = &self.discovery.worktrees.error {
             page.push(
                 div()
@@ -47,13 +48,11 @@ impl SettingsView {
                         div()
                             .text_size(px(13.))
                             .font_weight(gpui::FontWeight::MEDIUM)
-                            .child("No additional worktrees"),
+                            .child(tr("No additional worktrees")),
                     )
-                    .child(
-                        div().text_size(px(12.)).text_color(content(0.5)).child(
-                            "Create a worktree to work on another branch in a separate folder.",
-                        ),
-                    )
+                    .child(div().text_size(px(12.)).text_color(content(0.5)).child(tr(
+                        "Create a worktree to work on another branch in a separate folder.",
+                    )))
                     .into_any_element(),
             );
         } else {
@@ -75,13 +74,13 @@ impl SettingsView {
                             .filter(|(_, p, _)| natsu_core::files::is_equal_or_inside(p, &t.path))
                             .count();
                         let status = if t.missing {
-                            "Missing folder"
+                            tr("Missing folder")
                         } else if tree.dirty == Some(true) {
-                            "Uncommitted changes"
+                            tr("Uncommitted changes")
                         } else if tree.dirty == Some(false) {
-                            "Clean"
+                            tr("Clean")
                         } else {
-                            "Status unavailable"
+                            tr("Status unavailable")
                         };
                         let blocked = tree.locked || t.branch.is_none();
                         div()
@@ -126,14 +125,17 @@ impl SettingsView {
                                             .child(
                                                 t.branch
                                                     .as_ref()
-                                                    .map(|b| format!("Current branch: {b}"))
+                                                    .map(|b| tr_fmt("Current branch: {branch}", &[("branch", b)]))
                                                     .unwrap_or_else(|| {
-                                                        format!(
-                                                            "Detached at {}",
-                                                            t.head
-                                                                .chars()
-                                                                .take(7)
-                                                                .collect::<String>()
+                                                        tr_fmt(
+                                                            "Detached at {head}",
+                                                            &[(
+                                                                "head",
+                                                                &t.head
+                                                                    .chars()
+                                                                    .take(7)
+                                                                    .collect::<String>(),
+                                                            )],
                                                         )
                                                     }),
                                             ),
@@ -143,25 +145,54 @@ impl SettingsView {
                                             .mt_2()
                                             .text_size(px(11.))
                                             .text_color(content(0.55))
-                                            .child(format!(
-                                                "{count} {} in this worktree · {status}{}{}",
-                                                if count == 1 { "session" } else { "sessions" },
-                                                if tree.unpushed > 0 {
-                                                    format!(
-                                                        " · {} unpublished commits",
-                                                        tree.unpushed
+                                            .child({
+                                                let unpublished = if tree.unpushed > 0 {
+                                                    tr_fmt(
+                                                        " · {commits} unpublished commits",
+                                                        &[("commits", &tree.unpushed)],
                                                     )
                                                 } else {
                                                     String::new()
-                                                },
-                                                if tree.locked { " · Locked" } else { "" }
-                                            )),
+                                                };
+                                                let locked = if tree.locked {
+                                                    tr(" · Locked")
+                                                } else {
+                                                    ""
+                                                };
+                                                if count == 1 {
+                                                    tr_fmt(
+                                                        "{count} session in this worktree · {status}{unpublished}{locked}",
+                                                        &[
+                                                            ("count", &count),
+                                                            ("status", &status),
+                                                            ("unpublished", &unpublished),
+                                                            ("locked", &locked),
+                                                        ],
+                                                    )
+                                                } else {
+                                                    tr_fmt(
+                                                        "{count} sessions in this worktree · {status}{unpublished}{locked}",
+                                                        &[
+                                                            ("count", &count),
+                                                            ("status", &status),
+                                                            ("unpublished", &unpublished),
+                                                            ("locked", &locked),
+                                                        ],
+                                                    )
+                                                }
+                                            }),
                                     ),
                             )
                             .child(
                                 secondary_button(
                                     SharedString::from(format!("reveal-tree-{ix}")),
-                                    format!("Reveal {}", t.branch.as_deref().unwrap_or("worktree")),
+                                    tr_fmt(
+                                        "Reveal {branch}",
+                                        &[(
+                                            "branch",
+                                            &t.branch.as_deref().unwrap_or(tr("worktree")),
+                                        )],
+                                    ),
                                     false,
                                     t.missing,
                                 )
@@ -171,7 +202,13 @@ impl SettingsView {
                             .child(
                                 secondary_button(
                                     SharedString::from(format!("delete-tree-{ix}")),
-                                    format!("Delete {}", t.branch.as_deref().unwrap_or("worktree")),
+                                    tr_fmt(
+                                        "Delete {branch}",
+                                        &[(
+                                            "branch",
+                                            &t.branch.as_deref().unwrap_or(tr("worktree")),
+                                        )],
+                                    ),
                                     false,
                                     blocked,
                                 )
@@ -193,9 +230,9 @@ impl SettingsView {
             );
         }
         if ready {
-            page.push(note(format!(
-                "New worktrees are created in {}.",
-                self.discovery.worktrees.default_root.display()
+            page.push(note(tr_fmt(
+                "New worktrees are created in {folder}.",
+                &[("folder", &self.discovery.worktrees.default_root.display())],
             )));
         }
         page

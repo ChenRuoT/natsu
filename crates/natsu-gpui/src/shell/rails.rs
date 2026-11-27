@@ -348,7 +348,7 @@ impl Shell {
             .and_then(|name| name.to_str())
             .unwrap_or(&session.summary.cwd);
         let git_label = if saved.is_some_and(|details| details.worktree_removed) {
-            "No branch".to_string()
+            tr("No branch").to_string()
         } else {
             match branch.filter(|branch| !branch.is_empty()) {
                 Some(branch) if !repo.is_empty() => format!("{repo}/{branch}"),
@@ -679,28 +679,28 @@ impl Shell {
                 .text_color(rgb(0xfbbf24))
                 .child(icon("circle-alert", 12.))
                 .child(if self.orchestration_summaries.contains_key(&id) {
-                    "Needs input"
+                    tr("Needs input")
                 } else {
-                    "Need approval"
+                    tr("Need approval")
                 })
                 .into_any_element()
         } else if session.responding() {
             status
                 .text_color(crate::theme::accent_color())
                 .children(self.session_marks.get(&id).cloned())
-                .child("Working...")
+                .child(tr("Working..."))
                 .into_any_element()
         } else if self.unseen_finished.contains(&id) {
             status
                 .text_color(rgb(0x34d399))
                 .child(icon("check", 12.))
-                .child("Done")
+                .child(tr("Done"))
                 .into_any_element()
         } else if session.has_saved_draft() {
             status
                 .text_color(content(0.55))
                 .child(icon("circle-dashed-hi", 12.))
-                .child("Draft")
+                .child(tr("Draft"))
                 .into_any_element()
         } else {
             status
@@ -732,23 +732,24 @@ impl Shell {
                         .text_size(px(11.))
                         .line_height(px(16.5))
                         .text_color(content(0.45))
-                        .child(format!(
-                            "{} {}",
-                            summary.tasks.len(),
-                            if summary.tasks.len() == 1 {
-                                "agent"
-                            } else {
-                                "agents"
-                            }
-                        ))
-                        .child(format!(
-                            "{}/{} done",
-                            summary
-                                .tasks
-                                .iter()
-                                .filter(|task| task.status == "completed")
-                                .count(),
-                            summary.tasks.len()
+                        .child(if summary.tasks.len() == 1 {
+                            tr_fmt("{count} agent", &[("count", &summary.tasks.len())])
+                        } else {
+                            tr_fmt("{count} agents", &[("count", &summary.tasks.len())])
+                        })
+                        .child(tr_fmt(
+                            "{done}/{total} done",
+                            &[
+                                (
+                                    "done",
+                                    &summary
+                                        .tasks
+                                        .iter()
+                                        .filter(|task| task.status == "completed")
+                                        .count(),
+                                ),
+                                ("total", &summary.tasks.len()),
+                            ],
                         )),
                 )
             })
@@ -790,7 +791,7 @@ impl Shell {
                             .id(("rail-agent", (lead as usize) << 8 | ix))
                             .debug_selector(move || format!("rail-agent-{lead}-{ix}"))
                             .role(Role::Button)
-                            .aria_label(format!("Agent details: {}", task.title))
+                            .aria_label(tr_fmt("Agent details: {title}", &[("title", &task.title)]))
                             .aria_expanded(open)
                             .group(group.clone())
                             .h(px(if classic { 28.5 } else { 28. }))
@@ -948,26 +949,28 @@ impl Shell {
                                         .gap_1()
                                         .when_some(worker, |d, worker| {
                                             d.child(
-                                                solid("rail-agent-open", "See details").on_click(
-                                                    cx.listener(move |this, _, window, cx| {
-                                                        this.open(worker, window, cx)
-                                                    }),
-                                                ),
+                                                solid("rail-agent-open", tr("See details"))
+                                                    .on_click(cx.listener(
+                                                        move |this, _, window, cx| {
+                                                            this.open(worker, window, cx)
+                                                        },
+                                                    )),
                                             )
                                         })
                                         .when_some(worker.filter(|_| running), |d, worker| {
                                             d.child(
-                                                solid("rail-agent-cancel", "Cancel task").on_click(
-                                                    cx.listener(move |this, _, _, cx| {
-                                                        if let Some(view) =
-                                                            this.sessions.get(&worker)
-                                                        {
-                                                            view.update(cx, |v, cx| {
-                                                                v.stop_if_busy(cx)
-                                                            });
-                                                        }
-                                                    }),
-                                                ),
+                                                solid("rail-agent-cancel", tr("Cancel task"))
+                                                    .on_click(cx.listener(
+                                                        move |this, _, _, cx| {
+                                                            if let Some(view) =
+                                                                this.sessions.get(&worker)
+                                                            {
+                                                                view.update(cx, |v, cx| {
+                                                                    v.stop_if_busy(cx)
+                                                                });
+                                                            }
+                                                        },
+                                                    )),
                                             )
                                         }),
                                 )

@@ -18,6 +18,7 @@ use gpui::{
     Subscription, Window, actions, div, list, prelude::*, px, rgb,
 };
 use natsu_core::files::{self, DirEntry, NameIssueKind, Severity};
+use natsu_core::i18n::{tr, tr_fmt};
 use std::{
     collections::{HashMap, HashSet},
     path::{Path, PathBuf},
@@ -244,7 +245,7 @@ impl Explorer {
     ) -> Self {
         let name_input = cx.new(|cx| {
             let mut input = Input::field(
-                "Type file name. Press Enter to confirm or Escape to cancel.",
+                tr("Type file name. Press Enter to confirm or Escape to cancel."),
                 "",
                 content(0.35),
                 cx,
@@ -581,33 +582,35 @@ impl Explorer {
         } else if let Some(issue) = &issue {
             match issue.kind {
                 NameIssueKind::Empty => {
-                    vec![("A file or folder name must be provided.".into(), false)]
+                    vec![(tr("A file or folder name must be provided.").into(), false)]
                 }
                 NameIssueKind::Slash => {
                     vec![(
-                        "A file or folder name cannot start with a slash.".into(),
+                        tr("A file or folder name cannot start with a slash.").into(),
                         false,
                     )]
                 }
+                // The name is highlighted on its own, so the sentence is split
+                // around it; each part keeps the same order in every language.
                 NameIssueKind::Exists => vec![
-                    ("A file or folder ".into(), false),
+                    (tr("A file or folder ").into(), false),
                     (issue.name.clone(), true),
                     (
-                        " already exists at this location. Please choose a different name.".into(),
+                        tr(" already exists at this location. Please choose a different name.").into(),
                         false,
                     ),
                 ],
                 NameIssueKind::Invalid => vec![
-                    ("The name ".into(), false),
+                    (tr("The name ").into(), false),
                     (issue.name.clone(), true),
                     (
-                        " is not valid as a file or folder name. Please choose a different name."
+                        tr(" is not valid as a file or folder name. Please choose a different name.")
                             .into(),
                         false,
                     ),
                 ],
                 NameIssueKind::Whitespace => vec![(
-                    "Leading or trailing whitespace detected in file or folder name.".into(),
+                    tr("Leading or trailing whitespace detected in file or folder name.").into(),
                     false,
                 )],
             }
@@ -874,12 +877,15 @@ impl Explorer {
         let answer = window.prompt(
             PromptLevel::Warning,
             &if is_dir {
-                format!("Delete folder “{label}” and everything inside it?")
+                tr_fmt(
+                    "Delete folder “{label}” and everything inside it?",
+                    &[("label", &label)],
+                )
             } else {
-                format!("Delete “{label}”?")
+                tr_fmt("Delete “{label}”?", &[("label", &label)])
             },
             None,
-            &["OK", "Cancel"],
+            &[tr("OK"), tr("Cancel")],
             cx,
         );
         cx.spawn_in(window, async move |this, cx| {
@@ -934,7 +940,7 @@ impl Explorer {
             return;
         };
         if clip.is_dir && (dest == clip.path || dest.starts_with(&format!("{}/", clip.path))) {
-            self.fail("Cannot paste a folder into itself.".into(), cx);
+            self.fail(tr("Cannot paste a folder into itself.").into(), cx);
             return;
         }
         let from = clip.path.clone();
@@ -1044,44 +1050,44 @@ impl Explorer {
         });
         let root = target.root;
         let items: Vec<MenuItem> = vec![
-            MenuAction::new("new-file", "New File").into(),
-            MenuAction::new("new-folder", "New Folder").into(),
+            MenuAction::new("new-file", tr("New File")).into(),
+            MenuAction::new("new-folder", tr("New Folder")).into(),
             MenuItem::Separator,
-            MenuAction::new("cut", "Cut")
+            MenuAction::new("cut", tr("Cut"))
                 .shortcut(format!("{MOD}X"))
                 .disabled(root)
                 .into(),
-            MenuAction::new("copy", "Copy")
+            MenuAction::new("copy", tr("Copy"))
                 .shortcut(format!("{MOD}C"))
                 .disabled(root)
                 .into(),
-            MenuAction::new("paste", "Paste")
+            MenuAction::new("paste", tr("Paste"))
                 .shortcut(format!("{MOD}V"))
                 .disabled(paste_blocked)
                 .into(),
-            MenuAction::new("duplicate", "Duplicate")
+            MenuAction::new("duplicate", tr("Duplicate"))
                 .disabled(root)
                 .into(),
             MenuItem::Separator,
-            MenuAction::new("copy-path", "Copy Path")
+            MenuAction::new("copy-path", tr("Copy Path"))
                 .shortcut(format!("{MOD}{SHIFT}C"))
                 .into(),
-            MenuAction::new("copy-relative-path", "Copy Relative Path").into(),
+            MenuAction::new("copy-relative-path", tr("Copy Relative Path")).into(),
             MenuItem::Separator,
-            MenuAction::new("rename", "Rename")
+            MenuAction::new("rename", tr("Rename"))
                 .shortcut("F2")
                 .disabled(root)
                 .into(),
-            MenuAction::new("delete", "Delete")
+            MenuAction::new("delete", tr("Delete"))
                 .shortcut("⌫")
                 .disabled(root)
                 .danger()
                 .into(),
             MenuItem::Separator,
-            MenuAction::new("reveal", REVEAL_LABEL).into(),
+            MenuAction::new("reveal", tr(REVEAL_LABEL)).into(),
         ];
         self.menu = None;
-        let menu = cx.new(|cx| Menu::new("File actions", items, window, cx));
+        let menu = cx.new(|cx| Menu::new(tr("File actions"), items, window, cx));
         let events = cx.subscribe_in(&menu, window, |this, _, event: &MenuEvent, window, cx| {
             let Some(open) = this.menu.take() else {
                 return;
@@ -1494,7 +1500,7 @@ impl Render for Explorer {
                 .py_2()
                 .text_size(px(12.))
                 .text_color(content(0.5))
-                .child("No project folder")
+                .child(tr("No project folder"))
                 .into_any_element();
         }
         let root_open = self.expanded.contains(&self.cwd);
@@ -1510,7 +1516,7 @@ impl Render for Explorer {
         div()
             .id("explorer")
             .role(Role::TabPanel)
-            .aria_label("Explorer")
+            .aria_label(tr("Explorer"))
             .key_context("Explorer")
             .track_focus(&self.focus)
             .size_full()
@@ -1620,18 +1626,23 @@ impl Render for Explorer {
                 }),
             )
             .child(
-                pane_header("explorer-header", "Explorer")
+                pane_header("explorer-header", tr("Explorer"))
                     .on_mouse_down(MouseButton::Right, |_, _, cx| cx.stop_propagation())
                     .child(
-                        Self::header_icon("explorer-new-file", "New File".into(), "file-add", true)
-                            .on_click(cx.listener(|this, _, window, cx| {
-                                this.start_create(false, None, window, cx)
-                            })),
+                        Self::header_icon(
+                            "explorer-new-file",
+                            tr("New File").into(),
+                            "file-add",
+                            true,
+                        )
+                        .on_click(cx.listener(|this, _, window, cx| {
+                            this.start_create(false, None, window, cx)
+                        })),
                     )
                     .child(
                         Self::header_icon(
                             "explorer-new-folder",
-                            "New Folder".into(),
+                            tr("New Folder").into(),
                             "folder-add",
                             true,
                         )
@@ -1642,7 +1653,7 @@ impl Render for Explorer {
                     .child(
                         Self::header_icon(
                             "explorer-collapse",
-                            "Collapse All".into(),
+                            tr("Collapse All").into(),
                             "fold-vertical",
                             true,
                         )
@@ -1651,7 +1662,7 @@ impl Render for Explorer {
                     .child(
                         Self::header_icon(
                             "explorer-search",
-                            format!("Search in files ({MOD}Shift+F)").into(),
+                            tr_fmt("Search in files ({mod}Shift+F)", &[("mod", &MOD)]).into(),
                             "search",
                             true,
                         )

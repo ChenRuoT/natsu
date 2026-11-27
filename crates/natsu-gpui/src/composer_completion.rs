@@ -10,6 +10,7 @@ use gpui::{
     App, Context, Entity, EventEmitter, Focusable, KeyBinding, MouseButton, Role, SharedString,
     Subscription, Window, actions, div, prelude::*, px,
 };
+use natsu_core::i18n::tr;
 use natsu_core::{
     composer::{self, Token, Trigger},
     files::ProjectFile,
@@ -595,11 +596,11 @@ impl Completion {
                         server.provider,
                         server.scope,
                         if server.provider != self.provider.id() {
-                            "Different provider"
+                            tr("Different provider")
                         } else if !server.enabled {
-                            "Disabled in provider configuration"
+                            tr("Disabled in provider configuration")
                         } else {
-                            "Configured for this provider"
+                            tr("Configured for this provider")
                         }
                     ),
                     insertion: String::new(),
@@ -663,42 +664,54 @@ impl Completion {
             for (order, (id, label, detail)) in [
                 (
                     "draft",
-                    "Draft",
-                    "Save this message without starting the agent",
+                    tr("Draft"),
+                    tr("Save this message without starting the agent"),
                 ),
                 (
                     "orchestrator",
-                    "Orchestrator",
-                    "Plan and coordinate agent work",
+                    tr("Orchestrator"),
+                    tr("Plan and coordinate agent work"),
                 ),
-                ("operator", "Operator", "Give this thread access to Natsu"),
-                ("plan", "Plan mode", "Review a plan before building"),
+                (
+                    "operator",
+                    "Operator",
+                    tr("Give this thread access to Natsu"),
+                ),
+                ("plan", tr("Plan mode"), tr("Review a plan before building")),
                 (
                     "btw",
-                    "Side question",
-                    "Ask a read-only side question about the current turn",
+                    tr("Side question"),
+                    tr("Ask a read-only side question about the current turn"),
                 ),
                 (
                     "compact",
-                    "Compact context",
-                    "Summarize older conversation context to free space",
+                    tr("Compact context"),
+                    tr("Summarize older conversation context to free space"),
                 ),
                 (
                     "add-to-folder",
-                    "Add to folder",
-                    "Place this session in an existing or new sidebar folder",
+                    tr("Add to folder"),
+                    tr("Place this session in an existing or new sidebar folder"),
                 ),
-                ("mcp", "MCP server", "Find an MCP server for this message"),
-                ("stage", "Stage", "Stage only this session's changes"),
+                (
+                    "mcp",
+                    tr("MCP server"),
+                    tr("Find an MCP server for this message"),
+                ),
+                (
+                    "stage",
+                    tr("Stage"),
+                    tr("Stage only this session's changes"),
+                ),
                 (
                     "commit",
-                    "Commit",
-                    "Stage and commit this session's changes",
+                    tr("Commit"),
+                    tr("Stage and commit this session's changes"),
                 ),
                 (
                     "visualize",
-                    "Visualize",
-                    "Create an inline visual of this topic or a specific request",
+                    tr("Visualize"),
+                    tr("Create an inline visual of this topic or a specific request"),
                 ),
             ]
             .into_iter()
@@ -1018,15 +1031,15 @@ impl Render for Completion {
                 .collect();
             let weak = cx.weak_entity();
             let title = if self.mcp_open {
-                "MCP SERVERS"
+                tr("MCP SERVERS")
             } else if self
                 .token
                 .as_ref()
                 .is_some_and(|t| t.trigger == Trigger::Mention)
             {
-                "FILES & NOTES"
+                tr("FILES & NOTES")
             } else {
-                "SKILLS & COMMANDS"
+                tr("SKILLS & COMMANDS")
             };
             let anchor = if self.composer_anchor.get().is_some() {
                 self.composer_anchor.clone()
@@ -1110,11 +1123,11 @@ impl Render for Completion {
                                         .text_size(px(12.))
                                         .text_color(content(0.45))
                                         .child(SharedString::from(if self.loading {
-                                            "Loading…".to_owned()
+                                            tr("Loading…").to_owned()
                                         } else {
                                             self.error
                                                 .clone()
-                                                .unwrap_or_else(|| "No matches".into())
+                                                .unwrap_or_else(|| tr("No matches").into())
                                         })),
                                 )
                             })
@@ -1129,7 +1142,7 @@ impl Render for Completion {
                                     .border_color(content(0.07))
                                     .text_size(px(10.))
                                     .text_color(content(0.35))
-                                    .child("↑ ↓ navigate    ↵ / Tab select    Esc dismiss"),
+                                    .child(tr("↑ ↓ navigate    ↵ / Tab select    Esc dismiss")),
                             ),
                     ),
             );

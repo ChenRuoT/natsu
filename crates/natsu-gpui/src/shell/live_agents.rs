@@ -71,11 +71,11 @@ impl Shell {
                     provider: view.summary.provider.clone(),
                     title: view.display_title(),
                     activity: if needs_approval {
-                        "Need approval".into()
+                        tr("Need approval").into()
                     } else if done {
-                        "Done".into()
+                        tr("Done").into()
                     } else {
-                        tool.unwrap_or_else(|| "Working".into())
+                        tool.unwrap_or_else(|| tr("Working").into())
                     },
                     started_at,
                     duration_ms: duration_ms.filter(|_| done),
@@ -184,7 +184,7 @@ impl Shell {
                                         .truncate()
                                         .text_size(px(12.))
                                         .text_color(content(0.5))
-                                        .child("Working"),
+                                        .child(tr("Working")),
                                 )
                                 .child(
                                     div()
@@ -237,7 +237,7 @@ impl Shell {
                                         }),
                                     )
                                     .child(if expanded {
-                                        "Show less".to_owned()
+                                        tr("Show less").to_owned()
                                     } else {
                                         format!("{extra} more")
                                     })

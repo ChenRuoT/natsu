@@ -941,7 +941,7 @@ pub(super) fn heatmap(
                 let square = SQUARE as f32 * CELL;
                 readout(
                     &name,
-                    &[(tint, "Value".into(), reading(*v))],
+                    &[(tint, natsu_core::i18n::tr("Value").into(), reading(*v))],
                     grid.origin
                         + point(
                             px(c as f32 * pitch + square),

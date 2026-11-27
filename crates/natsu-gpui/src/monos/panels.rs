@@ -5,6 +5,7 @@ use crate::{
     project_settings::{BackgroundDialog, Event as BackgroundEvent},
 };
 use gpui::{AnyView, Div, FontWeight, Stateful};
+use natsu_core::i18n::{tr, tr_fmt};
 use natsu_core::mono::heartbeat;
 use natsu_core::project_appearance::{MASCOTS, ProjectAppearance};
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -289,14 +290,14 @@ fn sub_agent_card(agent: SubAgent) -> Stateful<Div> {
         .map_or(model.clone(), |short| short.to_owned().into());
     let amber: gpui::Hsla = rgb(0xfbbf24).into();
     let (label, color, live): (String, gpui::Hsla, bool) = match agent.state {
-        AgentState::Working => ("Working".into(), accent_color(), true),
-        AgentState::NeedsInput => ("Needs approval".into(), amber, true),
+        AgentState::Working => (tr("Working").into(), accent_color(), true),
+        AgentState::NeedsInput => (tr("Needs approval").into(), amber, true),
         AgentState::Idle(at) => (
             natsu_core::time::relative(at, natsu_core::time::now_ms()),
             content(0.45),
             false,
         ),
-        AgentState::Unavailable => ("Unavailable".into(), content(0.45), false),
+        AgentState::Unavailable => (tr("Unavailable").into(), content(0.45), false),
     };
     let needs_input = matches!(agent.state, AgentState::NeedsInput);
     let id = agent.id;
@@ -305,7 +306,10 @@ fn sub_agent_card(agent: SubAgent) -> Stateful<Div> {
             .id(("mono-launch", id as usize))
             .debug_selector(move || format!("mono-launch-{id}"))
             .role(Role::Button)
-            .aria_label(format!("{}, {model}", agent.title)),
+            .aria_label(tr_fmt(
+                "{title}, {model}",
+                &[("title", &agent.title), ("model", &model)],
+            )),
     )
     .when(needs_input, |d| {
         let mut c = amber;
@@ -489,12 +493,12 @@ impl EventEmitter<LookSubmitted> for LookEditor {}
 impl LookEditor {
     fn new(mono: Mono, cx: &mut Context<Self>) -> Self {
         let name = cx.new(|cx| {
-            let mut f = Input::field("Mono name", mono.label(), content(0.45), cx);
+            let mut f = Input::field(tr("Mono name"), mono.label(), content(0.45), cx);
             f.set_text(mono.name.clone(), cx);
             f
         });
         let color = cx.new(|cx| {
-            let mut f = Input::field("Custom Mono color", "#rrggbb", content(0.4), cx);
+            let mut f = Input::field(tr("Custom Mono color"), "#rrggbb", content(0.4), cx);
             f.set_text(format!("#{:06x}", mono.color), cx);
             f
         });
@@ -606,7 +610,7 @@ impl gpui::Render for LookEditor {
                         div()
                             .id("mono-mascot-options")
                             .role(Role::RadioGroup)
-                            .aria_label("Mascot")
+                            .aria_label(tr("Mascot"))
                             .px_1()
                             .flex()
                             .gap(px(2.))
@@ -649,7 +653,7 @@ impl gpui::Render for LookEditor {
                         div()
                             .id("mono-color-options")
                             .role(Role::Group)
-                            .aria_label("Color")
+                            .aria_label(tr("Color"))
                             .child(
                                 div()
                                     .px_1()
@@ -659,7 +663,7 @@ impl gpui::Render for LookEditor {
                                         |(ix, color)| {
                                             swatch(
                                                 ("mono-color", ix).into(),
-                                                COLOR_NAMES[ix].into(),
+                                                tr(COLOR_NAMES[ix]).into(),
                                                 self.mono.color == color,
                                                 div()
                                                     .size(px(14.))
@@ -686,7 +690,7 @@ impl gpui::Render for LookEditor {
                                     .child(
                                         swatch(
                                             "mono-custom-color".into(),
-                                            "Custom color".into(),
+                                            tr("Custom color").into(),
                                             !preset || self.custom_open,
                                             div()
                                                 .relative()
@@ -741,7 +745,7 @@ impl LookEditor {
             .id("mono-settings-look-picker")
             .debug_selector(|| "mono-settings-look-picker".into())
             .role(Role::Dialog)
-            .aria_label("Mascot and color")
+            .aria_label(tr("Mascot and color"))
             .track_focus(&self.focus)
             .p_3()
             .w_full()
@@ -752,7 +756,7 @@ impl LookEditor {
                 div()
                     .id("mono-mascot-options")
                     .role(Role::RadioGroup)
-                    .aria_label("Mascot")
+                    .aria_label(tr("Mascot"))
                     .px_1()
                     .flex()
                     .flex_col()
@@ -800,7 +804,7 @@ impl LookEditor {
                 div()
                     .id("mono-color-options")
                     .role(Role::Group)
-                    .aria_label("Color")
+                    .aria_label(tr("Color"))
                     .px_1()
                     .flex()
                     .flex_col()
@@ -814,7 +818,7 @@ impl LookEditor {
                                 div()
                                     .id(("settings-color", index))
                                     .role(Role::Button)
-                                    .aria_label(COLOR_NAMES[index])
+                                    .aria_label(tr(COLOR_NAMES[index]))
                                     .aria_selected(selected)
                                     .size(px(36.))
                                     .flex()
@@ -856,7 +860,7 @@ impl LookEditor {
                                 div()
                                     .id("settings-custom-color")
                                     .role(Role::Button)
-                                    .aria_label("Custom color")
+                                    .aria_label(tr("Custom color"))
                                     .size(px(36.))
                                     .flex()
                                     .items_center()
@@ -927,7 +931,7 @@ impl Monos {
         });
         let menu = cx.new(|cx| {
             Menu::new(
-                "Mascot and color",
+                tr("Mascot and color"),
                 vec![MenuItem::Custom(editor.into(), focus)],
                 window,
                 cx,
@@ -1012,7 +1016,7 @@ impl Monos {
             .flex()
             .items_center()
             .child(
-                icon_button("mono-settings", "Mono settings", "settings")
+                icon_button("mono-settings", tr("Mono settings"), "settings")
                     .debug_selector(|| "mono-settings".into())
                     .on_click(cx.listener(move |this, _, window, cx| {
                         this.settings = Some(SettingsSection::General);
@@ -1071,7 +1075,7 @@ impl Monos {
                     .id("original-hide-mono-overview")
                     .debug_selector(|| "original-hide-mono-overview".into())
                     .role(Role::Button)
-                    .aria_label("Hide overview")
+                    .aria_label(tr("Hide overview"))
                     .aria_toggled(gpui::Toggled::True)
                     .size(px(24.))
                     .flex_shrink_0()
@@ -1109,23 +1113,28 @@ impl Monos {
             .as_ref()
             .and_then(|r| r.progress(self.overview_tab, window, cx));
         let tabs = [
-            (OverviewTab::Overview, "Overview", "dashboard", 0),
+            (OverviewTab::Overview, tr("Overview"), "dashboard", 0),
             (
                 OverviewTab::Sessions,
-                "Sub-agents",
+                tr("Sub-agents"),
                 "message-multiple",
                 mono.launches.len(),
             ),
             (
                 OverviewTab::Documents,
-                "Documents",
+                tr("Documents"),
                 "file",
                 mono.documents.len(),
             ),
-            (OverviewTab::Habits, "Habits", "clock", self.habits.len()),
+            (
+                OverviewTab::Habits,
+                tr("Habits"),
+                "clock",
+                self.habits.len(),
+            ),
             (
                 OverviewTab::Changes,
-                "Changes",
+                tr("Changes"),
                 "file-diff",
                 self.project_changes.count(&mono.id),
             ),
@@ -1134,7 +1143,7 @@ impl Monos {
             .id("mono-overview-tabs")
             .debug_selector(|| "mono-overview-tabs".into())
             .role(Role::TabList)
-            .aria_label("Mono details")
+            .aria_label(tr("Mono details"))
             .h(px(TITLE_BAR_HEIGHT))
             .flex_1()
             .min_w_0()
@@ -1172,7 +1181,7 @@ impl Monos {
             .child(crate::shell::titlebar_drag_area().flex_1().min_w_0())
             .when(self.overview_tab == OverviewTab::Habits, |d| {
                 d.child(
-                    icon_button("mono-new-habit", "New habit", "plus")
+                    icon_button("mono-new-habit", tr("New habit"), "plus")
                         .debug_selector(|| "mono-new-habit".into())
                         .on_click(cx.listener(|this, _, _, cx| {
                             this.route = Some(Route::NewHabit);
@@ -1182,7 +1191,7 @@ impl Monos {
                 )
             })
             .child(
-                icon_button("mono-activity", "Show activity", "list-bullet")
+                icon_button("mono-activity", tr("Show activity"), "list-bullet")
                     .debug_selector(|| "mono-activity".into())
                     .when(self.overview_tab == OverviewTab::Activity, |d| {
                         d.bg(content(0.1))
@@ -1228,7 +1237,7 @@ impl Monos {
     fn session_list(&mut self, mono: &Mono, cx: &mut Context<Self>) -> AnyElement {
         let filter = self.field(
             "mono-session-search",
-            "Search sub-agents…",
+            tr("Search sub-agents…"),
             String::new(),
             false,
             cx,
@@ -1276,7 +1285,7 @@ impl Monos {
             )
         });
         let search_bar = search_bar(filter).child(
-            icon_button("mono-session-filter", "Filter sub-agents", "filter")
+            icon_button("mono-session-filter", tr("Filter sub-agents"), "filter")
                 .relative()
                 .child(self.session_filter_anchor.probe())
                 .on_click(cx.listener(|this, _, window, cx| this.filter_menu(window, cx))),
@@ -1285,8 +1294,8 @@ impl Monos {
         div().size_full().flex().flex_col()
             .when(!mono.launches.is_empty(),|d|d.child(search_bar))
             .child(div().id("mono-session-list").debug_selector(|| "mono-session-list".into()).flex_1().min_h_0().overflow_y_scroll().p_2().flex().flex_col().gap_1p5()
-                .when(mono.launches.is_empty(),|d|d.child(empty_state("message-multiple",&format!("Ask {} to hand work to a sub-agent on one of your projects, like a bug fix or a review, and it shows up here.",mono.label()))))
-                .when(no_matches,|d|d.child(empty_state("search-01",if query.trim().is_empty(){"No sub-agents match these filters."}else{"No sub-agents match this search."})))
+                .when(mono.launches.is_empty(),|d|d.child(empty_state("message-multiple",&tr_fmt("Ask {mono} to hand work to a sub-agent on one of your projects, like a bug fix or a review, and it shows up here.",&[("mono",&mono.label())]))))
+                .when(no_matches,|d|d.child(empty_state("search-01",if query.trim().is_empty(){tr("No sub-agents match these filters.")}else{tr("No sub-agents match this search.")})))
                 .children(launches.into_iter().map(|launch|{
                     let id = launch.session_id;
                     let state = views.iter().find(|v| v.id == id);
@@ -1319,7 +1328,7 @@ impl Monos {
     fn document_list(&mut self, mono: &Mono, cx: &mut Context<Self>) -> AnyElement {
         let filter = self.field(
             "mono-document-search",
-            "Search documents…",
+            tr("Search documents…"),
             String::new(),
             false,
             cx,
@@ -1343,27 +1352,27 @@ impl Monos {
             .when(mono.documents.is_empty(), |d| {
                 d.child(empty_state(
                     "file",
-                    &format!(
-                        "Ask {} to write something up, like a plan or a summary, and it shows up here.",
-                        mono.label()
+                    &tr_fmt(
+                        "Ask {mono} to write something up, like a plan or a summary, and it shows up here.",
+                        &[("mono", &mono.label())],
                     ),
                 ))
             })
             .when(documents.is_empty() && !mono.documents.is_empty(), |d| {
-                d.child(empty_state("search-01", "No documents match this search."))
+                d.child(empty_state("search-01", tr("No documents match this search.")))
             })
             .children(documents.into_iter().map(|document| {
                 // MonoOverview's DocumentRow: laid out like a habit.
                 let id = document.id.clone();
                 let visual = matches!(document.kind.as_str(), "html" | "visual");
-                let label = if visual { "Visual" } else { "Document" };
+                let label = if visual { tr("Visual") } else { tr("Document") };
                 outlined(div().id(SharedString::from(format!("mono-document-{id}"))))
                     .debug_selector({
                         let id = id.clone();
                         move || format!("mono-document-{id}")
                     })
                     .role(Role::Button)
-                    .aria_label(format!("Open {} {}", label.to_lowercase(), document.title))
+                    .aria_label(tr_fmt("Open {label} {title}", &[("label", &label.to_lowercase()), ("title", &document.title)]))
                     .w_full()
                     .min_w_0()
                     .flex()
@@ -1440,7 +1449,7 @@ impl Monos {
             .items_center()
             .gap_2()
             .child(
-                icon_button("mono-page-back", "Back", "chevron-left")
+                icon_button("mono-page-back", tr("Back"), "chevron-left")
                     .debug_selector(|| "mono-page-back".into())
                     .on_click(cx.listener(|this, _, _, cx| {
                         this.route = None;
@@ -1470,7 +1479,7 @@ impl Monos {
                 .size_full()
                 .flex()
                 .flex_col()
-                .child(self.page_header("Changes", cx))
+                .child(self.page_header(tr("Changes"), cx))
                 .when_some(self.review.clone(), |d, review| {
                     d.child(div().flex_1().min_h_0().child(review))
                 })
@@ -1485,7 +1494,7 @@ impl Monos {
                 let title = view
                     .as_ref()
                     .map(|v| v.read(cx).summary.title.clone())
-                    .unwrap_or_else(|| "Session unavailable".into());
+                    .unwrap_or_else(|| tr("Session unavailable").into());
                 div()
                     .size_full()
                     .flex()
@@ -1494,7 +1503,7 @@ impl Monos {
                         self.page_header(&title, cx).child(
                             icon_button(
                                 "mono-open-session",
-                                "Open session in workspace",
+                                tr("Open session in workspace"),
                                 "external-link",
                             )
                             .on_click(
@@ -1524,16 +1533,16 @@ impl Monos {
                         .documents
                         .iter()
                         .find(|d| d.id == id)
-                        .map_or("Document", |d| d.title.as_str());
+                        .map_or(tr("Document"), |d| d.title.as_str());
                     return div()
                         .size_full()
                         .flex()
                         .flex_col()
                         .child(self.page_header(title, cx))
                         .child(empty(if self.work.loading_documents.contains(&id) {
-                            "Loading document…"
+                            tr("Loading document…")
                         } else {
-                            "Document unavailable"
+                            tr("Document unavailable")
                         }))
                         .into_any_element();
                 };
@@ -1578,7 +1587,7 @@ impl Monos {
                             .py_3()
                             .child(view)
                             .into_any_element(),
-                        None => empty("Visual unavailable"),
+                        None => empty(tr("Visual unavailable")),
                     }
                 } else {
                     self.documents
@@ -1602,12 +1611,16 @@ impl Monos {
                         document.kind != "visual",
                         |header| {
                             header.child(
-                                icon_button("mono-document-copy", "Copy document", "response-copy")
-                                    .on_click(move |_, _, cx| {
-                                        cx.write_to_clipboard(gpui::ClipboardItem::new_string(
-                                            document.body.clone(),
-                                        ))
-                                    }),
+                                icon_button(
+                                    "mono-document-copy",
+                                    tr("Copy document"),
+                                    "response-copy",
+                                )
+                                .on_click(move |_, _, cx| {
+                                    cx.write_to_clipboard(gpui::ClipboardItem::new_string(
+                                        document.body.clone(),
+                                    ))
+                                }),
                             )
                         },
                     ))
@@ -1620,16 +1633,16 @@ impl Monos {
     }
     fn activity_view(&mut self, mono: &Mono, cx: &mut Context<Self>) -> AnyElement {
         let Some(chat) = self.chat() else {
-            return empty("Loading…");
+            return empty(tr("Loading…"));
         };
         // Response actions number turns across every loaded page.
         let source = chat.read(cx).transcript.read(cx).history_rows();
         let Some(start) = self.activity_turn.filter(|i| *i < source.len()) else {
             return empty_state(
                 "list-bullet",
-                &format!(
-                    "Select the activity on one of {}’s messages to see each step it took.",
-                    mono.label()
+                &tr_fmt(
+                    "Select the activity on one of {mono}’s messages to see each step it took.",
+                    &[("mono", &mono.label())],
                 ),
             );
         };
@@ -1646,7 +1659,7 @@ impl Monos {
             .cloned()
             .collect::<Vec<_>>();
         if rows.is_empty() {
-            return empty_state("list-bullet", "No activity in this turn yet.");
+            return empty_state("list-bullet", tr("No activity in this turn yet."));
         }
         let key = mono::files::content_hash(&format!("{rows:?}"));
         if self.activity.as_ref().is_none_or(|(old, _)| old != &key) {
@@ -1724,7 +1737,7 @@ impl Monos {
                             .debug_selector(|| "mono-settings-dialog".into())
                             .role(Role::Dialog)
                             .track_focus(&self.settings_focus)
-                            .aria_label(format!("{} settings", mono.label()))
+                            .aria_label(tr_fmt("{mono} settings", &[("mono", &mono.label())]))
                             .h_full()
                             .w_full()
                             .flex()
@@ -1734,7 +1747,7 @@ impl Monos {
                                     .id("mono-settings-navigation")
                                     .debug_selector(|| "mono-settings-navigation".into())
                                     .role(Role::Navigation)
-                                    .aria_label("Settings sections")
+                                    .aria_label(tr("Settings sections"))
                                     .w(px(192.))
                                     .flex_shrink_0()
                                     .h_full()
@@ -1751,7 +1764,7 @@ impl Monos {
                                             .pb_2()
                                             .text_size(px(11.))
                                             .text_color(content(0.45))
-                                            .child("Settings"),
+                                            .child(tr("Settings")),
                                     )
                                     .children(
                                         [
@@ -1767,7 +1780,7 @@ impl Monos {
                                                     .id(SharedString::from(row_id.clone()))
                                                     .debug_selector(move || row_id.clone())
                                                     .role(Role::Button)
-                                                    .aria_label(label)
+                                                    .aria_label(tr(label))
                                                     .w_full()
                                                     .h(px(32.))
                                                     .flex_shrink_0()
@@ -1824,7 +1837,7 @@ impl Monos {
                                                                     "mono-settings-label-{label}"
                                                                 )
                                                             })
-                                                            .child(label),
+                                                            .child(tr(label)),
                                                     )
                                                     .on_click(cx.listener(
                                                         move |this, _, window, cx| {
@@ -1851,7 +1864,7 @@ impl Monos {
                                 div().absolute().right_3().top_1p5().child(
                                     icon_button(
                                         "mono-settings-close",
-                                        "Close Mono settings",
+                                        tr("Close Mono settings"),
                                         "close",
                                     )
                                     .size(px(28.))
@@ -1875,7 +1888,7 @@ impl Monos {
         _window: &mut Window,
         cx: &mut Context<Self>,
     ) -> AnyElement {
-        let name = self.field("mono-name", "Name", mono.name.clone(), false, cx);
+        let name = self.field("mono-name", tr("Name"), mono.name.clone(), false, cx);
         name.update(cx, |f, cx| {
             f.set_font_size(15.);
             f.set_line_height(20.);
@@ -1889,7 +1902,7 @@ impl Monos {
         let model = chat
             .as_ref()
             .map(|v| v.read(cx).mono_model_label())
-            .unwrap_or_else(|| "Loading…".into());
+            .unwrap_or_else(|| tr("Loading…").into());
         let provider = chat
             .as_ref()
             .map(|v| v.read(cx).summary.provider.clone())
@@ -1928,10 +1941,10 @@ impl Monos {
         };
         div().id("mono-general-settings").debug_selector(||"mono-general-settings".into())
             .flex_1().min_h_0().overflow_y_scroll().px_8().pt_6().pb_8()
-            .child(div().text_size(px(14.)).font_weight(FontWeight::MEDIUM).child("General"))
+            .child(div().text_size(px(14.)).font_weight(FontWeight::MEDIUM).child(tr("General")))
             .child(div().flex().flex_col().items_center().pt_4().pb_6()
                 .child(div().id("mono-look").debug_selector(||"mono-look".into()).role(Role::Button)
-                    .aria_label("Change mascot and color").relative().size(px(80.)).flex_shrink_0()
+                    .aria_label(tr("Change mascot and color")).relative().size(px(80.)).flex_shrink_0()
                     .flex().items_center().justify_center().rounded_2xl().border_1().border_color(content(0.04))
                     .bg(content(0.04)).hover(|s|s.bg(content(0.08)))
                     .child(self.settings_anchor.probe())
@@ -1939,10 +1952,10 @@ impl Monos {
                     .on_click(cx.listener(move |this, _, w, cx|this.open_settings_look(&look,w,cx))))
                 .child(div().id("mono-name-field").debug_selector(||"mono-name-field".into()).mt_3().h(px(32.)).w(px(256.)).max_w_full().px_2().py_1p5()
                     .rounded_md().font_weight(FontWeight::MEDIUM).hover(|s|s.bg(content(0.05))).child(name)))
-            .child(heading("Model", None))
+            .child(heading(tr("Model"), None))
             .child(card()
-                .child(setting("Model",Some("What it thinks and replies with."),
-                    div().id("mono-settings-model").role(Role::Button).aria_label(format!("Choose model, {model}"))
+                .child(setting(tr("Model"),Some(tr("What it thinks and replies with.")),
+                    div().id("mono-settings-model").role(Role::Button).aria_label(tr_fmt("Choose model, {model}", &[("model", &model)]))
                         .h(px(28.)).px_1p5().mx(px(-6.)).rounded_md().flex().items_center().gap_2()
                         .text_size(px(12.)).text_color(content(0.85)).hover(|s|s.bg(content(0.06)))
                         .child(self.model_anchor.probe()).child(provider_icon(&provider,14.)).child(model)
@@ -1950,7 +1963,7 @@ impl Monos {
                 .children(model_options.into_iter().filter_map(|item| {
                     let MenuItem::Action(option)=item else { return None; };
                     let label=option.label.clone();
-                    let value=option.value.clone().unwrap_or_else(||if option.checked {"On"}else{"Off"}.into());
+                    let value=option.value.clone().unwrap_or_else(||if option.checked {tr("On")}else{tr("Off")}.into());
                     let anchor=AnchorSlot::default(); let probe=anchor.probe();
                     Some(setting(&label,None,
                         plain(SharedString::from(format!("mono-option-{}",option.id)),value).child(probe)
@@ -1961,15 +1974,15 @@ impl Monos {
                                 } else { this.open_model_option(option.label.clone(),option.submenu.clone(),anchor.clone(),w,cx); }
                             })).into_any_element()).border_t_1().border_color(content(0.04)))
                 }))
-                .child(setting("Permissions",Some("What it may do without asking."),
-                    div().id("mono-settings-access").role(Role::Button).aria_label(format!("Permissions, {}",mode.label()))
+                .child(setting(tr("Permissions"),Some(tr("What it may do without asking.")),
+                    div().id("mono-settings-access").role(Role::Button).aria_label(tr_fmt("Permissions, {mode}", &[("mode", &mode.label())]))
                         .h(px(28.)).max_w(px(208.)).px_1p5().mx(px(-6.)).rounded_md().flex().items_center().gap_2()
                         .text_size(px(12.)).text_color(content(0.85)).hover(|s|s.bg(content(0.06)))
                         .child(self.access_anchor.probe()).child(icon(access_icon,14.).when(mode==AccessMode::FullAccess,|i|i.text_color(rgb(0xffb900))))
                         .child(mode.label()).child(icon("chevron-down",12.))
                         .on_click(cx.listener(|this,_,w,cx|this.open_access_picker(w,cx))).into_any_element())
                     .border_t_1().border_color(content(0.04))))
-            .child(heading("Projects",Some("It can see every session, note and folder in these.")))
+            .child(heading(tr("Projects"),Some(tr("It can see every session, note and folder in these."))))
             .child(card()
                 .children(mono.projects.iter().enumerate().map(|(ix,project)| {
                     let remove=project.clone();
@@ -1984,46 +1997,46 @@ impl Monos {
                         .child(div().flex_1().min_w_0()
                             .child(div().text_size(px(13.)).line_height(px(20.)).text_color(content(0.9)).truncate().child(label))
                             .child(div().text_size(px(11.)).line_height(px(16.)).text_color(content(0.4)).truncate().child(pretty)))
-                        .child(icon_button("mono-remove-project","Remove project","close").opacity(0.).group_hover(group,|s|s.opacity(1.))
+                        .child(icon_button("mono-remove-project",tr("Remove project"),"close").opacity(0.).group_hover(group,|s|s.opacity(1.))
                             .on_click(cx.listener(move |this,_,_,cx| { if let Some(id)=this.active.clone() {
                                 if let Some(m)=this.roster.get_mut(&id) {m.projects.retain(|p|p!=&remove);}
                                 this.configure_chat(&id,cx);this.save(cx);
                             }})))
                 }))
-                .child(div().id("mono-add-project").role(Role::Button).aria_label("Add project").h(px(44.)).px_3().flex().items_center().gap_3()
+                .child(div().id("mono-add-project").role(Role::Button).aria_label(tr("Add project")).h(px(44.)).px_3().flex().items_center().gap_3()
                     .text_size(px(13.)).text_color(content(0.55)).hover(|s|s.bg(content(0.04)).text_color(content(1.)))
                     .when(!mono.projects.is_empty(),|d|d.border_t_1().border_color(content(0.04)))
                     .child(self.projects_anchor.probe())
                     .child(div().size(px(32.)).rounded_lg().border_1().border_color(content(0.15)).flex().items_center().justify_center().child(icon("plus",14.)))
-                    .child("Add project").on_click(cx.listener(move |this,_,w,cx|this.pick_project(&add,w,cx)))))
-            .child(heading("Sessions it starts",None))
+                    .child(tr("Add project")).on_click(cx.listener(move |this,_,w,cx|this.pick_project(&add,w,cx)))))
+            .child(heading(tr("Sessions it starts"),None))
             .child(card()
-                .child(switch_setting("Show sessions in sidebar","Sessions it starts appear in your project sidebar. Hidden ones stay saved and open from its overview.",false,
+                .child(switch_setting(tr("Show sessions in sidebar"),tr("Sessions it starts appear in your project sidebar. Hidden ones stay saved and open from its overview."),false,
                     self.switch("mono-show-started",mono.show_started_sessions_in_sidebar,false,|m,on|m.show_started_sessions_in_sidebar=on,cx)))
-                .child(switch_setting("Group in a folder",&format!("Sessions it starts go in a “{}” folder in your project sidebar.",mono.label()),!mono.show_started_sessions_in_sidebar,
+                .child(switch_setting(tr("Group in a folder"),&tr_fmt("Sessions it starts go in a “{mono}” folder in your project sidebar.",&[("mono",&mono.label())]),!mono.show_started_sessions_in_sidebar,
                     self.switch("mono-group-started",mono.show_started_sessions_in_sidebar&&mono.use_sidebar_folders,!mono.show_started_sessions_in_sidebar,|m,on|m.use_sidebar_folders=on,cx))
                     .border_t_1().border_color(content(0.04)))
-                .child(setting("Model",Some("For sessions it starts without naming one."),
-                    div().id("mono-subsession-model").role(Role::Button).aria_label(format!("Model for sessions it starts, {}",sub.model_label))
+                .child(setting(tr("Model"),Some(tr("For sessions it starts without naming one.")),
+                    div().id("mono-subsession-model").role(Role::Button).aria_label(tr_fmt("Model for sessions it starts, {model}",&[("model",&sub.model_label)]))
                         .h(px(28.)).px_1p5().mx(px(-6.)).rounded_md().flex().items_center().gap_2()
                         .text_size(px(12.)).text_color(content(0.85)).hover(|s|s.bg(content(0.06)))
                         .child(self.subsession_model_anchor.probe())
                         .when_some(sub.provider,|d,kind|d.child(provider_icon(kind.id(),14.))).child(sub.model_label.clone())
                         .on_click(cx.listener(|this,_,w,cx|this.open_subsession_model_picker(w,cx))).into_any_element())
                     .border_t_1().border_color(content(0.04)))
-                .when(!sub.efforts.is_empty(),|d|d.child(setting("Effort",None,
+                .when(!sub.efforts.is_empty(),|d|d.child(setting(tr("Effort"),None,
                     plain(SharedString::from("mono-subsession-effort"),sub.effort_label.clone()).child(self.subsession_effort_anchor.probe())
                         .on_click(cx.listener(|this,_,w,cx|this.open_subsession_effort_picker(w,cx))).into_any_element())
                     .border_t_1().border_color(content(0.04)))))
-            .child(heading("Heartbeat",Some("When it has been quiet for a while, it looks over its recent work, sessions you left, your notes and inbox, and suggests what to do next. It never acts without asking.")))
+            .child(heading(tr("Heartbeat"),Some(tr("When it has been quiet for a while, it looks over its recent work, sessions you left, your notes and inbox, and suggests what to do next. It never acts without asking."))))
             .child(card()
-                .child(switch_setting("Check in on its own","Quiet check-ins leave nothing behind; you only hear from it when it has an idea.",false,
+                .child(switch_setting(tr("Check in on its own"),tr("Quiet check-ins leave nothing behind; you only hear from it when it has an idea."),false,
                     self.switch("mono-heartbeat",mono.heartbeat_minutes>0,false,|m,on|m.heartbeat_minutes=if on {heartbeat::DEFAULT_MINUTES} else {0},cx)))
-                .child(setting("After it has been quiet for",None,self.heartbeat_intervals(mono,cx))
+                .child(setting(tr("After it has been quiet for"),None,self.heartbeat_intervals(mono,cx))
                     .when(mono.heartbeat_minutes==0,|d|d.opacity(0.4)).border_t_1().border_color(content(0.04))))
-            .child(heading("Conversation",None))
-            .child(card().child(setting("Reset conversation",Some("Clear all messages and start fresh. Its soul, memory and habits stay."),
-                div().id("mono-reset").role(Role::Button).aria_label("Reset").flex().items_center().px_3().py_1p5().rounded_md().text_size(px(12.)).border_1().border_color(content(0.04)).text_color(rgb(0xff6467)).hover(|s|s.bg(rgb(0xfb2c36).opacity(0.1))).child("Reset")
+            .child(heading(tr("Conversation"),None))
+            .child(card().child(setting(tr("Reset conversation"),Some(tr("Clear all messages and start fresh. Its soul, memory and habits stay.")),
+                div().id("mono-reset").role(Role::Button).aria_label(tr("Reset")).flex().items_center().px_3().py_1p5().rounded_md().text_size(px(12.)).border_1().border_color(content(0.04)).text_color(rgb(0xff6467)).hover(|s|s.bg(rgb(0xfb2c36).opacity(0.1))).child("Reset")
                     .on_click(cx.listener(move |this,_,w,cx|this.reset_conversation(&reset,w,cx))).into_any_element())))
             .into_any_element()
     }
@@ -2135,14 +2148,14 @@ impl Monos {
         });
         let menu = cx.new(|cx| {
             Menu::new(
-                "Mono options",
+                tr("Mono options"),
                 vec![
                     MenuItem::Custom(AnyView::from(editor), focus.clone()),
                     MenuItem::Separator,
-                    MenuAction::new("background", "Background image")
+                    MenuAction::new("background", tr("Background image"))
                         .icon("image-add")
                         .into(),
-                    MenuAction::new("delete", "Delete mono…")
+                    MenuAction::new("delete", tr("Delete mono…"))
                         .icon("trash")
                         .danger()
                         .into(),
@@ -2222,7 +2235,7 @@ impl Monos {
         });
         let menu = cx.new(|cx| {
             Menu::new(
-                "Model",
+                tr("Model"),
                 vec![MenuItem::Custom(list.into(), focus)],
                 window,
                 cx,
@@ -2277,7 +2290,7 @@ impl Monos {
                 .flatten()
         });
         let model_label = match &set.harness {
-            None => format!("Same as {}", mono.label()),
+            None => tr_fmt("Same as {mono}", &[("mono", &mono.label())]),
             Some(_) => entry
                 .map(|m| m.name.clone())
                 .or(set.model.clone())
@@ -2292,8 +2305,8 @@ impl Monos {
                 .find(|(value, _)| value == effort)
                 .map(|(_, name)| name.clone())
                 .unwrap_or_else(|| effort.clone()),
-            None if set.harness.is_none() => format!("Same as {}", mono.label()),
-            None => "Model default".into(),
+            None if set.harness.is_none() => tr_fmt("Same as {mono}", &[("mono", &mono.label())]),
+            None => tr("Model default").into(),
         };
         SubsessionChoice {
             provider: set.harness.is_some().then_some(kind),
@@ -2355,13 +2368,16 @@ impl Monos {
             cx.notify();
         });
         let items = vec![
-            MenuAction::new("subsessions:inherit", format!("Same as {}", mono.label()))
-                .checked(inherited)
-                .into(),
+            MenuAction::new(
+                "subsessions:inherit",
+                tr_fmt("Same as {mono}", &[("mono", &mono.label())]),
+            )
+            .checked(inherited)
+            .into(),
             MenuItem::Separator,
             MenuItem::Custom(list.into(), focus),
         ];
-        let menu = cx.new(|cx| Menu::new("Model", items, window, cx).width(400.));
+        let menu = cx.new(|cx| Menu::new(tr("Model"), items, window, cx).width(400.));
         let closed = cx.subscribe(&menu, |this, _, event: &MenuEvent, cx| {
             if let MenuEvent::Picked(id, _) = event
                 && id == "subsessions:inherit"
@@ -2398,9 +2414,9 @@ impl Monos {
             .as_ref()
             .is_none_or(|s| s.harness.is_none())
         {
-            format!("Same as {}", mono.label())
+            tr_fmt("Same as {mono}", &[("mono", &mono.label())])
         } else {
-            "Model default".into()
+            tr("Model default").into()
         };
         let mut items: Vec<MenuItem> = vec![
             MenuAction::new("effort:", unset)
@@ -2412,7 +2428,7 @@ impl Monos {
                 .checked(effort.as_deref() == Some(value.as_str()))
                 .into()
         }));
-        let menu = cx.new(|cx| Menu::new("Effort", items, window, cx));
+        let menu = cx.new(|cx| Menu::new(tr("Effort"), items, window, cx));
         let picked = cx.subscribe(&menu, |this, _, event: &MenuEvent, cx| {
             if let MenuEvent::Picked(id, _) = event
                 && let Some(value) = id.strip_prefix("effort:")
@@ -2473,7 +2489,7 @@ impl Monos {
             .map(|chat| chat.read(cx).mono_access_options())
             .unwrap_or_default();
         let menu = cx.new(|cx| {
-            Menu::new("Permissions", options, window, cx)
+            Menu::new(tr("Permissions"), options, window, cx)
                 .style(MenuStyle::Access)
                 .width(288.)
         });
@@ -2514,8 +2530,8 @@ impl Monos {
             .map(|(ix, path)| MenuAction::new(format!("project:{ix}"), path).into())
             .collect();
         items.push(MenuItem::Separator);
-        items.push(MenuAction::new("browse", "Open project…").into());
-        let menu = cx.new(|cx| Menu::new("Add project", items, window, cx).width(300.));
+        items.push(MenuAction::new("browse", tr("Open project…")).into());
+        let menu = cx.new(|cx| Menu::new(tr("Add project"), items, window, cx).width(300.));
         let picked = cx.subscribe(&menu, move |this, _, event: &MenuEvent, cx| {
             this.picker = None;
             if let MenuEvent::Picked(action, _) = event {
@@ -2553,7 +2569,7 @@ impl Monos {
             files: false,
             directories: true,
             multiple: false,
-            prompt: Some("Add project".into()),
+            prompt: Some(tr("Add project").into()),
         });
         let id = id.to_string();
         cx.spawn(async move |this, cx| {

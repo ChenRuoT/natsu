@@ -11,6 +11,7 @@ use gpui::{
     AnyElement, App, Context, Entity, EventEmitter, FocusHandle, Focusable, Role, SharedString,
     Subscription, Window, div, prelude::*, px, rgb,
 };
+use natsu_core::i18n::{tr, tr_fmt};
 use natsu_core::{
     automations::{
         self, Automation, AutomationRun, AutomationTrigger, AutomationUpsert, DueAutomationRun,
@@ -156,8 +157,14 @@ impl Automations {
         projects: Vec<String>,
         cx: &mut Context<Self>,
     ) -> Self {
-        let filter =
-            cx.new(|cx| Input::field("Filter automations", "Filter automations", content(0.4), cx));
+        let filter = cx.new(|cx| {
+            Input::field(
+                tr("Filter automations"),
+                tr("Filter automations"),
+                content(0.4),
+                cx,
+            )
+        });
         let subscription = cx.subscribe(&filter, |_, _, _: &input::Changed, cx| cx.notify());
         let mut this = Self {
             service,
@@ -257,7 +264,7 @@ impl Automations {
         let work = cx.background_executor().spawn(async move {
             let mut service = service
                 .lock()
-                .map_err(|_| "Automations unavailable".to_string())?;
+                .map_err(|_| tr("Automations unavailable").to_string())?;
             let list = service.list()?;
             let runs = selected_for_work
                 .as_deref()
@@ -451,10 +458,10 @@ impl Automations {
                     input
                 })
             };
-            let time = field("Trigger time", "09:00", trigger.time, cx);
+            let time = field(tr("Trigger time"), "09:00", trigger.time, cx);
             let repos = field(
-                "Trigger repositories",
-                "Any repository",
+                tr("Trigger repositories"),
+                tr("Any repository"),
                 trigger
                     .repos
                     .iter()
@@ -465,7 +472,7 @@ impl Automations {
                     .join(", "),
                 cx,
             );
-            let actor = field("Trigger actor", "Anyone", trigger.actor, cx);
+            let actor = field(tr("Trigger actor"), tr("Anyone"), trigger.actor, cx);
             for input in [&time, &repos, &actor] {
                 editor._subscriptions.push(cx.subscribe(
                     input,
@@ -526,7 +533,7 @@ impl Automations {
         let work = cx.background_executor().spawn(async move {
             service
                 .lock()
-                .map_err(|_| "Automations unavailable".to_string())?
+                .map_err(|_| tr("Automations unavailable").to_string())?
                 .upsert(draft)
         });
         cx.spawn(async move |this, cx| {
@@ -552,7 +559,7 @@ impl Automations {
         let work = cx.background_executor().spawn(async move {
             service
                 .lock()
-                .map_err(|_| "Automations unavailable".to_string())?
+                .map_err(|_| tr("Automations unavailable").to_string())?
                 .set_enabled(&id, enabled)
         });
         cx.spawn(async move |this, cx| {
@@ -591,7 +598,7 @@ impl Automations {
         let work = cx.background_executor().spawn(async move {
             let run = service
                 .lock()
-                .map_err(|_| "Automations unavailable".to_string())?
+                .map_err(|_| tr("Automations unavailable").to_string())?
                 .run_now(&automation.id, natsu_core::time::now_ms() as i64)?;
             Ok::<_, String>(DueAutomationRun { automation, run })
         });
@@ -613,9 +620,9 @@ impl Automations {
     fn ask_delete(&mut self, window: &mut Window, cx: &mut Context<Self>) {
         let prompt = window.prompt(
             gpui::PromptLevel::Warning,
-            "Delete this automation?",
-            Some("Its run history will be deleted too."),
-            &["Delete", "Cancel"],
+            tr("Delete this automation?"),
+            Some(tr("Its run history will be deleted too.")),
+            &[tr("Delete"), tr("Cancel")],
             cx,
         );
         cx.spawn(async move |this, cx| {
@@ -633,7 +640,7 @@ impl Automations {
         let work = cx.background_executor().spawn(async move {
             service
                 .lock()
-                .map_err(|_| "Automations unavailable".to_string())?
+                .map_err(|_| tr("Automations unavailable").to_string())?
                 .delete(&id)
         });
         cx.spawn(async move |this, cx| {
@@ -693,7 +700,7 @@ impl Automations {
                     {
                         this.model_controls.push(natsu_core::catalog::ModelControl {
                             id: "reasoningEffort".into(),
-                            name: "Reasoning".into(),
+                            name: tr("Reasoning").into(),
                             current: model
                                 .default_effort
                                 .clone()
@@ -711,11 +718,11 @@ impl Automations {
                             .iter()
                             .any(|c| c.id == "serviceTier" || c.id == "service_tier")
                     {
-                        let mut choices = vec![("default".into(), "Standard".into())];
+                        let mut choices = vec![("default".into(), tr("Standard").into())];
                         choices.extend(model.tiers.clone());
                         this.model_controls.push(natsu_core::catalog::ModelControl {
                             id: "serviceTier".into(),
-                            name: "Speed".into(),
+                            name: tr("Speed").into(),
                             current: "default".into(),
                             choices,
                         });
@@ -819,7 +826,7 @@ impl Automations {
             files: false,
             directories: true,
             multiple: false,
-            prompt: Some("Choose project".into()),
+            prompt: Some(tr("Choose project").into()),
         });
         cx.spawn(async move |this, cx| {
             let result = prompt.await;
@@ -892,7 +899,7 @@ impl Render for Automations {
         let mut list = div()
             .id("automations-list")
             .role(Role::ListBox)
-            .aria_label("Automations")
+            .aria_label(tr("Automations"))
             .flex_1()
             .min_h_0()
             .overflow_y_scroll()
@@ -908,11 +915,11 @@ impl Render for Automations {
                     .text_size(px(12.))
                     .text_color(content(0.45))
                     .child(if self.loading {
-                        "Loading automations…"
+                        tr("Loading automations…")
                     } else if query.trim().is_empty() {
-                        "No automations yet"
+                        tr("No automations yet")
                     } else {
-                        "No matching automations"
+                        tr("No matching automations")
                     }),
             );
         }
@@ -934,7 +941,7 @@ impl Render for Automations {
                         div()
                             .id(SharedString::from(format!("open-{id}")))
                             .role(Role::Button)
-                            .aria_label(format!("Open {}", automation.name))
+                            .aria_label(tr_fmt("Open {name}", &[("name", &automation.name)]))
                             .px(px(10.))
                             .py(px(8.))
                             .flex()
@@ -1013,7 +1020,7 @@ impl Render for Automations {
                     .child(icon("search", 12.))
                     .child(div().flex_1().min_w_0().child(self.filter.clone()))
                     .child(
-                        icon_button("new-automation", "New automation", "plus").on_click(
+                        icon_button("new-automation", tr("New automation"), "plus").on_click(
                             cx.listener(|this, _, _, cx| {
                                 this.show_gallery(cx);
                             }),
@@ -1029,7 +1036,7 @@ impl Render for Automations {
         let mut root = div()
             .id("automations-view")
             .role(Role::Region)
-            .aria_label("Automations")
+            .aria_label(tr("Automations"))
             .track_focus(&self.focus)
             .size_full()
             .min_h_0()

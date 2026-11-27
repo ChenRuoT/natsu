@@ -10,6 +10,7 @@ use crate::visuals::dither::{
 use chrono::{DateTime, Datelike, Duration as Days, Local, NaiveDate};
 use gpui::{Bounds, Div, FontWeight, Hsla, canvas, point, size};
 use natsu_core::contributions::{self, Contribution, Kind};
+use natsu_core::i18n::{tr, tr_fmt};
 use natsu_core::time::{now_ms, relative};
 use std::collections::HashSet;
 use std::sync::Arc;
@@ -306,7 +307,7 @@ fn graph(days: Arc<Vec<Day>>, tint: Hsla, motion: Motion) -> AnyElement {
                 Some(if inked(x, y, tone) { tint } else { track })
             });
             let axis = Label::mono(10., content(0.45));
-            for (r, name) in [(1, "Mon"), (3, "Wed"), (5, "Fri")] {
+            for (r, name) in [(1, tr("Mon")), (3, tr("Wed")), (5, tr("Fri"))] {
                 axis.paint(
                     name,
                     grid.origin + point(px(-GUTTER), px(r as f32 * pitch + square / 2.)),
@@ -338,16 +339,16 @@ fn graph(days: Arc<Vec<Day>>, tint: Hsla, motion: Motion) -> AnyElement {
             let more = Label::mono(10., content(0.4));
             let edge = (grid.origin.x.as_f32() + fits as f32 * pitch - CELL).round();
             more.paint(
-                "More",
+                tr("More"),
                 point(px(edge), px(legend_y)),
                 Align::Right,
                 window,
                 cx,
             );
-            let right = edge - more.measure("More", window) - 6.;
+            let right = edge - more.measure(tr("More"), window) - 6.;
             let swatches = (right - 5. * pitch + CELL).round();
             more.paint(
-                "Less",
+                tr("Less"),
                 point(px(swatches - 6.), px(legend_y)),
                 Align::Right,
                 window,
@@ -373,13 +374,13 @@ fn graph(days: Arc<Vec<Day>>, tint: Hsla, motion: Motion) -> AnyElement {
                 let d = &days[ix];
                 let mut rows = vec![];
                 if d.count() == 0 {
-                    rows.push((track, "Contributions".into(), "None".into()));
+                    rows.push((track, tr("Contributions").into(), tr("None").into()));
                 } else {
                     for (name, n) in [
-                        ("Commits", d.commits),
-                        ("Reviews", d.reviews),
-                        ("PRs opened", d.opened),
-                        ("PRs merged", d.merged),
+                        (tr("Commits"), d.commits),
+                        (tr("Reviews"), d.reviews),
+                        (tr("PRs opened"), d.opened),
+                        (tr("PRs merged"), d.merged),
                     ] {
                         if n > 0 {
                             rows.push((tint, name.into(), n.to_string()));
@@ -387,7 +388,7 @@ fn graph(days: Arc<Vec<Day>>, tint: Hsla, motion: Motion) -> AnyElement {
                     }
                     rows.push((
                         content(0.3),
-                        "Lines".into(),
+                        tr("Lines").into(),
                         format!("+{} −{}", d.additions, d.deletions),
                     ));
                 }
@@ -571,19 +572,25 @@ impl Monos {
 
         // Identity, with a live line about what it is doing right now.
         let (live, ticker) = match (state, busy.first()) {
-            ("needs-you", _) => (true, "Waiting for your input".to_string()),
+            ("needs-you", _) => (true, tr("Waiting for your input").to_string()),
             (_, Some(v)) if busy.len() > 1 => (
                 true,
-                format!("Working on {} +{} more", v.title, busy.len() - 1),
+                tr_fmt(
+                    "Working on {title} +{count} more",
+                    &[("title", &v.title), ("count", &(busy.len() - 1))],
+                ),
             ),
-            (_, Some(v)) => (true, format!("Working on {}", v.title)),
-            ("working", None) => (true, "Thinking…".to_string()),
+            (_, Some(v)) => (true, tr_fmt("Working on {title}", &[("title", &v.title)])),
+            ("working", None) => (true, tr("Thinking…").to_string()),
             _ => match mine.iter().map(|v| v.updated_at).max().filter(|t| *t > 0) {
                 Some(at) => (
                     false,
-                    format!("Idle · last active {} ago", relative(at, now)),
+                    tr_fmt(
+                        "Idle · last active {time} ago",
+                        &[("time", &relative(at, now))],
+                    ),
                 ),
-                None => (false, "Idle".to_string()),
+                None => (false, tr("Idle").to_string()),
             },
         };
         let header = div()
@@ -658,7 +665,7 @@ impl Monos {
         let total: u32 = days.iter().map(Day::count).sum();
         let streak = streak(&days);
         let today_stats = *days.last().expect("the graph always includes today");
-        let contributions = section("Contributions")
+        let contributions = section(tr("Contributions"))
             .child(
                 div()
                     .px_1()
@@ -677,7 +684,7 @@ impl Monos {
                         div()
                             .text_size(px(12.))
                             .text_color(content(0.5))
-                            .child("in the last 6 months"),
+                            .child(tr("in the last 6 months")),
                     )
                     .when(streak > 1, |d| {
                         d.child(
@@ -686,7 +693,7 @@ impl Monos {
                                 .text_size(px(11.))
                                 .font_features(tabular())
                                 .text_color(content(0.5))
-                                .child(format!("{streak}-day streak")),
+                                .child(tr_fmt("{streak}-day streak", &[("streak", &streak)])),
                         )
                     }),
             )
@@ -730,16 +737,16 @@ impl Monos {
                     .text_color(rgb(DIFF_DEL))
                     .child(format!("−{}", format_integer(today_stats.deletions as i64))),
             );
-        let today_tiles = section("Today")
+        let today_tiles = section(tr("Today"))
             .child(
                 div()
                     .flex()
                     .gap_2()
                     .child(tile(
                         figure(merged_today.to_string()).into_any_element(),
-                        "PRs merged",
+                        tr("PRs merged"),
                     ))
-                    .child(tile(lines.into_any_element(), "Lines changed")),
+                    .child(tile(lines.into_any_element(), tr("Lines changed"))),
             )
             .child(
                 div()
@@ -747,12 +754,12 @@ impl Monos {
                     .gap_2()
                     .child(tile(
                         figure(sessions_today.to_string()).into_any_element(),
-                        "Sessions",
+                        tr("Sessions"),
                     ))
                     .child(tile(
                         figure(format!("{ran_today}/{}", ran_today + still_today))
                             .into_any_element(),
-                        "Habits run",
+                        tr("Habits run"),
                     )),
             );
 
@@ -764,15 +771,15 @@ impl Monos {
             .map(|h| (self.habit_running_since(h), h))
             .collect();
         upcoming.sort_by_key(|(running, h)| (running.is_none(), h.next_run_at));
-        let up_next = section("Up next").children(upcoming.is_empty().then(|| {
+        let up_next = section(tr("Up next")).children(upcoming.is_empty().then(|| {
             div()
                 .px_1()
                 .text_size(px(12.))
                 .line_height(px(18.))
                 .text_color(content(0.45))
-                .child(format!(
-                    "Nothing scheduled. Ask {} to put recurring work on a habit.",
-                    mono.label()
+                .child(tr_fmt(
+                    "Nothing scheduled. Ask {mono} to put recurring work on a habit.",
+                    &[("mono", &mono.label())],
                 ))
                 .into_any_element()
         }));
@@ -781,7 +788,7 @@ impl Monos {
             let at = local_day(h.next_run_at);
             // Today's runs give their time, later ones their weekday.
             let when = match running {
-                Some(since) => format!("Running · {}", relative(since, now)),
+                Some(since) => tr_fmt("Running · {since}", &[("since", &relative(since, now))]),
                 None => {
                     let day = DateTime::from_timestamp_millis(h.next_run_at as i64)
                         .map(|t| {
@@ -791,8 +798,8 @@ impl Monos {
                         })
                         .unwrap_or_default();
                     match relative(now, h.next_run_at.max(now)) {
-                        soon if soon == "now" => format!("{day} · soon"),
-                        later => format!("{day} · in {later}"),
+                        soon if soon == "now" => tr_fmt("{day} · soon", &[("day", &day)]),
+                        later => tr_fmt("{day} · in {later}", &[("day", &day), ("later", &later)]),
                     }
                 }
             };
@@ -875,12 +882,12 @@ impl Monos {
             .filter(|d| local_day(d.created_at) == Some(today))
             .collect();
         fresh.sort_by_key(|d| std::cmp::Reverse(d.created_at));
-        let new_today = section("New today").children(fresh.is_empty().then(|| {
+        let new_today = section(tr("New today")).children(fresh.is_empty().then(|| {
             div()
                 .px_1()
                 .text_size(px(12.))
                 .text_color(content(0.45))
-                .child("Nothing new yet today.")
+                .child(tr("Nothing new yet today."))
                 .into_any_element()
         }));
         let new_today = new_today.children(fresh.into_iter().take(4).map(|doc| {

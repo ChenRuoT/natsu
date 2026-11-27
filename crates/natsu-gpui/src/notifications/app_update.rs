@@ -6,6 +6,7 @@ use crate::{
     theme::*,
 };
 use gpui::{Context, EventEmitter, FontWeight, Render, Role, Window, div, img, prelude::*, px};
+use natsu_core::i18n::{tr, tr_fmt};
 use natsu_core::store::Store;
 use std::time::Instant;
 const MARKER: &str = "natsu.installedUpdate";
@@ -60,7 +61,7 @@ impl Render for InstalledUpdateNotice {
         let Some(version) = self.version.clone() else {
             return div().into_any_element();
         };
-        let label = format!("Updated to {version}");
+        let label = tr_fmt("Updated to {version}", &[("version", &version)]);
         div()
             .id("installed-update-notice")
             .role(Role::Status)
@@ -114,7 +115,7 @@ impl Render for InstalledUpdateNotice {
                                     .mt(px(2.))
                                     .text_size(px(11.))
                                     .text_color(content(0.5))
-                                    .child("What's new"),
+                                    .child(tr("What's new")),
                             ),
                     ),
             )
@@ -122,7 +123,7 @@ impl Render for InstalledUpdateNotice {
                 div()
                     .id("dismiss-installed-update")
                     .role(Role::Button)
-                    .aria_label("Dismiss update notification")
+                    .aria_label(tr("Dismiss update notification"))
                     .debug_selector(|| "dismiss-installed-update".into())
                     // The X sits over the clickable card; keep its click from opening What's new.
                     .block_mouse_except_scroll()
@@ -264,12 +265,9 @@ impl Render for WhatsNew {
             .px(px(20.))
             .py(px(16.));
         if self.rows.is_empty() {
-            body = body.child(
-                div()
-                    .text_size(px(13.))
-                    .text_color(content(0.6))
-                    .child("Release notes for this version are not available in this build."),
-            );
+            body = body.child(div().text_size(px(13.)).text_color(content(0.6)).child(tr(
+                "Release notes for this version are not available in this build.",
+            )));
         }
         for (ix, row) in self.rows.iter().enumerate() {
             body = body.child(div().pt(px(if ix == 0 { 0. } else { row.gap })).child(
@@ -285,7 +283,7 @@ impl Render for WhatsNew {
         div()
             .id("whats-new-dialog")
             .role(Role::Dialog)
-            .aria_label("What's new")
+            .aria_label(tr("What's new"))
             .relative()
             .w(px(512.))
             .max_w_full()
@@ -316,7 +314,7 @@ impl Render for WhatsNew {
                                 div()
                                     .text_size(px(16.))
                                     .font_weight(FontWeight::SEMIBOLD)
-                                    .child("What's new"),
+                                    .child(tr("What's new")),
                             )
                             .child(
                                 div()
@@ -330,7 +328,7 @@ impl Render for WhatsNew {
                         div()
                             .id("close-whats-new")
                             .role(Role::Button)
-                            .aria_label("Close")
+                            .aria_label(tr("Close"))
                             .cursor_pointer()
                             .size(px(24.))
                             .flex()

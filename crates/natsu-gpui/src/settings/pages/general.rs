@@ -6,6 +6,7 @@ use crate::settings::{
 };
 use crate::theme::*;
 use gpui::{AnyElement, Context, FontWeight, div, prelude::*, px};
+use natsu_core::i18n::{tr, tr_fmt};
 
 impl SettingsView {
     pub(super) fn general_page(&mut self, cx: &mut Context<Self>) -> Vec<AnyElement> {
@@ -14,24 +15,27 @@ impl SettingsView {
             self.row(
                 Some("sounds"),
                 true,
-                "Sounds",
-                Some("Play sounds for activity, completed turns, and updates.".into()),
-                vec![
-                    self.toggle("sounds", "Sounds", p.sounds, false, cx, |this, on, cx| {
-                        this.update(cx, |p| p.sounds = on)
-                    }),
-                ],
+                tr("Sounds"),
+                Some(tr("Play sounds for activity, completed turns, and updates.").into()),
+                vec![self.toggle(
+                    "sounds",
+                    tr("Sounds"),
+                    p.sounds,
+                    false,
+                    cx,
+                    |this, on, cx| this.update(cx, |p| p.sounds = on),
+                )],
             ),
             self.row(
                 Some("notifications"),
                 false,
-                "Notifications",
-                Some("Alert when reminders are due or agents finish or need input.".into()),
+                tr("Notifications"),
+                Some(tr("Alert when reminders are due or agents finish or need input.").into()),
                 {
                     let mut controls = self.notification_permission_controls(cx);
                     controls.push(self.toggle(
                         "notifications",
-                        "Notifications",
+                        tr("Notifications"),
                         p.notifications,
                         false,
                         cx,
@@ -50,13 +54,13 @@ impl SettingsView {
             self.row(
                 Some("file-tabs"),
                 true,
-                "File tabs",
-                Some("Choose where files open.".into()),
+                tr("File tabs"),
+                Some(tr("Choose where files open.").into()),
                 vec![self.segmented(
                     "file-tabs",
-                    "File tabs",
+                    tr("File tabs"),
                     &p.file_tabs,
-                    &[("pane", "Beside chat"), ("workspace", "Top bar")],
+                    &[("pane", tr("Beside chat")), ("workspace", tr("Top bar"))],
                     cx,
                     |this, v, cx| this.update(cx, |p| p.file_tabs = v.into()),
                 )],
@@ -64,11 +68,11 @@ impl SettingsView {
             self.row(
                 Some("file-word-wrap"),
                 false,
-                "Word wrap",
-                Some("Wrap long lines to fit the editor.".into()),
+                tr("Word wrap"),
+                Some(tr("Wrap long lines to fit the editor.").into()),
                 vec![self.toggle(
                     "file-word-wrap",
-                    "Word wrap",
+                    tr("Word wrap"),
                     p.file_word_wrap,
                     false,
                     cx,
@@ -78,11 +82,11 @@ impl SettingsView {
             self.row(
                 Some("tab-animations"),
                 false,
-                "Tab animations",
-                Some("Animate tabs as they open and close.".into()),
+                tr("Tab animations"),
+                Some(tr("Animate tabs as they open and close.").into()),
                 vec![self.toggle(
                     "tab-animations",
-                    "Tab animations",
+                    tr("Tab animations"),
                     p.tab_animations,
                     false,
                     cx,
@@ -92,10 +96,12 @@ impl SettingsView {
             self.row(
                 Some("notes"),
                 false,
-                "Notes",
-                Some("Show Notes in project navigation. Mention saved notes with @note.".into()),
+                tr("Notes"),
+                Some(
+                    tr("Show Notes in project navigation. Mention saved notes with @note.").into(),
+                ),
                 vec![
-                    self.toggle("notes", "Notes", p.notes, false, cx, |this, on, cx| {
+                    self.toggle("notes", tr("Notes"), p.notes, false, cx, |this, on, cx| {
                         this.update(cx, |p| p.notes = on)
                     }),
                 ],
@@ -105,14 +111,14 @@ impl SettingsView {
             workspace.push(self.row(
                 Some("quick-composer"),
                 false,
-                "Quick composer",
-                Some(format!(
-                    "Press {} from any app. Return starts a session in the background; ⌘Return opens it. Change the shortcut in Keybindings.",
-                    super::keybindings::quick_composer_label(&p)
+                tr("Quick composer"),
+                Some(tr_fmt(
+                    "Press {shortcut} from any app. Return starts a session in the background; ⌘Return opens it. Change the shortcut in Keybindings.",
+                    &[("shortcut", &super::keybindings::quick_composer_label(&p))],
                 ).into()),
                 {let mut controls=Vec::new();if let Some(error)=&self.ctx.quick_error{controls.push(super::super::widgets::note(error.clone()));}controls.push(self.toggle(
                     "quick-composer",
-                    "Quick composer",
+                    tr("Quick composer"),
                     p.quick_composer,
                     false,
                     cx,
@@ -123,14 +129,14 @@ impl SettingsView {
         workspace.push(self.row(
             Some("search-panel"),
             false,
-            "Search as command panel",
+            tr("Search as command panel"),
             Some(
-                "Open search as a floating panel over your work instead of a page with its own tab."
+                tr("Open search as a floating panel over your work instead of a page with its own tab.")
                     .into(),
             ),
             vec![self.toggle(
                 "search-panel",
-                "Search as command panel",
+                tr("Search as command panel"),
                 p.search_panel,
                 false,
                 cx,
@@ -140,11 +146,11 @@ impl SettingsView {
         workspace.push(self.row(
             Some("working-agents"),
             false,
-            "Working agents",
-            Some("Show active chats across projects. Finished chats stay until opened.".into()),
+            tr("Working agents"),
+            Some(tr("Show active chats across projects. Finished chats stay until opened.").into()),
             vec![self.toggle(
                 "working-agents",
-                "Working agents",
+                tr("Working agents"),
                 p.working_agents,
                 false,
                 cx,
@@ -154,13 +160,13 @@ impl SettingsView {
         workspace.push(self.row(
             Some("action-opens-terminal"),
             false,
-            "Show terminal for actions",
+            tr("Show terminal for actions"),
             Some(
-                "Open the terminal when an action runs. Off, actions run in the background.".into(),
+                tr("Open the terminal when an action runs. Off, actions run in the background.").into(),
             ),
             vec![self.toggle(
                 "action-opens-terminal",
-                "Show terminal for actions",
+                tr("Show terminal for actions"),
                 p.action_opens_terminal,
                 false,
                 cx,
@@ -170,13 +176,17 @@ impl SettingsView {
         workspace.push(self.row(
             Some("terminal-placement"),
             false,
-            "Terminal",
-            Some("Where new terminals open: docked below the chat, as a tab in the right panel (Focused layout), or as their own tabs in the title bar.".into()),
+            tr("Terminal"),
+            Some(tr("Where new terminals open: docked below the chat, as a tab in the right panel (Focused layout), or as their own tabs in the title bar.").into()),
             vec![self.segmented(
                 "terminal-placement",
-                "Terminal",
+                tr("Terminal"),
                 p.terminal_placement(),
-                &[("bottom", "Bottom"), ("panel", "Side panel"), ("title", "Title bar")],
+                &[
+                    ("bottom", tr("Bottom")),
+                    ("panel", tr("Side panel")),
+                    ("title", tr("Title bar")),
+                ],
                 cx,
                 |this, v, cx| this.update(cx, |p| p.set_terminal_placement(v)),
             )],
@@ -185,11 +195,11 @@ impl SettingsView {
             workspace.push(self.row(
                 Some("close-to-tray"),
                 false,
-                "Close to tray",
-                Some("Closing a window hides it to the system tray instead of quitting, so running agents keep going. Reopen from the tray icon, and quit for real from its menu. Turn this off to have close end the window.".into()),
+                tr("Close to tray"),
+                Some(tr("Closing a window hides it to the system tray instead of quitting, so running agents keep going. Reopen from the tray icon, and quit for real from its menu. Turn this off to have close end the window.").into()),
                 vec![self.toggle(
                     "close-to-tray",
-                    "Close to tray",
+                    tr("Close to tray"),
                     p.close_to_tray,
                     false,
                     cx,
@@ -206,7 +216,7 @@ impl SettingsView {
                     .flex()
                     .items_baseline()
                     .gap_2()
-                    .child("Version")
+                    .child(tr("Version"))
                     .child(
                         div()
                             .font_family(crate::fonts::mono())
@@ -219,7 +229,7 @@ impl SettingsView {
                     cx.try_global::<updater::Shared>()
                         .and_then(|shared| updater::status(&shared.0, cx))
                         .unwrap_or_else(|| {
-                            "View release notes and check for app and agent updates.".into()
+                            tr("View release notes and check for app and agent updates.").into()
                         })
                         .into(),
                 ),
@@ -229,8 +239,8 @@ impl SettingsView {
                         .items_center()
                         .gap_2()
                         .child(
-                            secondary_button("whats-new", "What's new", false, false)
-                                .child("What's new")
+                            secondary_button("whats-new", tr("What's new"), false, false)
+                                .child(tr("What's new"))
                                 .on_click(cx.listener(|_, _, _, cx| {
                                     cx.emit(crate::settings::SettingsEvent::WhatsNew)
                                 })),
@@ -238,11 +248,11 @@ impl SettingsView {
                         .child(
                             secondary_button(
                                 "check-harness-updates",
-                                "Check harness updates",
+                                tr("Check harness updates"),
                                 false,
                                 false,
                             )
-                            .child("Check harness updates")
+                            .child(tr("Check harness updates"))
                             .on_click(cx.listener(|_, _, _, cx| {
                                 cx.emit(crate::settings::SettingsEvent::CheckHarnessUpdates)
                             })),
@@ -253,9 +263,9 @@ impl SettingsView {
             ),
         ];
         vec![
-            self.group(None, true, "Alerts", None, None, alerts),
-            self.group(None, false, "Workspace", None, None, workspace),
-            self.group(None, false, "About", None, None, about),
+            self.group(None, true, tr("Alerts"), None, None, alerts),
+            self.group(None, false, tr("Workspace"), None, None, workspace),
+            self.group(None, false, tr("About"), None, None, about),
         ]
     }
 }
@@ -267,7 +277,7 @@ impl SettingsView {
             .map(|shared| shared.0.clone());
         match updater.as_ref().map(|u| updater::action(u, cx)) {
             Some(Action::Install(version)) => {
-                let label = format!("Update to {version}");
+                let label = tr_fmt("Update to {version}", &[("version", &version)]);
                 let mut ink = shell_fill();
                 ink.a = 1.;
                 primary_button("check-updates", label.clone(), false)
@@ -287,9 +297,9 @@ impl SettingsView {
                     .into_any_element()
             }
             Some(Action::Check) | None => {
-                secondary_button("check-updates", "Check for updates", false, false)
+                secondary_button("check-updates", tr("Check for updates"), false, false)
                     .child(icon("refresh-cw", 14.).text_color(content(0.7)))
-                    .child("Check for updates")
+                    .child(tr("Check for updates"))
                     .on_click(cx.listener(|_, _, _, cx| {
                         cx.emit(crate::settings::SettingsEvent::CheckAppUpdates)
                     }))
