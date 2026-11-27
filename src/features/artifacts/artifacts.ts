@@ -1,5 +1,10 @@
 import { convertFileSrc, invoke } from "@tauri-apps/api/core";
 import type { Block, Session } from "../sessions/model/session";
+import {
+  t as tNow,
+  type MessageKey,
+  type TFunction,
+} from "../../shared/i18n/i18n";
 
 /** Extend this union when a renderer and storage support for a new kind exist. */
 export type ArtifactKind = "document" | "html";
@@ -21,13 +26,19 @@ export type ArtifactCard = Pick<Artifact, "id" | "kind" | "title"> & {
 export const ARTIFACTS_CHANGED_EVENT = "natsu:artifacts-changed";
 export const ARTIFACT_DELETED_EVENT = "natsu:artifact-deleted";
 
-export function artifactLabel(kind: ArtifactKind): string {
-  switch (kind) {
-    case "document":
-      return "Document";
-    case "html":
-      return "Visual";
-  }
+export const ARTIFACT_LABEL_KEYS = {
+  document: "artifacts.label.document",
+  html: "artifacts.label.visual",
+} as const satisfies Record<ArtifactKind, MessageKey>;
+
+/** Lowercase noun for sentences such as "Copy document". */
+export const ARTIFACT_NOUN_KEYS = {
+  document: "artifacts.noun.document",
+  html: "artifacts.noun.visual",
+} as const satisfies Record<ArtifactKind, MessageKey>;
+
+export function artifactLabel(kind: ArtifactKind, t: TFunction = tNow): string {
+  return t(ARTIFACT_LABEL_KEYS[kind]);
 }
 
 /** Where the app's own scheme serves an `html` artifact to its sandboxed frame. */

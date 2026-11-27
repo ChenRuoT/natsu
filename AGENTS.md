@@ -43,7 +43,7 @@ This repository houses **four** cooperating surfaces across **two separate Cargo
 - `src/features/` — Co-located domain slices (`ui/`, `model/`, `hooks/`, `data/`, `*.test.ts`): `sessions`, `terminal`, `source-control`, `files`, `providers`, `connections`, `mobile`, `monos`, `orchestration`, `automations`, `inbox`, `notes`, `notifications`, `projects`, `quick-composer`, `settings`, `skills`, `workspace`.
 - `src/integrations/harness/` — Provider-agnostic harness runtime (`core/{registry,child,auth,availability,apply}.ts`) + 11 CLI provider adapters (`providers/{claude,codex,cursor,opencode,omp,pi,fx,grok,hermes,devin,antigravity}/`). Each provider's `*Protocol.ts` is a pure parser with colocated unit tests.
 - `src/platform/tauri/` — Frontend wrappers over Tauri IPC (`pty.ts`, `fs.ts`, `clipboard.ts`).
-- `src/shared/` — Feature-agnostic UI components, hooks, and utilities.
+- `src/shared/` — Feature-agnostic UI components, hooks, and utilities. `src/shared/i18n/` holds the i18n layer and message catalogs.
 - `src-tauri/src/` — Tauri Rust backend: ConPTY/PTY (`pty.rs`, `windows.rs`), CLI harness execution (`harness.rs`), SQLite store (`session_store.rs`), Git & worktrees (`fs.rs`, `worktrees.rs`, `worktree_lifecycle.rs`), remote SSH (`remote.rs`, `remote_ssh.rs`, `ssh_askpass.rs`), control loopback host (`control.rs`), mobile access (`mobile_access.rs`), artifacts (`artifacts.rs`).
 - `crates/natsu-core/` — Shared Rust core for the GPUI frontend (store, providers, git/scm, remote, mobile, updater, desktop preferences).
 - `crates/natsu-gpui/` — GPUI native desktop UI (separate `[workspace]` in `crates/natsu-gpui/Cargo.toml`).
@@ -122,6 +122,12 @@ npm run native:check        # Script tests + fmt + clippy + native:test
 3. **Windows-first diligence**: Always consider path separators, `PATHEXT` / `.cmd` / `.ps1` wrappers, `CREATE_NO_WINDOW`, Windows Job Object cleanup, and `%APPDATA%` vs `%LOCALAPPDATA%` isolation.
 4. **Protocol & UI tests**: Keep harness protocol parsing pure in `*Protocol.ts` with unit tests; run `npm run test:browser` for transcript layout/scroll changes.
 5. **Keep docs synchronized**: Whenever rebranding, data paths, or architecture change, update `AGENTS.md` and `handoff.md` accordingly.
+6. **Internationalization (en / zh-CN)**: Every surface has its own hand-rolled i18n layer (no library); English is the source and Chinese is typed or tested against it. Read the README and `glossary.md` before adding or changing UI text (Chinese terms; `MCP`, `Agent`, `Skill(s)`, `Mono`, provider names stay English; never translate text sent to a model, persisted values or raw backend errors). English values must match the original text because tests assert it.
+   - **Tauri frontend (`src/`)**: `src/shared/i18n/` (`README.md`, `glossary.md`); catalogs in `messages/{en,zh-CN}/<area>.ts`; language in `localStorage` `natsu.language`, chosen in Settings > Appearance. The Windows tray menu and the macOS menu bar follow it through `tray_set_language` / `menu_set_language` (`src-tauri/src/tray.rs`, `menu.rs`, synced by `src/platform/tauri/nativeLanguage.ts`).
+   - **Mobile (`mobile/`)**: `mobile/src/i18n/` (same conventions, `@/i18n/i18n`); language preference in the kv-store, chosen in Settings > Appearance (System / English / 简体中文).
+   - **GPUI (`crates/natsu-gpui/`)**: `natsu_core::i18n` with English as the key (`tr("…")`, `tr_fmt("{n} files", …)`); Chinese tables in `crates/natsu-core/src/i18n/zh_cn/<area>.rs`; chosen in Settings > Appearance (System / English / 简体中文); `System` follows `NATSU_LANGUAGE`, then the desktop app's `natsu.language`, then the OS. `tests/i18n_coverage.rs` fails if a `tr` text has no Chinese entry.
+   - **Native app metadata**: the mobile iOS/Android permission texts are localized through `mobile/locales/zh-Hans.json` (`locales` in `app.json`); the macOS menu bar and Mono chat popup are translated in `src-tauri/src/menu.rs` (macOS-only code, verified only by unit tests and a temporary Windows-cfg compile).
+   - Provider-supplied option labels (Reasoning, Effort, ...) are data; the model picker translates the known ones through `settingText` in `src/features/sessions/model/models.ts`.
 
 ---
 

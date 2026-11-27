@@ -1,6 +1,7 @@
 import type { GridArcade } from "./gridArcade";
 import { createPacmanArcade } from "./pacmanArcade";
 import { createSnakeArcade } from "./snakeArcade";
+import type { MessageKey } from "../../../shared/i18n/i18n";
 
 /** How long an idle board stays up before the slider moves on. */
 export const SLIDE_HOLD_MS = 16_000;
@@ -8,7 +9,11 @@ export const SLIDE_HOLD_MS = 16_000;
 export type GridGame = {
   id: string;
   label: string;
+  /** Catalog key for `label`; the English `label` stays the fallback. */
+  labelKey: MessageKey;
   playLabel: string;
+  /** Catalog key for `playLabel`. */
+  playLabelKey: MessageKey;
   /**
    * Idle-band brightness vs a full game. Maze games fill the grid, so they
    * run quieter than a sparse one like snake.
@@ -27,7 +32,9 @@ export const GRID_GAMES: readonly GridGame[] = [
   {
     id: "pacman",
     label: "pac-man",
+    labelKey: "terminal.gridGames.pacmanLabel",
     playLabel: "Pac-man. Arrow keys or WASD to move. Escape to release.",
+    playLabelKey: "terminal.gridGames.pacmanPlayLabel",
     idleDim: 0.2,
     lives: true,
     create: createPacmanArcade,
@@ -35,7 +42,9 @@ export const GRID_GAMES: readonly GridGame[] = [
   {
     id: "snake",
     label: "snake",
+    labelKey: "terminal.gridGames.snakeLabel",
     playLabel: "Snake. Arrow keys or WASD to move. Escape to release.",
+    playLabelKey: "terminal.gridGames.snakePlayLabel",
     idleDim: 0.65,
     lives: false,
     create: createSnakeArcade,

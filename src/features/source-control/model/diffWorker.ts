@@ -1,4 +1,5 @@
 import type { UnifiedFileDiff } from "./unifiedDiff";
+import { t as tNow } from "../../../shared/i18n/i18n";
 
 type Job = {
   id: number;
@@ -52,7 +53,7 @@ function pump() {
       const currentWorker = worker;
       worker.onerror = () => {
         if (worker === currentWorker)
-          fail(new Error("Could not prepare the diff"));
+          fail(new Error(tNow("scm.diffWorker.prepareFailed")));
       };
     }
     const { id, original, current } = active;

@@ -1,5 +1,6 @@
 import { attachmentsFromFiles } from "../../sessions/model/attachments";
 import type { Attachment } from "../../sessions/model/session";
+import { t as tNow } from "../../../shared/i18n/i18n";
 
 /** As the phone's composer allows; bounds what one command can stage. */
 const MAX_MOBILE_ATTACHMENTS = 10;
@@ -17,17 +18,17 @@ export function hasMobileAttachments(value: unknown): boolean {
 export async function mobileAttachments(value: unknown): Promise<Attachment[]> {
   if (value === undefined) return [];
   if (!Array.isArray(value) || value.length > MAX_MOBILE_ATTACHMENTS)
-    throw new Error(`Attach up to ${MAX_MOBILE_ATTACHMENTS} files`);
+    throw new Error(tNow("mobile.attachments.tooMany", { max: MAX_MOBILE_ATTACHMENTS }));
   const files = value.map((item: unknown) => {
     const { name, mimeType, data } = (item ?? {}) as Record<string, unknown>;
     if (typeof name !== "string" || !name.trim() || name.length > 255)
-      throw new Error("An attachment is missing its name");
-    if (typeof data !== "string") throw new Error(`${name} has no contents`);
+      throw new Error(tNow("mobile.attachments.missingName"));
+    if (typeof data !== "string") throw new Error(tNow("mobile.attachments.noContents", { name }));
     const type = typeof mimeType === "string" ? mimeType : "";
     return new File([decodeBase64(data, name)], name, { type });
   });
   const staged = await attachmentsFromFiles(files);
-  if (staged.length !== files.length) throw new Error("Desktop could not save an attachment");
+  if (staged.length !== files.length) throw new Error(tNow("mobile.attachments.saveFailed"));
   return staged;
 }
 
@@ -36,7 +37,7 @@ function decodeBase64(data: string, name: string): Uint8Array<ArrayBuffer> {
   try {
     binary = atob(data);
   } catch {
-    throw new Error(`${name} could not be read`);
+    throw new Error(tNow("mobile.attachments.unreadable", { name }));
   }
   const bytes = new Uint8Array(binary.length);
   for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);

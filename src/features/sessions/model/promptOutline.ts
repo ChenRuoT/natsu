@@ -1,4 +1,5 @@
 import type { Block } from "./session";
+import { t as tNow, type TFunction } from "../../../shared/i18n/i18n";
 
 /** A vertical span in viewport coordinates. */
 export type OutlineBand = { top: number; bottom: number };
@@ -48,15 +49,17 @@ export function barWindow(
   return { start, end: start + max };
 }
 
-export function promptLabel(block: Block): string {
+export function promptLabel(block: Block, t: TFunction = tNow): string {
   const card = block.secondOpinion;
   const textShown = !card || card.kind === "handoff";
   const text = textShown ? firstLine(block.text) : "";
   if (text) return text;
   if (card) {
-    if (card.kind === "handoff") return "Handoff";
+    if (card.kind === "handoff") return t("sessions.promptOutline.handoff");
     const request = firstLine(card.request ?? "");
-    return request ? `Second opinion: ${request}` : "Second opinion";
+    return request
+      ? t("sessions.promptOutline.secondOpinionRequest", { request })
+      : t("sessions.promptOutline.secondOpinion");
   }
   if (block.noteCard?.title) return block.noteCard.title;
   const files = block.attachments ?? [];
@@ -64,7 +67,7 @@ export function promptLabel(block: Block): string {
     const [first] = files;
     return files.length > 1 ? `${first.name} +${files.length - 1}` : first.name;
   }
-  return "Empty message";
+  return t("sessions.promptOutline.emptyMessage");
 }
 
 function firstLine(text: string): string {
@@ -98,6 +101,7 @@ const REPLY_SCAN_CHARS = 2000;
 export function promptPreview(
   blocks: Block[],
   promptId: string,
+  t: TFunction = tNow,
 ): PromptPreview | null {
   const index = blocks.findIndex((block) => block.id === promptId);
   if (index < 0) return null;
@@ -110,7 +114,7 @@ export function promptPreview(
     if (reply.length > 0) break;
   }
   return {
-    title: promptLabel(blocks[index]),
+    title: promptLabel(blocks[index], t),
     reply: reply[0],
     detail: reply[1],
   };

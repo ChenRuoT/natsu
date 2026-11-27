@@ -1,9 +1,27 @@
+import {
+  t as tNow,
+  type MessageKey,
+  type TFunction,
+} from "../../../shared/i18n/i18n";
+
 export const APP_VIEW_LABELS = {
   search: "Search",
   inbox: "Inbox",
   notes: "Notes",
   automations: "Automations",
 } as const;
+
+export const APP_VIEW_LABEL_KEYS = {
+  search: "workspace.appViews.search",
+  inbox: "workspace.appViews.inbox",
+  notes: "workspace.appViews.notes",
+  automations: "workspace.appViews.automations",
+} as const satisfies Record<keyof typeof APP_VIEW_LABELS, MessageKey>;
+
+/** Localized app view title; `APP_VIEW_LABELS` stays the English fallback. */
+export function appViewLabel(view: AppView, t: TFunction = tNow): string {
+  return t(APP_VIEW_LABEL_KEYS[view]);
+}
 
 export type AppView = keyof typeof APP_VIEW_LABELS;
 

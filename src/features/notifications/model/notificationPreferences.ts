@@ -1,9 +1,36 @@
+import type { MessageKey } from "../../../shared/i18n/i18n";
+
 export const NOTIFICATION_CATEGORIES = [
-  { id: "pullRequests", label: "Pull requests / Merge requests" },
-  { id: "issues", label: "Issues and Linear tasks" },
-  { id: "agentFinished", label: "Agent finished" },
-  { id: "agentInput", label: "Agent approvals and questions" },
-  { id: "reminders", label: "Reminders" },
+  {
+    id: "pullRequests",
+    label: "Pull requests / Merge requests",
+    labelKey:
+      "settings.notifications.category.pullRequests" as const satisfies MessageKey,
+  },
+  {
+    id: "issues",
+    label: "Issues and Linear tasks",
+    labelKey:
+      "settings.notifications.category.issues" as const satisfies MessageKey,
+  },
+  {
+    id: "agentFinished",
+    label: "Agent finished",
+    labelKey:
+      "settings.notifications.category.agentFinished" as const satisfies MessageKey,
+  },
+  {
+    id: "agentInput",
+    label: "Agent approvals and questions",
+    labelKey:
+      "settings.notifications.category.agentInput" as const satisfies MessageKey,
+  },
+  {
+    id: "reminders",
+    label: "Reminders",
+    labelKey:
+      "settings.notifications.category.reminders" as const satisfies MessageKey,
+  },
 ] as const;
 
 export type NotificationCategory =

@@ -6,6 +6,7 @@ import {
   type EditorCodeSelection,
 } from "../model/editorSelection";
 import { requestAddToChat } from "../../sessions/model/quoteDraft";
+import { useT } from "../../../shared/i18n/i18n";
 
 export type EditorSelectionTarget = EditorCodeSelection & {
   anchor: DOMRect;
@@ -18,6 +19,7 @@ export function EditorSelectionMenu({
   selection: EditorSelectionTarget | null;
   onDismiss: () => void;
 }) {
+  const t = useT();
   const onDismissRef = useRef(onDismiss);
   onDismissRef.current = onDismiss;
 
@@ -44,7 +46,7 @@ export function EditorSelectionMenu({
       gap={6}
       onDismiss={onDismiss}
       role="toolbar"
-      aria-label="Selected code actions"
+      aria-label={t("files.editorSelection.actionsLabel")}
       className="p-1"
     >
       <button
@@ -61,7 +63,7 @@ export function EditorSelectionMenu({
           className="size-3.5"
           strokeWidth={1.75}
         />
-        Add to chat
+        {t("files.editorSelection.addToChat")}
       </button>
     </Popover>
   );

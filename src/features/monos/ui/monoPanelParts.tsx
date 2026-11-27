@@ -18,6 +18,7 @@ import { Popover } from "../../../shared/ui/Popover";
 import { PixelMascot } from "../../projects/ui/PixelMascot";
 import { MarkdownSourceEditor } from "../../sessions/ui/MarkdownSourceEditor";
 import { playCue } from "../../settings/model/sounds";
+import { useT, type MessageKey } from "../../../shared/i18n/i18n";
 import {
   MEMORY_MAX_BYTES,
   MEMORY_MAX_LINES,
@@ -40,6 +41,7 @@ export function PageHeader({
   onBack?: () => void;
   children?: ReactNode;
 }) {
+  const t = useT();
   return (
     // Same height as the panel's own header, so a page does not jump.
     <header
@@ -52,7 +54,7 @@ export function PageHeader({
       data-tauri-drag-region="deep"
     >
       {onBack ? (
-        <IconButton label="Back" onClick={onBack}>
+        <IconButton label={t("mono.panel.back")} onClick={onBack}>
           <ChevronLeft className="size-3.5" strokeWidth={1.75} />
         </IconButton>
       ) : null}
@@ -225,11 +227,12 @@ export function MascotPicker({
   /** Five lays them out as larger tiles, for a popover of their own. */
   columns?: 5 | 10;
 }) {
+  const t = useT();
   const large = columns === 5;
   return (
     <div
       role="radiogroup"
-      aria-label="Mascot"
+      aria-label={t("mono.panel.mascot")}
       className={`grid gap-0.5 px-1 ${large ? "grid-cols-5 gap-1" : "grid-cols-10"}`}
     >
       {PROJECT_MASCOTS.map(({ name }) => {
@@ -264,6 +267,19 @@ export function MascotPicker({
   );
 }
 
+/** Names of the nine preset colors, in `MONO_COLORS` order. */
+const COLOR_LABEL_KEYS = [
+  "mono.color.blue",
+  "mono.color.coral",
+  "mono.color.yellow",
+  "mono.color.green",
+  "mono.color.pink",
+  "mono.color.purple",
+  "mono.color.teal",
+  "mono.color.orange",
+  "mono.color.indigo",
+] as const satisfies readonly MessageKey[];
+
 /** Nine presets and the project's custom picker, aligned with the mascots. */
 export function ColorPicker({
   current,
@@ -280,26 +296,17 @@ export function ColorPicker({
 }) {
   const [open, setOpen] = useState(false);
   const anchor = useRef<HTMLDivElement>(null);
+  const t = useT();
   const presetIndex = MONO_COLORS.findIndex((color) => color === current);
   return (
-    <div ref={anchor} role="group" aria-label="Color">
+    <div ref={anchor} role="group" aria-label={t("mono.panel.color")}>
       <ColorSwatchRow
         className={`grid place-items-center px-1 ${
           columns === 5 ? "grid-cols-5 gap-y-2" : "grid-cols-10 gap-0.5"
         }`}
         size={columns === 5 ? "lg" : "sm"}
         colors={MONO_COLORS}
-        labels={[
-          "Blue",
-          "Coral",
-          "Yellow",
-          "Green",
-          "Pink",
-          "Purple",
-          "Teal",
-          "Orange",
-          "Indigo",
-        ]}
+        labels={COLOR_LABEL_KEYS.map((key) => t(key))}
         colorIndex={presetIndex >= 0 ? presetIndex : undefined}
         customColor={presetIndex < 0 ? current : undefined}
         customPickerOpen={open}
@@ -354,6 +361,7 @@ export function FileField({
   placeholder: string;
   autoFocus?: boolean;
 }) {
+  const t = useT();
   const [draft, setDraft] = useState(value);
   const [conflict, setConflict] = useState(false);
   // The version the draft started from; a newer one replaces a clean draft.
@@ -395,7 +403,7 @@ export function FileField({
       {conflict ? (
         <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 px-2 text-[11px] leading-4 text-content/60">
           <span className="min-w-0 flex-1">
-            {author} changed this while you were editing.
+            {t("mono.panel.conflictChanged", { author })}
           </span>
           <button
             type="button"
@@ -406,14 +414,14 @@ export function FileField({
             }}
             className="rounded px-1.5 py-0.5 text-content/70 hover:bg-content/8 hover:text-content"
           >
-            Use theirs
+            {t("mono.panel.useTheirs")}
           </button>
           <button
             type="button"
             onClick={() => void save(true)}
             className="rounded px-1.5 py-0.5 text-content/70 hover:bg-content/8 hover:text-content"
           >
-            Keep mine
+            {t("mono.panel.keepMine")}
           </button>
         </div>
       ) : null}

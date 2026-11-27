@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { loginHarness } from "../../../integrations/harness/core/auth";
+import { t as tNow, useT } from "../../../shared/i18n/i18n";
 import { HARNESS_TITLE, type HarnessId } from "../model/session";
 import { Modal } from "../../../shared/ui/Modal";
 import {
@@ -13,6 +14,7 @@ type Props = {
 };
 
 export function ProviderSignInDialog({ harness, onClose }: Props) {
+  const t = useT();
   const [state, setState] = useState<ProviderSignInState>("idle");
   const [error, setError] = useState<string | null>(null);
 
@@ -31,7 +33,9 @@ export function ProviderSignInDialog({ harness, onClose }: Props) {
         setError(
           reason instanceof Error
             ? reason.message
-            : `Could not sign in to ${HARNESS_TITLE[harness]}.`,
+            : tNow("sessions.providerSignInDialog.couldNotSignIn", {
+                provider: HARNESS_TITLE[harness],
+              }),
         );
       },
     );
@@ -40,8 +44,10 @@ export function ProviderSignInDialog({ harness, onClose }: Props) {
   return (
     <Modal
       onClose={onClose}
-      title="Authentication required"
-      description={`Sign in to continue using ${HARNESS_TITLE[harness]}.`}
+      title={t("sessions.providerSignInDialog.authRequired")}
+      description={t("sessions.providerSignInDialog.signInHint", {
+        provider: HARNESS_TITLE[harness],
+      })}
       size="sm"
       minimalHeader
     >
@@ -51,7 +57,7 @@ export function ProviderSignInDialog({ harness, onClose }: Props) {
         error={error}
         onSignIn={signIn}
         onComplete={onClose}
-        completeActionLabel="Continue"
+        completeActionLabel={t("sessions.providerSignInDialog.continue")}
         autoFocus
       />
     </Modal>

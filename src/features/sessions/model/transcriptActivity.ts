@@ -17,6 +17,7 @@ import { INTERRUPT_MESSAGE } from "./inFlight";
 import type { Block, ToolPreview } from "./session";
 import { allModels } from "./models";
 import { natsuWorkSummary } from "./natsuToolCall";
+import { t as tNow, type TFunction } from "../../../shared/i18n/i18n";
 
 export type ToolCallState = "pending" | "accepted" | "rejected";
 
@@ -63,7 +64,11 @@ export function toolCallState(block: Block): ToolCallState {
   return "pending";
 }
 
-export function toolCallLabel(block: Block, cwd?: string): string {
+export function toolCallLabel(
+  block: Block,
+  cwd?: string,
+  t: TFunction = tNow,
+): string {
   const preview = block.tool?.preview;
   const path = preview?.path
     ? displayPath(preview.path, cwd)
@@ -76,7 +81,7 @@ export function toolCallLabel(block: Block, cwd?: string): string {
       query: preview?.query,
       previewKind: preview?.kind,
       cwd,
-    }) || "Working"
+    }) || t("sessions.transcriptActivity.working")
   );
 }
 
@@ -733,14 +738,14 @@ export function isSubagentBlock(block: Block): boolean {
  * The whole brief a run was spawned with. Providers put the instructions here,
  * so this can be a paragraph; it belongs on a tooltip, not on a row.
  */
-export function subagentBrief(block: Block): string {
+export function subagentBrief(block: Block, t: TFunction = tNow): string {
   const name =
     block.agentRun?.name?.trim() ||
     (block.text || block.tool?.title || "").trim();
   const stripped = name
     .replace(/^(?:agent|task|subagent)\b[\s:·-]*/i, "")
     .trim();
-  return stripped || "Subagent";
+  return stripped || t("sessions.transcriptActivity.subagent");
 }
 
 /** Past this a name stops being a name and starts being the brief again. */
@@ -786,7 +791,10 @@ export function subagentReport(
 }
 
 /** A failed delegated call must stay visible even when the work trail folds. */
-export function subagentFailureSummary(blocks: Block[]): string | undefined {
+export function subagentFailureSummary(
+  blocks: Block[],
+  t: TFunction = tNow,
+): string | undefined {
   const failed = blocks.filter(
     (block) =>
       isToolBlock(block) &&
@@ -794,7 +802,9 @@ export function subagentFailureSummary(blocks: Block[]): string | undefined {
       toolCallState(block) === "rejected",
   ).length;
   if (failed === 0) return undefined;
-  return failed === 1 ? "Subagent failed" : `${failed} subagents failed`;
+  return failed === 1
+    ? t("sessions.transcriptActivity.subagentFailed")
+    : t("sessions.transcriptActivity.subagentsFailed", { count: failed });
 }
 
 /**
@@ -1003,10 +1013,12 @@ function tallySteps(steps: Block[]): PhaseTally {
   return tally;
 }
 
-function fileLabel(paths: Set<string>): string {
+function fileLabel(paths: Set<string>, t: TFunction): string {
   const [first] = paths;
   if (paths.size === 1 && first) return leafName(first) || first;
-  return `${paths.size} files`;
+  return paths.size === 1
+    ? t("sessions.transcriptActivity.fileCount.one", { count: paths.size })
+    : t("sessions.transcriptActivity.fileCount.other", { count: paths.size });
 }
 
 /** What the calls of one kind add up to: "Edited 2 files", "Ran 3 commands". */
@@ -1014,40 +1026,73 @@ function workSummary(
   kind: ActivityWorkKind,
   tally: PhaseTally,
   live: boolean,
+  t: TFunction,
 ): string {
   switch (kind) {
     case "edit":
-      return `${live ? "Editing" : "Edited"} ${fileLabel(tally.edits)}`;
+      return live
+        ? t("sessions.transcriptActivity.editing", {
+            files: fileLabel(tally.edits, t),
+          })
+        : t("sessions.transcriptActivity.edited", {
+            files: fileLabel(tally.edits, t),
+          });
     case "research":
       if (tally.reads.size > 0 && tally.searches === 0) {
-        return `${live ? "Reading" : "Read"} ${fileLabel(tally.reads)}`;
+        return live
+          ? t("sessions.transcriptActivity.reading", {
+              files: fileLabel(tally.reads, t),
+            })
+          : t("sessions.transcriptActivity.read", {
+              files: fileLabel(tally.reads, t),
+            });
       }
       if (tally.reads.size === 0) {
-        return live ? "Searching the project" : "Searched the project";
+        return live
+          ? t("sessions.transcriptActivity.searchingProject")
+          : t("sessions.transcriptActivity.searchedProject");
       }
-      return live ? "Exploring the project" : "Explored the project";
+      return live
+        ? t("sessions.transcriptActivity.exploringProject")
+        : t("sessions.transcriptActivity.exploredProject");
     case "run":
-      if (tally.backgroundLive > 0) return "Running in background";
+      if (tally.backgroundLive > 0)
+        return t("sessions.transcriptActivity.runningInBackground");
       if (tally.runs === 0 && tally.background > 0) {
-        return "Finished in background";
+        return t("sessions.transcriptActivity.finishedInBackground");
       }
-      return tally.runs === 1
-        ? live
-          ? "Running a command"
-          : "Ran a command"
-        : `${live ? "Running" : "Ran"} ${tally.runs} commands`;
+      if (tally.runs === 1) {
+        return live
+          ? t("sessions.transcriptActivity.runningCommand")
+          : t("sessions.transcriptActivity.ranCommand");
+      }
+      return live
+        ? t("sessions.transcriptActivity.runningCommands", {
+            count: tally.runs,
+          })
+        : t("sessions.transcriptActivity.ranCommands", { count: tally.runs });
     case "agent":
-      return tally.agents === 1
-        ? live
-          ? "Running a subagent"
-          : "Ran a subagent"
-        : `${live ? "Running" : "Ran"} ${tally.agents} subagents`;
+      if (tally.agents === 1) {
+        return live
+          ? t("sessions.transcriptActivity.runningSubagent")
+          : t("sessions.transcriptActivity.ranSubagent");
+      }
+      return live
+        ? t("sessions.transcriptActivity.runningSubagents", {
+            count: tally.agents,
+          })
+        : t("sessions.transcriptActivity.ranSubagents", {
+            count: tally.agents,
+          });
     default:
-      return tally.others === 1
-        ? live
-          ? "Running a tool"
-          : "Ran a tool"
-        : `${live ? "Running" : "Ran"} ${tally.others} tools`;
+      if (tally.others === 1) {
+        return live
+          ? t("sessions.transcriptActivity.runningTool")
+          : t("sessions.transcriptActivity.ranTool");
+      }
+      return live
+        ? t("sessions.transcriptActivity.runningTools", { count: tally.others })
+        : t("sessions.transcriptActivity.ranTools", { count: tally.others });
   }
 }
 
@@ -1066,24 +1111,31 @@ function currentWorkKind(steps: Block[]): ActivityWorkKind | undefined {
  * when it folds. Interjections the turn absorbed ride along as a trailing
  * "N notes" clause; a group holding nothing but notes is just that clause.
  */
-export function workSummaryLine(steps: Block[], live = false): string {
-  const appSummary = natsuWorkSummary(steps, live);
+export function workSummaryLine(
+  steps: Block[],
+  live = false,
+  t: TFunction = tNow,
+): string {
+  const appSummary = natsuWorkSummary(steps, live, t);
   if (appSummary) return appSummary;
   const tally = tallySteps(steps);
   const notes =
     tally.notes === 1
-      ? "1 note"
+      ? t("sessions.transcriptActivity.notes.one", { count: tally.notes })
       : tally.notes > 1
-        ? `${tally.notes} notes`
+        ? t("sessions.transcriptActivity.notes.other", { count: tally.notes })
         : "";
   if (tally.order.length === 0) {
     if (notes) return notes;
-    if (steps.length > 0 && steps.every(isStatusStep)) return "Status update";
-    return live ? "Thinking" : "Thought";
+    if (steps.length > 0 && steps.every(isStatusStep))
+      return t("sessions.transcriptActivity.statusUpdate");
+    return live
+      ? t("sessions.transcriptActivity.thinking")
+      : t("sessions.transcriptActivity.thought");
   }
   const running = live ? currentWorkKind(steps) : undefined;
   return [
-    ...tally.order.map((kind) => workSummary(kind, tally, kind === running)),
+    ...tally.order.map((kind) => workSummary(kind, tally, kind === running, t)),
     ...(notes ? [notes] : []),
   ].join(" · ");
 }
@@ -1103,16 +1155,22 @@ export function workKind(steps: Block[]): ActivityPhaseKind {
  * The group's header: the agent's own line if it wrote one, otherwise what the
  * calls add up to.
  */
-export function activityPhaseTitle(phase: ActivityPhase, live = false): string {
-  const failure = subagentFailureSummary(phase.steps);
+export function activityPhaseTitle(
+  phase: ActivityPhase,
+  live = false,
+  t: TFunction = tNow,
+): string {
+  const failure = subagentFailureSummary(phase.steps, t);
   if (failure) return failure;
   if (phase.headline) {
     const summary = proseSummary(phase.headline.text);
     if (hasReadableText(summary)) return summary;
     if (!summary)
-      return phase.headline.role === "reasoning" ? "Thinking" : "Working";
+      return phase.headline.role === "reasoning"
+        ? t("sessions.transcriptActivity.thinking")
+        : t("sessions.transcriptActivity.working");
   }
-  return workSummaryLine(phase.steps, live);
+  return workSummaryLine(phase.steps, live, t);
 }
 
 /** The span of a turn that folds away once the agent has answered for it. */

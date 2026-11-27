@@ -16,6 +16,7 @@ import {
   type ProviderAccount,
   type ProviderAccountProvider,
 } from "./providerAccounts";
+import { t as tNow, type TFunction } from "../../../shared/i18n/i18n";
 import { identityKey } from "./providerAccountIdentity";
 
 const CLOCK_MS = 30_000;
@@ -60,43 +61,60 @@ export function accountHeadroom(
 export function accountStatus(
   limits: ProviderRateLimits | undefined,
   now: number,
+  t: TFunction = tNow,
 ): AccountStatus {
   const headroom = accountHeadroom(limits, now);
   if (!limits || headroom == null) {
     if (!limits || limits.status === "idle" || limits.status === "fetching") {
-      return { tone: "checking", label: "Checking…", detail: null };
+      return {
+        tone: "checking",
+        label: t("providers.accountUsage.checking"),
+        detail: null,
+      };
     }
     return {
       tone: "unknown",
       label:
         limits.status === "unavailable"
-          ? limits.error || "Not signed in"
-          : limits.error || "Usage unavailable",
+          ? limits.error || t("providers.accountUsage.notSignedIn")
+          : limits.error || t("providers.accountUsage.unavailable"),
       detail: null,
     };
   }
   if (headroom <= 0) {
     return {
       tone: "exhausted",
-      label: "Exhausted",
-      detail: backIn(limits, now),
+      label: t("providers.accountUsage.exhausted"),
+      detail: backIn(limits, now, t),
     };
   }
   if (headroom <= LOW_HEADROOM_PERCENT) {
     return {
       tone: "low",
-      label: "Running low",
-      detail: `${Math.round(headroom)}% left`,
+      label: t("providers.accountUsage.runningLow"),
+      detail: t("providers.accountUsage.percentLeft", {
+        percent: `${Math.round(headroom)}%`,
+      }),
     };
   }
-  return { tone: "ready", label: "Ready", detail: null };
+  return {
+    tone: "ready",
+    label: t("providers.accountUsage.ready"),
+    detail: null,
+  };
 }
 
 /** "back in 31m" for the used-up window that stays blocked longest. */
-function backIn(limits: ProviderRateLimits, now: number): string | null {
+function backIn(
+  limits: ProviderRateLimits,
+  now: number,
+  t: TFunction,
+): string | null {
   const resetAt = exhaustedWindowResetAt(limits);
   if (resetAt == null || resetAt <= now) return null;
-  return `back in ${formatResetDuration(resetAt - now)}`;
+  return t("providers.accountUsage.backIn", {
+    duration: formatResetDuration(resetAt - now, t),
+  });
 }
 
 /** The account with the most headroom, if it is comfortably above "low". */

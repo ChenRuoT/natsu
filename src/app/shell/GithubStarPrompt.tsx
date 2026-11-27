@@ -4,6 +4,7 @@ import {
   githubNatsuStarStatus,
   starNatsuOnGithub,
 } from "../../features/inbox/model/githubTasks";
+import { useT } from "../../shared/i18n/i18n";
 import { Loader, Star, X } from "../../shared/ui/icons";
 
 const NATSU_GITHUB_URL = "https://github.com/ChenRuoT/natsu";
@@ -103,6 +104,7 @@ export function GithubStarPrompt() {
     getPromptSnapshot,
     getPromptSnapshot,
   );
+  const t = useT();
   const show = snapshot === "visible" || snapshot === "starring";
   const busy = snapshot === "starring";
 
@@ -121,7 +123,7 @@ export function GithubStarPrompt() {
     <div data-github-star-prompt className="relative mb-1 h-8 w-full">
       <button
         type="button"
-        aria-label="Star Natsu on GitHub"
+        aria-label={t("shell.githubStarPrompt.starLabel")}
         aria-busy={busy}
         disabled={busy}
         onClick={() => void starFromPrompt()}
@@ -137,13 +139,15 @@ export function GithubStarPrompt() {
           />
         )}
         <span className="min-w-0 truncate text-xs font-medium leading-tight">
-          {busy ? "Starring…" : "Star on GitHub"}
+          {busy
+            ? t("shell.githubStarPrompt.starring")
+            : t("shell.githubStarPrompt.starButton")}
         </span>
       </button>
       <button
         type="button"
-        title="Don't show again"
-        aria-label="Dismiss GitHub star prompt"
+        title={t("shell.githubStarPrompt.dismissTitle")}
+        aria-label={t("shell.githubStarPrompt.dismissLabel")}
         onClick={dismissPrompt}
         className="absolute right-1 top-1/2 grid size-6 -translate-y-1/2 place-items-center rounded-md text-orange-400/60 transition-[color,background-color,transform] duration-150 ease-out hover:bg-orange-300/15 hover:text-orange-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400/60 active:scale-95"
       >

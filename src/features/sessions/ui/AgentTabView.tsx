@@ -1,3 +1,4 @@
+import { useT } from "../../../shared/i18n/i18n";
 import {
   useCallback,
   useEffect,
@@ -48,6 +49,7 @@ export function AgentTabView({
   focused?: boolean;
   onOpenFile?: (path: string) => void;
 }) {
+  const t = useT();
   const session = useSessionSnapshot(initialSession, visible);
   const navigateBlockRef = useRef<
     ((blockId: string | null, query?: string) => boolean) | null
@@ -116,8 +118,7 @@ export function AgentTabView({
     return (
       <div className="grid h-full place-items-center px-6 text-center">
         <p className="max-w-sm text-[12px] leading-5 text-content/45">
-          This agent is no longer running. Its work is summarised in the
-          orchestrator's conversation.
+          {t("sessions.agentTabView.noLongerRunning")}
         </p>
       </div>
     );

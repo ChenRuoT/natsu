@@ -1,4 +1,5 @@
 import type { TaskListItem, TaskListItemStatus } from "./session";
+import { t as tNow, type TFunction } from "../../../shared/i18n/i18n";
 
 export function isTaskListToolName(value: string): boolean {
   const name = value.trim().toLowerCase().replace(/[\s_-]+/g, "");
@@ -79,11 +80,18 @@ export function legacyTaskListFromText(text: string): TaskListItem[] | null {
     : null;
 }
 
-export function taskListProgressLabel(items: TaskListItem[]): string {
+export function taskListProgressLabel(
+  items: TaskListItem[],
+  t: TFunction = tNow,
+): string {
   const completed = items.filter((item) => item.status === "completed").length;
   const actionable = items.filter((item) => item.status !== "cancelled").length;
-  if (actionable > 0 && completed === actionable) return "Complete";
-  return `${completed} of ${actionable || items.length}`;
+  if (actionable > 0 && completed === actionable)
+    return t("sessions.taskList.complete");
+  return t("sessions.taskList.progress", {
+    completed,
+    total: actionable || items.length,
+  });
 }
 
 function taskListMark(status: TaskListItemStatus): string {

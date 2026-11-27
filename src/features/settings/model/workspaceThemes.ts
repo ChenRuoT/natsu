@@ -1,3 +1,4 @@
+import type { MessageKey, TFunction } from "../../../shared/i18n/i18n";
 /** Colour themes for the inset workspace. Each one paints the shell around the
  * card, the card itself, text, accent and the markdown link/heading colours,
  * with its own dark and light palette. "Default" sets nothing, so the
@@ -619,3 +620,27 @@ export const WORKSPACE_THEME_VARIABLE_NAMES: readonly string[] = (
   ...PALETTE_KEYS.map((key) => variableName(scheme, key)),
   ...SYNTAX_KEYS.map((key) => variableName(scheme, `syntax-${key}`)),
 ]);
+
+/** Catalog keys for the theme names, so the pickers can show them translated. */
+const WORKSPACE_THEME_NAME_KEYS: Record<string, MessageKey> = {
+  default: "wiring.settingsView.workspaceThemeDefault",
+  harbor: "settings.appearance.workspaceTheme.name.harbor",
+  moss: "settings.appearance.workspaceTheme.name.moss",
+  ember: "settings.appearance.workspaceTheme.name.ember",
+  orchid: "settings.appearance.workspaceTheme.name.orchid",
+  tidepool: "settings.appearance.workspaceTheme.name.tidepool",
+  dune: "settings.appearance.workspaceTheme.name.dune",
+  rosewood: "settings.appearance.workspaceTheme.name.rosewood",
+  glacier: "settings.appearance.workspaceTheme.name.glacier",
+  arcade: "settings.appearance.workspaceTheme.name.arcade",
+  ink: "settings.appearance.workspaceTheme.name.ink",
+};
+
+/** A theme's display name in the current language; the English label if unknown. */
+export function workspaceThemeLabel(
+  theme: { id: string; label: string },
+  t: TFunction,
+): string {
+  const key = WORKSPACE_THEME_NAME_KEYS[theme.id];
+  return key ? t(key) : theme.label;
+}

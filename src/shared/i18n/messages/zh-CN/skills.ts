@@ -1,0 +1,38 @@
+import type { skills } from "../en/skills";
+
+export const skillsZh: Record<keyof typeof skills, string> = {
+  "settings.skills.previewReadFailed": "无法读取 SKILL.md。{error}",
+  "settings.skills.savePreferenceFailed": "无法保存 Skill 偏好设置，请重试。",
+  "settings.skills.openFolderFailed": "无法打开文件夹：{error}",
+  "settings.skills.copyPathFailed": "无法将路径复制到剪贴板。",
+  "settings.skills.count.one": "{count} 个 Skill",
+  "settings.skills.count.other": "{count} 个 Skill",
+  "settings.skills.filterPlaceholder": "筛选",
+  "settings.skills.filterLabel": "筛选 Skill",
+  "settings.skills.refreshLabel": "刷新 Skill",
+  "settings.skills.refreshTitle": "重新扫描 Skill 文件夹",
+  "settings.skills.closeFormLabel": "关闭 Skill 表单",
+  "settings.skills.addButton": "添加 Skill",
+  "settings.skills.addTitle": "创建一个可编辑的入门 SKILL.md",
+  "settings.skills.closeButton": "关闭",
+  "settings.skills.loading": "正在加载 Skill…",
+  "settings.skills.emptyHint":
+    "还没有 Skill。点击“添加 Skill”可创建入门 SKILL.md。",
+  "settings.skills.noMatches": "没有匹配的 Skill",
+  "settings.skills.previewNameTitle": "预览 {name}",
+  "settings.skills.scopePersonal": "个人",
+  "settings.skills.scopeProject": "项目",
+  "settings.skills.catalogToggleLabel": "将 {name} 加入 Natsu 目录",
+  "settings.skills.previewIconLabel": "预览 Skill {name}",
+  "settings.skills.previewTitle": "预览 Skill",
+  "settings.skills.copyPathLabel": "复制 {name} 的路径",
+  "settings.skills.copyPathTitle": "复制路径",
+  "settings.skills.revealLabel": "在文件夹中显示 {name}",
+  "settings.skills.revealTitle": "在文件夹中显示",
+  "settings.skills.locationNote":
+    "已隐藏的 Skill 仍保留在磁盘上，并会从 Natsu 的文件 Skill 目录中排除。提供方管理的 Skill 和原生命令不受影响。本项目的 Skill 位于 <path>.agents/skills</path> 中，你个人的 Skill 位于 <path>~/.agents/skills</path> 中；各运行环境文件夹中的 Skill 也会被读取。",
+  "settings.skills.previewLabel": "Skill 预览",
+  "settings.skills.closePreviewLabel": "关闭 Skill 预览",
+  "settings.skills.closePreviewTitle": "关闭预览（Escape）",
+  "settings.skills.previewLoading": "正在加载 Skill…",
+};

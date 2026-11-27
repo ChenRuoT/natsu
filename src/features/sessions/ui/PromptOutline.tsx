@@ -22,6 +22,7 @@ import {
 } from "../model/promptOutline";
 import type { Block } from "../model/session";
 import { Popover } from "../../../shared/ui/Popover";
+import { useT } from "../../../shared/i18n/i18n";
 import { revealMeasuredTurn } from "./useMeasuredHistory";
 
 const OPEN_DELAY_MS = 25;
@@ -61,6 +62,7 @@ export function PromptOutline({
   visible = true,
   revealBlock,
 }: Props) {
+  const t = useT();
   const prompts = useMemo(() => promptBlocks(blocks), [blocks]);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [stackBudget, setStackBudget] = useState(BAR_STACK_MAX_PX);
@@ -198,8 +200,8 @@ export function PromptOutline({
 
   const hoverId = hover?.id ?? null;
   const preview = useMemo(
-    () => (hoverId ? promptPreview(blocks, hoverId) : null),
-    [blocks, hoverId],
+    () => (hoverId ? promptPreview(blocks, hoverId, t) : null),
+    [blocks, hoverId, t],
   );
 
   const jumpTo = (id: string) => {
@@ -274,7 +276,7 @@ export function PromptOutline({
       <div
         ref={rail}
         role="toolbar"
-        aria-label="Prompts"
+        aria-label={t("sessions.promptOutline.label")}
         aria-orientation="vertical"
         style={{ width: BAR_WIDTH_LIFTED_PX }}
         onMouseEnter={() => {
@@ -298,7 +300,7 @@ export function PromptOutline({
               type="button"
               data-prompt-bar={prompt.id}
               tabIndex={prompt.id === tabId ? 0 : -1}
-              aria-label={promptLabel(prompt)}
+              aria-label={promptLabel(prompt, t)}
               aria-current={prompt.id === activeId ? "true" : undefined}
               onMouseEnter={(event) => hoverBar(prompt.id, event.currentTarget)}
               onFocus={(event) => {
@@ -336,7 +338,7 @@ export function PromptOutline({
             gap={10}
             width={POPOVER_WIDTH}
             onDismiss={close}
-            aria-label="Prompt preview"
+            aria-label={t("sessions.promptOutline.previewLabel")}
             className="pointer-events-none flex flex-col gap-1.5 p-3 font-sans"
           >
             <p className="line-clamp-2 text-sm leading-snug text-content">

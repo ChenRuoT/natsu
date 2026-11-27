@@ -1,3 +1,4 @@
+import { t as tNow } from "../../../shared/i18n/i18n";
 import {
   DEFAULT_PROVIDER_ACCOUNT_ID,
   providerAccountExists,
@@ -41,7 +42,7 @@ export function mobileAccountChoice(
   const explicit = params.providerAccountId !== undefined;
   if (!supportsAccountProfiles(harness)) {
     if (explicit)
-      throw new Error("This provider does not support account switching");
+      throw new Error(tNow("mobile.providerAccounts.switchingUnsupported"));
     return undefined;
   }
   const accountId = explicit
@@ -51,8 +52,6 @@ export function mobileAccountChoice(
     typeof accountId !== "string" ||
     !providerAccountExists(harness, accountId)
   )
-    throw new Error(
-      "Account is no longer available. Choose another account in the model picker.",
-    );
+    throw new Error(tNow("mobile.providerAccounts.noLongerAvailable"));
   return accountId;
 }

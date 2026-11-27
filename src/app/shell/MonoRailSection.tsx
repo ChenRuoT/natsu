@@ -23,7 +23,6 @@ import {
   defaultMonoName,
   findMono,
   listMonos,
-  MONO_STATUS_LABEL,
   nextMonoLook,
   monoLook,
   monoProjectsPhrase,
@@ -35,7 +34,9 @@ import {
   subscribeMonos,
   updateMono,
   type MonoState,
+  type MonoStatus,
 } from "../../features/monos/model/mono";
+import { useT, type MessageKey, type TFunction } from "../../shared/i18n/i18n";
 
 export type MonoRailProps = {
   /** The Mono open in the main area, if any. */
@@ -57,9 +58,18 @@ export function unreadBadge(count: number): string {
   return count > 99 ? "99+" : String(count);
 }
 
-export function unreadLabel(count: number): string {
-  return count === 1 ? "1 new reply" : `${count} new replies`;
+export function unreadLabel(count: number, t: TFunction): string {
+  return count === 1
+    ? t("shell.monoRail.unreadReply.one", { count })
+    : t("shell.monoRail.unreadReply.other", { count });
 }
+
+/** Each Mono status's label, as a catalog key (the English is MONO_STATUS_LABEL). */
+export const MONO_STATUS_KEY: Record<MonoStatus, MessageKey> = {
+  working: "shell.monoRail.statusWorking",
+  "needs-you": "shell.monoRail.statusNeedsYou",
+  idle: "shell.monoRail.statusIdle",
+};
 
 /**
  * The user's Monos, above the projects. Each opens like a project does, but
@@ -81,6 +91,7 @@ export function MonoRailSection({
    */
   project?: string;
 }) {
+  const t = useT();
   const snapshot = useSyncExternalStore(subscribeMonos, monosSnapshot);
   const monos = useMemo(
     () => listMonos().filter((mono) => !project || monoWorksOn(mono, project)),
@@ -124,13 +135,13 @@ export function MonoRailSection({
             project ? "" : " px-1 text-xs leading-5 text-content/50"
           }`}
         >
-          Monos
+          {t("shell.monoRail.label")}
         </span>
         {monos.length ? (
           <button
             type="button"
-            title="New mono"
-            aria-label="New mono"
+            title={t("shell.monoRail.newMono")}
+            aria-label={t("shell.monoRail.newMono")}
             onClick={() => onCreate(project ? [project] : undefined)}
             className={`grid size-5 shrink-0 place-items-center rounded-md text-content/50 hover:bg-content/8 hover:text-content${
               project ? " -mr-0.5" : ""
@@ -143,7 +154,7 @@ export function MonoRailSection({
       <div className={`flex flex-col gap-px${project ? "" : " px-2"}`}>
         {monos.length === 0 ? (
           <RailAction
-            label="New mono"
+            label={t("shell.monoRail.newMono")}
             icon={Plus}
             onClick={() => onCreate(project ? [project] : undefined)}
           />
@@ -155,11 +166,11 @@ export function MonoRailSection({
           const unseen = selected ? 0 : (unseenCounts?.get(mono.id) ?? 0);
           const projects = look.projects.length
             ? monoProjectsPhrase(look.projects)
-            : "No projects yet";
+            : t("shell.monoRail.noProjects");
           const status =
             state.status === "idle"
               ? undefined
-              : (state.activity ?? MONO_STATUS_LABEL[state.status]);
+              : (state.activity ?? t(MONO_STATUS_KEY[state.status]));
           return (
             <div
               key={mono.id}
@@ -202,8 +213,8 @@ export function MonoRailSection({
                 title={[look.name, projects, status].filter(Boolean).join("\n")}
                 aria-label={[
                   look.name,
-                  status ?? "idle",
-                  unseen ? unreadLabel(unseen) : undefined,
+                  status ?? t("shell.monoRail.idle"),
+                  unseen ? unreadLabel(unseen, t) : undefined,
                   projects,
                 ]
                   .filter(Boolean)
@@ -242,8 +253,10 @@ export function MonoRailSection({
               <button
                 type="button"
                 data-no-drag
-                title="Mono options"
-                aria-label={`${look.name} options`}
+                title={t("shell.monoRail.monoOptions")}
+                aria-label={t("shell.monoRail.monoOptionsAria", {
+                  name: look.name,
+                })}
                 aria-haspopup="menu"
                 onPointerDown={(event) => event.stopPropagation()}
                 onClick={(event) => {
@@ -303,6 +316,7 @@ function MonoMenu({
   onDelete: () => void;
   onClose: () => void;
 }) {
+  const t = useT();
   useSyncExternalStore(subscribeMonos, monosSnapshot);
   const mono = findMono(monoId);
   const input = useRef<HTMLInputElement>(null);
@@ -333,7 +347,7 @@ function MonoMenu({
         onClose();
       }}
       role="menu"
-      aria-label="Mono options"
+      aria-label={t("shell.monoRail.monoOptions")}
       onContextMenu={(event) => event.preventDefault()}
       className="p-2"
     >
@@ -342,7 +356,7 @@ function MonoMenu({
         value={name}
         placeholder={defaultMonoName(mono.mascot)}
         maxLength={40}
-        aria-label="Mono name"
+        aria-label={t("shell.monoRail.monoName")}
         onChange={(event) => setName(event.target.value)}
         onBlur={commitName}
         onKeyDown={(event) => {
@@ -376,7 +390,7 @@ function MonoMenu({
         className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-left text-[13px] text-content/85 hover:bg-content/8"
       >
         <ImagePlus className="size-3.5 shrink-0" strokeWidth={1.75} />
-        Background image
+        {t("shell.monoRail.background")}
       </button>
       <button
         type="button"
@@ -385,7 +399,7 @@ function MonoMenu({
         className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-left text-[13px] text-red-400 hover:bg-content/8"
       >
         <Trash2 className="size-3.5 shrink-0" strokeWidth={1.75} />
-        Delete mono…
+        {t("shell.monoRail.deleteMono")}
       </button>
     </Popover>
   );

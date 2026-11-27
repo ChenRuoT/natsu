@@ -19,6 +19,11 @@ import {
   projectMascot,
 } from "../../projects/model/projectMascots";
 import { removeMonoBackground } from "./monoBackground";
+import {
+  t as tNow,
+  type MessageKey,
+  type TFunction,
+} from "../../../shared/i18n/i18n";
 
 /** The project palette's colors, plus indigo for a Mono's ninth preset. */
 export const MONO_COLORS = [
@@ -426,12 +431,40 @@ export const MONO_STATUS_LABEL: Record<MonoStatus, string> = {
   idle: "Idle",
 };
 
-/** The agent's state, with the step it is on or the call it is waiting for. */
+/** Translatable form of `MONO_STATUS_LABEL`, for components that render it. */
+export const MONO_STATUS_LABEL_KEY = {
+  working: "mono.status.working",
+  "needs-you": "mono.status.needsYou",
+  idle: "mono.status.idle",
+} as const satisfies Record<MonoStatus, MessageKey>;
+
+/**
+ * The projects as a localized phrase for UI text ("app, site and api").
+ * Prompts keep using `monoProjectsPhrase`, which stays English.
+ */
+export function monoProjectsPhraseIn(
+  projects: readonly MonoProject[],
+  t: TFunction,
+): string {
+  const names = projects.map((project) => project.name);
+  if (names.length <= 1) return names[0] ?? "";
+  return t("mono.projects.and", {
+    items: names.slice(0, -1).join(t("mono.projects.separator")),
+    last: names[names.length - 1],
+  });
+}
+
+/**
+ * The agent's state, with the step it is on or the call it is waiting for.
+ * Components pass their `useT()` function so the activity note re-renders
+ * with the language; the default is the global translator.
+ */
 export function monoState(
   session: Pick<
     Session,
     "blocks" | "busy" | "pendingQuestion" | "worktreeRemoved" | "usageLimit"
   >,
+  t: TFunction = tNow,
 ): MonoState {
   const { blocks, pendingQuestion: question } = session;
   if (!session.worktreeRemoved && question) {
@@ -448,17 +481,17 @@ export function monoState(
     return {
       status: "needs-you",
       activity: approval?.tool?.title
-        ? `Approve ${plainLine(approval.tool.title)}`
-        : "Waiting for approval",
+        ? t("mono.state.approve", { title: plainLine(approval.tool.title) })
+        : t("mono.state.waitingApproval"),
     };
   }
   if (!session.worktreeRemoved && session.usageLimit) {
-    return { status: "needs-you", activity: "Usage limit reached" };
+    return { status: "needs-you", activity: t("mono.state.usageLimit") };
   }
   if (!session.busy) return { status: "idle" };
   const last = blocks[blocks.length - 1];
   if (last?.role === "assistant" && !last.tool && last.streaming) {
-    return { status: "working", activity: "Writing a reply" };
+    return { status: "working", activity: t("mono.state.writingReply") };
   }
   // Only a step from the current turn says what it is doing now.
   for (let i = blocks.length - 1; i >= 0; i--) {
@@ -468,7 +501,7 @@ export function monoState(
       return { status: "working", activity: plainLine(block.tool.title) };
     }
   }
-  return { status: "working", activity: "Thinking" };
+  return { status: "working", activity: t("mono.state.thinking") };
 }
 
 function latest(

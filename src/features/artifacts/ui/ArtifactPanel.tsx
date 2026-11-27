@@ -4,8 +4,13 @@ import { copyMessage } from "../../../platform/tauri/clipboard";
 import { IconButton } from "../../../app/shell/TitleBar";
 import { MonoSidebarHeader } from "../../monos/ui/MonoSidebar";
 import { PageHeader } from "../../monos/ui/monoPanelParts";
-import { artifactLabel, deleteArtifact } from "../artifacts";
+import {
+  ARTIFACT_NOUN_KEYS,
+  artifactLabel,
+  deleteArtifact,
+} from "../artifacts";
 import { ArtifactContent, useArtifact } from "./ArtifactContent";
+import { t as tNow, useT } from "../../../shared/i18n/i18n";
 
 /**
  * A document's title, body and actions. With `onBack` it is a page over a
@@ -22,6 +27,7 @@ export function ArtifactReader({
   onClose: () => void;
   onOpenFile?: (path: string) => void;
 }) {
+  const t = useT();
   const leave = onBack ?? onClose;
   const { artifact, loaded, error, setError } = useArtifact(id);
   const [copied, setCopied] = useState(false);
@@ -45,10 +51,20 @@ export function ArtifactReader({
     return () => window.removeEventListener("keydown", escape);
   }, [leave]);
 
-  const label = artifact ? artifactLabel(artifact.kind) : "Document";
-  const noun = label.toLowerCase();
+  const label = artifact
+    ? artifactLabel(artifact.kind, t)
+    : t("artifacts.label.document");
+  const noun = t(
+    artifact ? ARTIFACT_NOUN_KEYS[artifact.kind] : "artifacts.noun.document",
+  );
   const onDelete = async () => {
-    if (!artifact || deleting || !window.confirm(`Delete “${artifact.title}”?`))
+    if (
+      !artifact ||
+      deleting ||
+      !window.confirm(
+        tNow("artifacts.panel.confirmDelete", { title: artifact.title }),
+      )
+    )
       return;
     setDeleting(true);
     setError(null);
@@ -56,7 +72,7 @@ export function ArtifactReader({
       await deleteArtifact(artifact.id);
       if (mounted.current) leave();
     } catch {
-      setError(`Could not delete this ${noun}.`);
+      setError(tNow("artifacts.panel.deleteFailed", { noun }));
     } finally {
       setDeleting(false);
     }
@@ -64,18 +80,22 @@ export function ArtifactReader({
   const actions = artifact ? (
     <>
       <IconButton
-        label={`Delete ${noun}`}
+        label={t("artifacts.panel.deleteLabel", { noun })}
         disabled={deleting}
         onClick={() => void onDelete()}
       >
         <Trash2 className="size-3.5" />
       </IconButton>
       <IconButton
-        label={copied ? "Copied" : `Copy ${noun}`}
+        label={
+          copied
+            ? t("artifacts.panel.copied")
+            : t("artifacts.panel.copyLabel", { noun })
+        }
         onClick={() =>
           void copyMessage(artifact.body).then(
             () => setCopied(true),
-            () => setError(`Could not copy this ${noun}.`),
+            () => setError(tNow("artifacts.panel.copyFailed", { noun })),
           )
         }
       >
@@ -88,7 +108,11 @@ export function ArtifactReader({
       {onBack ? (
         <PageHeader title={artifact?.title ?? label} onBack={onBack}>
           {actions}
-          <IconButton label="Hide overview" active onClick={onClose}>
+          <IconButton
+            label={t("artifacts.panel.hideOverview")}
+            active
+            onClick={onClose}
+          >
             <PanelRightToggle className="size-3.5" strokeWidth={1.75} />
           </IconButton>
         </PageHeader>
@@ -98,7 +122,7 @@ export function ArtifactReader({
       <div className="min-h-0 flex-1 overflow-y-auto overscroll-none px-4 py-3">
         {!loaded ? (
           <p role="status" className="text-[13px] text-content/50">
-            Loading document…
+            {t("artifacts.panel.loading")}
           </p>
         ) : error && !artifact ? (
           <p role="alert" className="text-[13px] text-content/65">
@@ -106,7 +130,7 @@ export function ArtifactReader({
           </p>
         ) : !artifact ? (
           <p role="status" className="text-[13px] text-content/50">
-            This document is no longer available.
+            {t("artifacts.panel.gone")}
           </p>
         ) : (
           <article data-artifact-reader={artifact.id}>
@@ -117,7 +141,7 @@ export function ArtifactReader({
               </p>
             ) : null}
             <span role="status" className="sr-only">
-              {copied ? `${label} copied` : ""}
+              {copied ? t("artifacts.panel.copiedAnnounce", { label }) : ""}
             </span>
           </article>
         )}

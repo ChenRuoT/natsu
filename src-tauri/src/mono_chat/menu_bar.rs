@@ -85,7 +85,7 @@ pub(super) fn decorate(tray: &tauri::tray::TrayIcon) -> tauri::Result<()> {
                     continue;
                 }
                 let title = item.title().to_string();
-                if let Some(action) = ACTIONS.iter().find(|a| a.title == title) {
+                if let Some(action) = ACTIONS.iter().find(|a| crate::menu::tr(a.title) == title) {
                     let image = action_icon(action);
                     item.setImage(image.as_deref());
                     show_image(&item);
@@ -102,7 +102,9 @@ pub(super) fn decorate(tray: &tauri::tray::TrayIcon) -> tauri::Result<()> {
                     item.setImage(Some(&image));
                     show_image(&item);
                     let view = row(&title, Some(&image), &NSColor::labelColor(), mtm);
-                    view.setToolTip(Some(&NSString::from_str("Open floating chat")));
+                    view.setToolTip(Some(&NSString::from_str(crate::menu::tr(
+                        "Open floating chat",
+                    ))));
                     item.setView(Some(&view));
                 }
             }

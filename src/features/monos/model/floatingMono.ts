@@ -4,6 +4,7 @@ import type { UserQuestionReply } from "../../sessions/model/userQuestion";
 import { displayAttachments } from "../../sessions/model/attachments";
 import { listMonos, monoLook, monoState, type MonoStatus } from "./mono";
 import { pixelLayers } from "../../projects/model/pixelMascots";
+import { t as tNow } from "../../../shared/i18n/i18n";
 
 export const FLOATING_MONO_CHANGED = "mono_chat_changed";
 export const FLOATING_MONO_REQUEST = "mono_chat_request";
@@ -122,7 +123,7 @@ export async function deliverFloatingMonoRequest(
   accept: () => Promise<boolean>,
 ): Promise<Session | undefined> {
   const session = await host.open(request.monoId);
-  if (!session) throw new Error("That Mono is no longer available.");
+  if (!session) throw new Error(tNow("mono.floating.noLongerAvailable"));
   if (!(await accept())) return undefined;
   const action = request.action;
   switch (action.kind) {
@@ -153,14 +154,16 @@ export async function deliverFloatingMonoRequest(
       await host.openFile(action.path);
       break;
     case "openArtifact":
-      if (!host.openArtifact) throw new Error("Artifacts are unavailable.");
+      if (!host.openArtifact)
+        throw new Error(tNow("mono.floating.artifactsUnavailable"));
       await host.openArtifact(request.monoId, action.id);
       break;
     case "resume":
       host.resume(session.id);
       break;
     case "create":
-      if (!host.create) throw new Error("New Monos are unavailable here.");
+      if (!host.create)
+        throw new Error(tNow("mono.floating.newMonoUnavailable"));
       await host.create(request.monoId);
       break;
     default:

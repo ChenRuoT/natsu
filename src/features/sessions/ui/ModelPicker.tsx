@@ -18,6 +18,7 @@ import {
   type KeyboardEvent as ReactKeyboardEvent,
   type ReactNode,
 } from "react";
+import { useT, type TFunction } from "../../../shared/i18n/i18n";
 import {
   coerceModelPickerTab,
   getModelSnapshot,
@@ -32,6 +33,7 @@ import {
   type AgentModel,
   type ModelPickerTab,
   type ModelSetting,
+  settingText,
 } from "../model/models";
 import {
   isProviderHidden,
@@ -219,10 +221,10 @@ function pillSettings(model: AgentModel): ModelSetting[] {
   });
 }
 
-function settingLabel(setting: ModelSetting): string {
+function settingLabel(setting: ModelSetting, t: TFunction): string {
   return setting.id === "effort" || setting.id === "reasoning"
-    ? "Effort"
-    : setting.label;
+    ? t("sessions.modelPicker.effort")
+    : settingText(setting.label, t);
 }
 
 function settingValue(
@@ -235,11 +237,11 @@ function settingValue(
 function settingValueLabel(
   setting: ModelSetting,
   values: Record<string, string>,
+  t: TFunction,
 ): string {
   const value = settingValue(setting, values);
-  return (
-    setting.options.find((option) => option.value === value)?.label ?? value
-  );
+  const option = setting.options.find((entry) => entry.value === value);
+  return option ? settingText(option.label, t) : value;
 }
 
 function recentMenuModels(
@@ -324,6 +326,7 @@ export function ModelPicker({
   onSettingsChange,
   onClose,
 }: Props) {
+  const t = useT();
   const source = useModelSource();
   const catalogVersion = useSyncExternalStore(
     subscribeModels,
@@ -391,7 +394,7 @@ export function ModelPicker({
     ? undefined
     : effortSetting(current);
   const triggerEffortLabel = triggerEffortSetting
-    ? settingValueLabel(triggerEffortSetting, values)
+    ? settingValueLabel(triggerEffortSetting, values, t)
     : undefined;
   const triggerModelName =
     current.harness === "claude"
@@ -737,16 +740,31 @@ export function ModelPicker({
         type="button"
         title={
           triggerLabel
-            ? `${triggerLabel} · ${triggerTitle}`
-            : `${triggerTitle} · Recent models: right-click or ${MOD}.`
+            ? t("sessions.modelPicker.triggerTitle", {
+                label: triggerLabel,
+                title: triggerTitle,
+              })
+            : t("sessions.modelPicker.triggerTitleHint", {
+                title: triggerTitle,
+                shortcut: MOD,
+              })
         }
         aria-label={
           triggerLabel ??
-          `${HARNESS_TITLE[current.harness]}${
-            current.provider ? `, ${current.provider.name},` : ""
-          } ${current.name}${
-            triggerEffortLabel ? `, effort ${triggerEffortLabel}` : ""
-          }`
+          t("sessions.modelPicker.triggerLabel", {
+            harness: HARNESS_TITLE[current.harness],
+            provider: current.provider
+              ? t("sessions.modelPicker.providerPart", {
+                  provider: current.provider.name,
+                })
+              : "",
+            model: current.name,
+            effort: triggerEffortLabel
+              ? t("sessions.modelPicker.effortPart", {
+                  effort: triggerEffortLabel,
+                })
+              : "",
+          })
         }
         aria-keyshortcuts={`${MOD}.`}
         aria-expanded={open || recentMenu != null}
@@ -829,7 +847,7 @@ export function ModelPicker({
             ignore={SELF}
             onDismiss={() => dismiss(false)}
             role="menu"
-            aria-label="Model and settings"
+            aria-label={t("sessions.modelPicker.menuLabel")}
             tabIndex={-1}
             onKeyDown={onMenuKey}
             data-model-picker
@@ -859,7 +877,7 @@ export function ModelPicker({
                         : "text-content hover:bg-content/5"
                     }`}
                   >
-                    <span className="min-w-0 flex-1">Model</span>
+                    <span className="min-w-0 flex-1">{t("sessions.modelPicker.model")}</span>
                     <span className="flex min-w-0 max-w-36 items-center gap-1 text-content/55">
                       <HarnessIcon
                         harness={current.harness}
@@ -910,7 +928,7 @@ export function ModelPicker({
                   }`}
                 >
                   <span className="min-w-0 flex-1">
-                    {settingLabel(setting)}
+                    {settingLabel(setting, t)}
                   </span>
                   {isToggle ? (
                     <span
@@ -930,7 +948,7 @@ export function ModelPicker({
                   ) : (
                     <>
                       <span className="min-w-0 max-w-28 truncate text-content/55">
-                        {settingValueLabel(setting, values)}
+                        {settingValueLabel(setting, values, t)}
                       </span>
                       <ChevronRight
                         className="size-3.5 shrink-0 text-content/45"
@@ -952,7 +970,7 @@ export function ModelPicker({
               width={SETTING_MENU_WIDTH}
               layer={LAYER.submenu}
               role="menu"
-              aria-label={settingLabel(submenu.setting)}
+              aria-label={settingLabel(submenu.setting, t)}
               onMouseEnter={() => setSubmenu(submenu)}
               data-model-picker
               className="p-1 font-sans"
@@ -980,7 +998,7 @@ export function ModelPicker({
                   >
                     {tileTone ? <EffortTileShimmer /> : null}
                     <span className="min-w-0 flex-1 truncate">
-                      {option.label}
+                      {settingText(option.label, t)}
                     </span>
                     {selected ? (
                       <Check
@@ -1024,7 +1042,7 @@ export function ModelPicker({
           autoFocus
           onDismiss={() => setRecentMenu(null)}
           role="menu"
-          aria-label="Recently used models"
+          aria-label={t("sessions.modelPicker.recentLabel")}
           aria-activedescendant={`${recentMenuId}-${recentActive}`}
           tabIndex={-1}
           onContextMenu={(event) => event.preventDefault()}
@@ -1194,6 +1212,7 @@ export function ModelSettingRows({
     control: ReactNode;
   }) => ReactNode;
 }) {
+  const t = useT();
   const catalogVersion = useSyncExternalStore(
     subscribeModels,
     getModelSnapshot,
@@ -1207,7 +1226,7 @@ export function ModelSettingRows({
         <Fragment key={setting.id}>
           {row({
             id: setting.id,
-            label: settingLabel(setting),
+            label: settingLabel(setting, t),
             control:
               setting.kind === "toggle" ? (
                 <TogglePill
@@ -1243,7 +1262,12 @@ function TogglePill({
   variant?: Variant;
   onSettingsChange: (settings: Record<string, string>) => void;
 }) {
+  const t = useT();
   const on = settingValue(setting, values) === "true";
+  const toggleTitle = t("sessions.modelPicker.settingToggle", {
+    label: settingText(setting.label, t),
+    state: on ? t("sessions.modelPicker.on") : t("sessions.modelPicker.off"),
+  });
   const toggle = () =>
     onSettingsChange({ ...values, [setting.id]: on ? "false" : "true" });
   if (variant === "plain") {
@@ -1252,9 +1276,9 @@ function TogglePill({
       <button
         type="button"
         role="switch"
-        aria-label={setting.label}
+        aria-label={settingText(setting.label, t)}
         aria-checked={on}
-        title={`${setting.label}: ${on ? "On" : "Off"}`}
+        title={toggleTitle}
         data-model-control
         onMouseDown={(event) => event.preventDefault()}
         onClick={toggle}
@@ -1273,8 +1297,8 @@ function TogglePill({
   return (
     <button
       type="button"
-      title={`${setting.label}: ${on ? "On" : "Off"}`}
-      aria-label={`${setting.label}: ${on ? "On" : "Off"}`}
+      title={toggleTitle}
+      aria-label={toggleTitle}
       aria-pressed={on}
       data-model-control
       onMouseDown={(event) => event.preventDefault()}
@@ -1286,7 +1310,7 @@ function TogglePill({
           on ? "" : variant === "text" ? "opacity-50" : "text-content/50"
         }`}
       >
-        {setting.label}
+        {settingText(setting.label, t)}
       </span>
     </button>
   );
@@ -1312,25 +1336,33 @@ function SelectPill({
   onClose?: () => void;
   additionalSettings?: ModelSetting[];
 }) {
+  const t = useT();
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(0);
   const button = useRef<HTMLButtonElement>(null);
   const menuId = useId();
 
   const value = settingValue(setting, values);
-  const valueLabel = settingValueLabel(setting, values);
-  const label = settingLabel(setting);
+  const valueLabel = settingValueLabel(setting, values, t);
+  const label = settingLabel(setting, t);
+  const valueTitle = t("sessions.modelPicker.settingValue", {
+    label,
+    value: valueLabel,
+  });
   const iconic = isEffortSetting(setting) || setting.id === "serviceTier";
   const menuSettings = [setting, ...(additionalSettings ?? [])];
   const grouped = menuSettings.length > 1;
   const menuOptions = menuSettings.flatMap((menuSetting) =>
     menuSetting.options.map((option) => ({ setting: menuSetting, option })),
   );
-  const menuLabels = menuSettings.map(settingLabel);
+  const menuLabels = menuSettings.map((menuSetting) => settingLabel(menuSetting, t));
   const menuLabel =
     menuLabels.length < 3
-      ? menuLabels.join(" and ")
-      : `${menuLabels.slice(0, -1).join(", ")}, and ${menuLabels[menuLabels.length - 1]}`;
+      ? menuLabels.join(t("sessions.modelPicker.joinTwoSep"))
+      : t("sessions.modelPicker.joinMany", {
+          items: menuLabels.slice(0, -1).join(t("sessions.modelPicker.joinSep")),
+          last: menuLabels[menuLabels.length - 1],
+        });
   const dismiss = (restoreFocus: boolean) => {
     setOpen(false);
     if (restoreFocus) onClose?.();
@@ -1352,8 +1384,8 @@ function SelectPill({
       <button
         ref={button}
         type="button"
-        title={`${label}: ${valueLabel}`}
-        aria-label={`${label}: ${valueLabel}`}
+        title={valueTitle}
+        aria-label={valueTitle}
         aria-expanded={open}
         aria-haspopup="menu"
         data-model-control
@@ -1415,11 +1447,11 @@ function SelectPill({
               ) : null}
               <div
                 role={grouped ? "group" : undefined}
-                aria-label={grouped ? settingLabel(menuSetting) : undefined}
+                aria-label={grouped ? settingLabel(menuSetting, t) : undefined}
               >
                 {grouped ? (
                   <div className="px-2.5 pb-1 pt-1 text-[10px] font-medium uppercase tracking-wide text-content/40">
-                    {settingLabel(menuSetting)}
+                    {settingLabel(menuSetting, t)}
                   </div>
                 ) : null}
                 {menuSetting.options.map((option) => {
@@ -1449,7 +1481,7 @@ function SelectPill({
                     >
                       {tileTone ? <EffortTileShimmer /> : null}
                       <span className="min-w-0 flex-1 truncate">
-                        {option.label}
+                        {settingText(option.label, t)}
                       </span>
                       {selected ? (
                         <Check
@@ -1506,6 +1538,7 @@ function ModelFlyout({
   onPick: (model: AgentModel) => void;
   onToggleFavorite: (id: string) => void;
 }) {
+  const t = useT();
   const source = useModelSource();
   const lockOverscroll = useLockOverscroll<HTMLDivElement>();
   const activeRef = useRef<HTMLButtonElement>(null);
@@ -1562,7 +1595,7 @@ function ModelFlyout({
       maxHeight={MODEL_MENU_FRAME_HEIGHT}
       layer={LAYER.submenu}
       role="dialog"
-      aria-label="Models"
+      aria-label={t("sessions.modelPicker.modelsLabel")}
       onDismiss={onDismiss}
       onKeyDown={(event) => {
         // Keyboard nav once focus leaves the search field (which stops its
@@ -1602,12 +1635,12 @@ function ModelFlyout({
     >
       <nav
         role="tablist"
-        aria-label="Providers"
+        aria-label={t("sessions.modelPicker.providersLabel")}
         aria-orientation="vertical"
         className="flex w-11 shrink-0 flex-col items-center gap-1 overflow-y-auto overscroll-none border-r border-stroke p-1.5"
       >
         <ProviderTabButton
-          title="Favorites"
+          title={t("sessions.modelPicker.favorites")}
           selected={tab === "favorites"}
           onSelect={() => onSelectTab("favorites")}
         >
@@ -1636,8 +1669,8 @@ function ModelFlyout({
             ref={searchRef}
             type="text"
             value={query}
-            placeholder="Search models"
-            aria-label="Search models"
+            placeholder={t("sessions.modelPicker.searchPlaceholder")}
+            aria-label={t("sessions.modelPicker.searchPlaceholder")}
             className="min-w-0 flex-1 bg-transparent text-[13px] text-content outline-none placeholder:text-content/40"
             onChange={(event) => onQuery(event.target.value)}
             onKeyDown={onSearchKey}
@@ -1647,18 +1680,18 @@ function ModelFlyout({
         <div
           ref={lockOverscroll}
           role="listbox"
-          aria-label="Models"
+          aria-label={t("sessions.modelPicker.modelsLabel")}
           className="min-h-0 flex-1 overflow-y-auto overscroll-none p-1"
         >
           {models.length === 0 ? (
             <div className="px-2 py-3 text-[12px] text-content/50">
               {tab === "favorites" && !query.trim()
-                ? "No favorite models"
+                ? t("sessions.modelPicker.noFavorites")
                 : tab !== "favorites" && !source.available(tab)
                   ? harnessUnavailableHint(tab)
                   : tab === "codex" && !query.trim()
-                    ? "Loading Codex models…"
-                    : "No matching models"}
+                    ? t("sessions.modelPicker.loadingCodex")
+                    : t("sessions.modelPicker.noMatches")}
             </div>
           ) : (
             groups.map((group) => (
@@ -1698,7 +1731,10 @@ function ModelFlyout({
                         type="button"
                         role="option"
                         aria-selected={selected}
-                        aria-label={`${item.name}, ${provenance}`}
+                        aria-label={t("sessions.modelPicker.itemLabel", {
+                          name: item.name,
+                          provenance,
+                        })}
                         disabled={disabled}
                         title={
                           disabled
@@ -1722,13 +1758,13 @@ function ModelFlyout({
                         type="button"
                         title={
                           favorited
-                            ? "Remove from favorites"
-                            : "Add to favorites"
+                            ? t("sessions.modelPicker.removeFavorite")
+                            : t("sessions.modelPicker.addFavorite")
                         }
                         aria-label={
                           favorited
-                            ? "Remove from favorites"
-                            : "Add to favorites"
+                            ? t("sessions.modelPicker.removeFavorite")
+                            : t("sessions.modelPicker.addFavorite")
                         }
                         onMouseDown={(event) => event.preventDefault()}
                         onClick={(event) => {

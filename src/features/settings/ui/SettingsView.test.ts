@@ -10,6 +10,7 @@ import {
   SETTINGS_INDEX,
   CLASSIC_LAYOUT_HIDDEN_SETTINGS,
   INSET_LAYOUT_HIDDEN_SETTINGS,
+  KEYBINDINGS,
   SETTINGS_SECTIONS,
   type SettingsSectionId,
 } from "../model/settings";
@@ -687,6 +688,39 @@ describe("settings pages", () => {
     await act(async () => control.click());
     expect(control.getAttribute("aria-checked")).toBe("true");
     expect(localStorage.getItem("natsu.tabAnimationsEnabled")).toBe("1");
+  });
+
+  it("puts the language switch first and translates the page live", async () => {
+    await render("appearance");
+    expect(container.querySelector("h2")?.textContent).toBe("Language");
+
+    const english = container.querySelector<HTMLButtonElement>("#language-en")!;
+    const chinese =
+      container.querySelector<HTMLButtonElement>("#language-zh-cn")!;
+    expect(english.getAttribute("aria-checked")).toBe("true");
+
+    await act(async () => chinese.click());
+    expect(localStorage.getItem("natsu.language")).toBe("zh-CN");
+    expect(chinese.getAttribute("aria-checked")).toBe("true");
+    expect(container.querySelector("h2")?.textContent).toBe("语言");
+    expect(container.textContent).toContain("跟随系统");
+    expect(document.documentElement.lang).toBe("zh-CN");
+
+    await act(async () => english.click());
+    expect(container.querySelector("h2")?.textContent).toBe("Language");
+  });
+
+  it("shows no raw command names or when-expressions in Chinese", async () => {
+    localStorage.setItem("natsu.language", "zh-CN");
+    await render("keybindings");
+    const text = container.textContent ?? "";
+    for (const row of KEYBINDINGS) {
+      expect(text, row.command).not.toContain(row.command);
+      // A when-clause is shown as words; expressions like "!editorFocus" are code.
+      if (/[&|!]|Focus|Busy|overlay/.test(row.when)) {
+        expect(text, row.when).not.toContain(row.when);
+      }
+    }
   });
 
   it("defaults to the icon rail and lets users hide it", async () => {

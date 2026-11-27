@@ -34,6 +34,7 @@ import {
   filterQuickModels,
   QUICK_COMPOSER_CATALOG_REQUEST_EVENT,
 } from "../model/quickComposer";
+import { useT } from "../../../shared/i18n/i18n";
 
 type Props = {
   model: AgentModel;
@@ -64,6 +65,7 @@ export function QuickModelSelector({
   const [favorites, setFavorites] = useState(loadFavoriteModels);
   const searchRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
+  const t = useT();
   const listId = useId();
   const providers = HARNESSES.filter((id) =>
     showProviderInModelPicker(
@@ -164,7 +166,7 @@ export function QuickModelSelector({
 
   return (
     <section
-      aria-label="Model selector"
+      aria-label={t("quickComposer.modelSelector.label")}
       className="flex min-h-0 flex-col border-t border-stroke"
       onKeyDown={(event) => {
         if (event.key === "Escape") {
@@ -176,11 +178,14 @@ export function QuickModelSelector({
     >
       <nav
         role="tablist"
-        aria-label="Providers"
+        aria-label={t("quickComposer.modelSelector.providers")}
         className="grid h-11 shrink-0 grid-flow-col auto-cols-fr items-center gap-1 border-b border-stroke px-2"
       >
         {tabs.map((id, index) => {
-          const title = id === "favorites" ? "Favorites" : HARNESS_TITLE[id];
+          const title =
+            id === "favorites"
+              ? t("quickComposer.modelSelector.favorites")
+              : HARNESS_TITLE[id];
           return (
             <button
               key={id}
@@ -231,14 +236,14 @@ export function QuickModelSelector({
               setActive(0);
             }}
             role="combobox"
-            aria-label="Search models"
+            aria-label={t("quickComposer.modelSelector.searchLabel")}
             aria-controls={listId}
             aria-expanded="true"
             aria-autocomplete="list"
             aria-activedescendant={
               models[active] ? `${listId}-${active}` : undefined
             }
-            placeholder="Search models…"
+            placeholder={t("quickComposer.modelSelector.searchPlaceholder")}
             autoComplete="off"
             spellCheck={false}
             className="min-w-0 flex-1 bg-transparent text-[13px] text-content outline-none placeholder:text-content/35"
@@ -266,7 +271,7 @@ export function QuickModelSelector({
           ref={listRef}
           id={listId}
           role="listbox"
-          aria-label="Models"
+          aria-label={t("quickComposer.modelSelector.modelsLabel")}
           className="h-60 min-h-0 overflow-y-auto overscroll-none p-2"
         >
           {models.length ? (
@@ -307,10 +312,18 @@ export function QuickModelSelector({
                   type="button"
                   title={
                     favorites.includes(item.id)
-                      ? "Remove from favorites"
-                      : "Add to favorites"
+                      ? t("quickComposer.modelSelector.removeFavoriteTitle")
+                      : t("quickComposer.modelSelector.addFavoriteTitle")
                   }
-                  aria-label={`${favorites.includes(item.id) ? "Remove" : "Add"} ${item.name} ${favorites.includes(item.id) ? "from" : "to"} favorites`}
+                  aria-label={
+                    favorites.includes(item.id)
+                      ? t("quickComposer.modelSelector.removeFavoriteLabel", {
+                          name: item.name,
+                        })
+                      : t("quickComposer.modelSelector.addFavoriteLabel", {
+                          name: item.name,
+                        })
+                  }
                   onClick={() => {
                     const next = favorites.includes(item.id)
                       ? favorites.filter((id) => id !== item.id)
@@ -330,10 +343,10 @@ export function QuickModelSelector({
           ) : (
             <p className="px-2 py-6 text-center text-[12px] text-content/45">
               {query
-                ? "No matching models"
+                ? t("quickComposer.modelSelector.noMatching")
                 : visibleTab === "favorites"
-                  ? "No favorite models"
-                  : "Loading models…"}
+                  ? t("quickComposer.modelSelector.noFavorites")
+                  : t("quickComposer.modelSelector.loading")}
             </p>
           )}
         </div>
@@ -343,10 +356,12 @@ export function QuickModelSelector({
               {canToggleFast ? (
                 <button
                   type="button"
-                  aria-label="Fast mode"
+                  aria-label={t("quickComposer.modelSelector.fastMode")}
                   aria-pressed={fastEnabled}
                   title={
-                    fastEnabled ? "Turn off fast mode" : "Turn on fast mode"
+                    fastEnabled
+                      ? t("quickComposer.modelSelector.turnOffFast")
+                      : t("quickComposer.modelSelector.turnOnFast")
                   }
                   onClick={() =>
                     changeSetting(fast.id, fastEnabled ? fastOff : fastOn)
@@ -366,8 +381,8 @@ export function QuickModelSelector({
               </span>
               <button
                 type="button"
-                aria-label="Reset to saved defaults"
-                title="Reset to saved defaults"
+                aria-label={t("quickComposer.modelSelector.resetDefaults")}
+                title={t("quickComposer.modelSelector.resetDefaults")}
                 onClick={resetSettings}
                 className="grid size-7 place-items-center rounded-md text-content/40 hover:bg-selection-hover hover:text-content"
               >

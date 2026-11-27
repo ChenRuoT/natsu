@@ -15,6 +15,7 @@ import {
   type IconComponent,
 } from "../../shared/ui/icons";
 import { useLockOverscroll } from "../../shared/hooks/useLockOverscroll";
+import { useT } from "../../shared/i18n/i18n";
 import {
   settingsSectionsByGroup,
   type SettingsSectionId,
@@ -44,12 +45,14 @@ type Props = {
 /** Body of the project rail while settings are open. */
 export function SettingsNav({ section, onSelect, onClose }: Props) {
   const lockOverscroll = useLockOverscroll<HTMLDivElement>();
+  // Re-renders on language change; the rail labels come from the settings model.
+  const t = useT();
 
   return (
     <>
       <div
         ref={lockOverscroll}
-        aria-label="Settings"
+        aria-label={t("shell.settingsRail.ariaLabel")}
         className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto overscroll-none px-2 py-3"
       >
         {settingsSectionsByGroup().map((group) => (
@@ -70,7 +73,11 @@ export function SettingsNav({ section, onSelect, onClose }: Props) {
         ))}
       </div>
       <div className="flex shrink-0 flex-col gap-px p-2">
-        <NavRow label="Back" icon={ArrowLeft} onClick={onClose} />
+        <NavRow
+          label={t("shell.settingsRail.back")}
+          icon={ArrowLeft}
+          onClick={onClose}
+        />
       </div>
     </>
   );

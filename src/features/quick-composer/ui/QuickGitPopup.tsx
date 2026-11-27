@@ -19,6 +19,7 @@ import {
   type QuickGitRequest,
 } from "../model/quickGitPopup";
 import type { QuickWorkspace } from "../model/quickWorkspace";
+import { useT } from "../../../shared/i18n/i18n";
 
 export function QuickGitPopup({ onShown }: { onShown: () => void }) {
   const [request, setRequest] = useState<QuickGitRequest | null>(null);
@@ -131,6 +132,7 @@ export function QuickGitPopupPicker({
   request: QuickGitRequest;
   onFinish: (id: string, choice?: QuickWorkspace) => Promise<void>;
 }) {
+  const t = useT();
   const finished = useRef(false);
   const { choice } = request;
   const cwd = choice.tree?.path ?? choice.cwd ?? "";
@@ -165,15 +167,15 @@ export function QuickGitPopupPicker({
       <div className="flex items-center gap-3 px-3 py-3 text-xs">
         <p role="status" className="flex-1 text-content/60">
           {settled
-            ? "Couldn’t load branches for this project."
-            : "Loading branches…"}
+            ? t("quickComposer.gitPopup.loadFailed")
+            : t("quickComposer.gitPopup.loading")}
         </p>
         <button
           type="button"
           className="rounded-md px-2 py-1 text-content/70 hover:bg-content/10"
           onClick={() => finish()}
         >
-          Close
+          {t("quickComposer.gitPopup.close")}
         </button>
       </div>
     );

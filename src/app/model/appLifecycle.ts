@@ -45,6 +45,7 @@ import { loadWindowTransfer } from "./windowTransferBootstrap";
 import type { WindowTransferPayload } from "./windowTransfer";
 import { lastProjectPath, normalizeProjectPath, sameProjectPath } from "../../features/projects/model/recents";
 import type { ProjectReturnMemory } from "../../features/projects/model/projectReturn";
+import { t as translateNow } from "../../shared/i18n/i18n";
 
 export type { ResumedWorkspace };
 export { hasInFlightSessions };
@@ -169,7 +170,7 @@ export async function askQuitConfirmation(
       confirmed = await ask(quitWhileBusyMessage(inFlight), {
         title: "Natsu",
         kind: "warning",
-        okLabel: "Quit",
+        okLabel: translateNow("shell.appLifecycle.quitLabel"),
       });
     } catch {
       confirmed = false;
@@ -359,10 +360,10 @@ export async function confirmReload(
   hasUnsavedFiles: boolean,
 ): Promise<boolean> {
   if (!hasUnsavedFiles) return true;
-  return ask("Reload Natsu and discard unsaved changes?", {
+  return ask(translateNow("shell.appLifecycle.reloadQuestion"), {
     title: "Natsu",
     kind: "warning",
-    okLabel: "Reload",
+    okLabel: translateNow("shell.appLifecycle.reloadLabel"),
   });
 }
 
@@ -467,8 +468,12 @@ async function confirmAndCloseWindow(
     const refs = inFlightRefs(sessions, tabs);
     if (refs.length > 0) {
       const ok = await ask(
-        "Close this window and stop its running chats? Other windows will stay open.",
-        { title: "Natsu", kind: "warning", okLabel: "Close window" },
+        translateNow("shell.appLifecycle.closeWindowQuestion"),
+        {
+          title: "Natsu",
+          kind: "warning",
+          okLabel: translateNow("shell.appLifecycle.closeWindowLabel"),
+        },
       );
       if (!ok) return;
     }

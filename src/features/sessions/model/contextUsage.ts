@@ -1,3 +1,5 @@
+import { t as tNow, type TFunction } from "../../../shared/i18n/i18n";
+
 /**
  * How much of the model context window the session is currently occupying.
  *
@@ -40,17 +42,27 @@ export function formatTokens(count: number): string {
 }
 
 /** Two-line hover text: "69% context used" over "176K / 256K tokens". */
-export function contextTooltip(usage: ContextUsage): {
+export function contextTooltip(
+  usage: ContextUsage,
+  t: TFunction = tNow,
+): {
   headline: string;
   detail: string;
 } {
   const percent = contextPercent(usage);
   return {
     headline:
-      percent === null ? "Context used" : `${percent}% context used`,
+      percent === null
+        ? t("sessions.contextUsage.contextUsed")
+        : t("sessions.contextUsage.percentContextUsed", { percent }),
     detail: usage.window
-      ? `${formatTokens(usage.used)} / ${formatTokens(usage.window)} tokens`
-      : `${formatTokens(usage.used)} tokens`,
+      ? t("sessions.contextUsage.tokensOfWindow", {
+          used: formatTokens(usage.used),
+          window: formatTokens(usage.window),
+        })
+      : t("sessions.contextUsage.tokensOnly", {
+          used: formatTokens(usage.used),
+        }),
   };
 }
 

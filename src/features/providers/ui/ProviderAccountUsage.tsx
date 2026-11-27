@@ -15,6 +15,7 @@ import type {
 } from "../model/accountUsage";
 import { RefreshCw } from "../../../shared/ui/icons";
 import { useShowRemainingUsage } from "../../settings/model/displayPrefs";
+import { useT, type MessageKey } from "../../../shared/i18n/i18n";
 
 const STATUS_DOT: Record<AccountStatusTone, string> = {
   ready: "bg-emerald-400",
@@ -63,14 +64,23 @@ export function AccountStatusLabel({
   );
 }
 
+/** Window titles from `meterWindows`, which stay English for model consumers. */
+const WINDOW_TITLE_KEYS: Partial<Record<string, MessageKey>> = {
+  Daily: "providers.accountUsage.windowDaily",
+  "5h": "providers.accountUsage.window5h",
+  Weekly: "providers.accountUsage.windowWeekly",
+  Monthly: "providers.accountUsage.windowMonthly",
+};
+
 export function AccountUsageRefresh({ usage }: { usage: AccountUsage }) {
+  const t = useT();
   return (
     <button
       type="button"
       disabled={usage.refreshing}
       onClick={usage.refresh}
-      aria-label="Refresh usage limits"
-      title="Refresh usage limits"
+      aria-label={t("providers.accountUsage.refreshLabel")}
+      title={t("providers.accountUsage.refreshLabel")}
       className="grid size-7 place-items-center rounded-md text-content/40 transition-transform duration-150 hover:bg-content/10 hover:text-content active:scale-[0.96] disabled:opacity-40"
     >
       <RefreshCw
@@ -106,6 +116,7 @@ export function AccountUsageMeters({
   limits: ProviderRateLimits | undefined;
   now: number;
 }) {
+  const t = useT();
   const windows = meterWindows(limits);
 
   if (windows.length === 0) {
@@ -137,8 +148,13 @@ export function AccountUsageMeters({
         />
       ))}
       {limits?.extraUsageBalance != null ? (
-        <div className="w-16 text-[10px] leading-3" title="Extra usage balance">
-          <div className="truncate text-content/40">Extra</div>
+        <div
+          className="w-16 text-[10px] leading-3"
+          title={t("providers.accountUsage.extraBalanceTitle")}
+        >
+          <div className="truncate text-content/40">
+            {t("providers.accountUsage.extraLabel")}
+          </div>
           <div className="mt-1 font-medium tabular-nums text-content/70">
             {formatExtraUsageBalance(limits.extraUsageBalance)}
           </div>
@@ -159,44 +175,57 @@ export function UsageMeter({
   now: number;
   className?: string;
 }) {
+  const t = useT();
   const showRemaining = useShowRemainingUsage();
   const pct = clampUsedPercent(window.usedPercent);
   const remaining = 100 - pct;
   const shown = showRemaining ? remaining : pct;
   const full = pct >= 100 && (window.resetsAt == null || window.resetsAt > now);
+  const titleText = WINDOW_TITLE_KEYS[title]
+    ? t(WINDOW_TITLE_KEYS[title])
+    : title;
   const reset =
     window.resetsAt == null
       ? formatWindowLabel(window.windowMinutes)
       : window.resetsAt <= now
-        ? "reset due"
-        : formatResetDuration(window.resetsAt - now);
+        ? t("providers.accountUsage.resetDue")
+        : formatResetDuration(window.resetsAt - now, t);
   return (
     <div
       className={className}
       title={
         window.resetsAt == null
           ? undefined
-          : `Resets ${new Date(window.resetsAt).toLocaleString()}`
+          : t("providers.accountUsage.resetsAt", {
+              time: new Date(window.resetsAt).toLocaleString(),
+            })
       }
     >
       <div className="flex items-baseline justify-between gap-2 text-[10px] leading-3">
         <span className="min-w-0 truncate text-content/40">
-          {title} · <span className="tabular-nums">{reset}</span>
+          {titleText} · <span className="tabular-nums">{reset}</span>
         </span>
         <span
           className={`shrink-0 tabular-nums ${full ? "font-medium text-red-400" : "text-content/60"}`}
         >
           {showRemaining
-            ? `${formatUsagePercent(remaining)} left`
+            ? t("providers.accountUsage.percentLeft", {
+                percent: formatUsagePercent(remaining),
+              })
             : full
-              ? "Full"
+              ? t("providers.accountUsage.full")
               : formatUsagePercent(pct)}
         </span>
       </div>
       <div
         className="mt-1.5 h-1 overflow-hidden rounded-full bg-content/10"
         role="progressbar"
-        aria-label={`${title} limit ${showRemaining ? "remaining" : "used"}`}
+        aria-label={t(
+          showRemaining
+            ? "providers.accountUsage.limitRemaining"
+            : "providers.accountUsage.limitUsed",
+          { title: titleText },
+        )}
         aria-valuemin={0}
         aria-valuemax={100}
         aria-valuenow={Math.round(shown)}

@@ -1,9 +1,14 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { setLocale } from "../../../shared/i18n/i18n";
+import { SETTINGS_TEXT_ZH } from "./settingsText";
 import {
   COMPOSER_RUNNER_DEFAULT,
   AUTOSAVE_DEFAULT,
   COLLAPSED_PROJECT_RAIL_MODE_DEFAULT,
   searchSettings,
+  SETTINGS_GROUPS,
+  SETTINGS_SECTIONS,
+  settingsSectionLabel,
   CLASSIC_LAYOUT_HIDDEN_SETTINGS,
   INSET_LAYOUT_HIDDEN_SETTINGS,
   SETTINGS_INDEX,
@@ -705,5 +710,40 @@ describe("settings search", () => {
 
   it("caps the result list", () => {
     expect(searchSettings("e", 4)).toHaveLength(4);
+  });
+});
+
+describe("settings text in Chinese", () => {
+  afterEach(() => setLocale("en"));
+
+  it("translates every section, group and searchable control", () => {
+    // The table also covers entries that only exist on other platforms.
+    for (const entry of SETTINGS_INDEX) {
+      expect(SETTINGS_TEXT_ZH.entries[entry.id], entry.id).toBeDefined();
+    }
+    expect(Object.keys(SETTINGS_TEXT_ZH.sections).sort()).toEqual(
+      SETTINGS_SECTIONS.map((section) => section.id).sort(),
+    );
+    expect(Object.keys(SETTINGS_TEXT_ZH.groups).sort()).toEqual(
+      SETTINGS_GROUPS.map((group) => group.id).sort(),
+    );
+  });
+
+  it("localizes the rail and page headers", () => {
+    setLocale("zh-CN");
+    expect(settingsSectionLabel("appearance")).toBe("外观");
+    expect(settingsSectionsByGroup()[0]?.label).toBe("应用");
+    setLocale("en");
+    expect(settingsSectionLabel("appearance")).toBe("Appearance");
+  });
+
+  it("finds a control by its Chinese or English name", () => {
+    setLocale("zh-CN");
+    const zh = searchSettings(SETTINGS_TEXT_ZH.entries.theme.label);
+    expect(zh[0]).toMatchObject({ settingId: "theme" });
+    expect(zh[0]?.label).toBe(SETTINGS_TEXT_ZH.entries.theme.label);
+    expect(searchSettings("accent color")[0]).toMatchObject({
+      settingId: "accent-color",
+    });
   });
 });

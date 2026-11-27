@@ -1,6 +1,7 @@
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { useEffect, useRef } from "react";
+import { t as tNow } from "../../../shared/i18n/i18n";
 import {
   mobileCatalog,
   mobileConversation,
@@ -323,7 +324,7 @@ export function useMobileWorkspace(options: Options) {
               const signature = JSON.stringify(payload.params);
               let job = gitJobs.get(payload.commandId);
               if (job && job.signature !== signature)
-                throw new Error("Command ID was already used with different input");
+                throw new Error(tNow("mobile.useMobileWorkspace.commandIdReused"));
               if (!job) {
                 if (gitJobs.size >= 100) {
                   const oldest = gitJobs.keys().next().value;
@@ -360,7 +361,7 @@ export function useMobileWorkspace(options: Options) {
               const existing = receipts.get(payload.commandId);
               if (existing && existing.signature !== signature)
                 throw new Error(
-                  "Command ID was already used with different input",
+                  tNow("mobile.useMobileWorkspace.commandIdReused"),
                 );
               if (!existing && receipts.size >= 1000) {
                 const oldest = receipts.keys().next().value;

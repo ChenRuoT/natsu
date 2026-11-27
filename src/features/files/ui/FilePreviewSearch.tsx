@@ -10,6 +10,7 @@ import {
 import { ALT, MOD, SHIFT } from "../../../platform/tauri/platform";
 import { ChevronDown, ChevronUp, X } from "../../../shared/ui/icons";
 import { keybindingPressed } from "../../settings/model/settings";
+import { useT } from "../../../shared/i18n/i18n";
 
 const MATCH_CAP = 999;
 const MATCH_HIGHLIGHT = "natsu-file-preview-search-match";
@@ -332,12 +333,13 @@ export function FilePreviewSearch({
     }
   };
 
+  const t = useT();
   const count = result.invalid
-    ? "Invalid regex"
+    ? t("files.filePreviewSearch.invalidRegex")
     : query && total === 0
-      ? "No results"
+      ? t("files.filePreviewSearch.noResults")
       : total > 0
-        ? `${current + 1} of ${total}${result.capped ? "+" : ""}`
+        ? `${t("files.filePreviewSearch.position", { current: current + 1, total })}${result.capped ? "+" : ""}`
         : "";
 
   return (
@@ -349,7 +351,7 @@ export function FilePreviewSearch({
       {open ? (
         <div
           role="search"
-          aria-label="Find in preview"
+          aria-label={t("files.filePreviewSearch.findInPreview")}
           className="relative z-30 flex h-[35px] shrink-0 items-center gap-1 border-b border-stroke px-2 py-1 text-content"
           onKeyDown={onKeyDown}
         >
@@ -364,8 +366,8 @@ export function FilePreviewSearch({
               ref={inputRef}
               type="text"
               value={query}
-              aria-label="Find"
-              placeholder="Find"
+              aria-label={t("files.filePreviewSearch.find")}
+              placeholder={t("files.filePreviewSearch.find")}
               autoComplete="off"
               autoCorrect="off"
               autoCapitalize="off"
@@ -386,41 +388,51 @@ export function FilePreviewSearch({
           </div>
           <FindToggle
             label="Aa"
-            title={`Match Case (${ALT}C)`}
+            title={t("files.filePreviewSearch.matchCaseTitle", {
+              shortcut: `${ALT}C`,
+            })}
             pressed={caseSensitive}
             onClick={() => toggle(setCaseSensitive)}
           />
           <FindToggle
             label="ab"
-            title={`Match Whole Word (${ALT}W)`}
+            title={t("files.filePreviewSearch.matchWholeWordTitle", {
+              shortcut: `${ALT}W`,
+            })}
             pressed={wholeWord}
             onClick={() => toggle(setWholeWord)}
           />
           <FindToggle
             label=".*"
-            title={`Use Regular Expression (${ALT}R)`}
+            title={t("files.filePreviewSearch.useRegexTitle", {
+              shortcut: `${ALT}R`,
+            })}
             pressed={regexp}
             onClick={() => toggle(setRegexp)}
           />
           <FindButton
-            label="Previous Match"
-            title={`Previous Match (${MOD}${SHIFT}G)`}
+            label={t("files.filePreviewSearch.previousMatch")}
+            title={t("files.filePreviewSearch.previousMatchTitle", {
+              shortcut: `${MOD}${SHIFT}G`,
+            })}
             disabled={total === 0}
             onClick={() => step(-1)}
           >
             <ChevronUp className="size-3.5" strokeWidth={1.75} />
           </FindButton>
           <FindButton
-            label="Next Match"
-            title={`Next Match (${MOD}G)`}
+            label={t("files.filePreviewSearch.nextMatch")}
+            title={t("files.filePreviewSearch.nextMatchTitle", {
+              shortcut: `${MOD}G`,
+            })}
             disabled={total === 0}
             onClick={() => step(1)}
           >
             <ChevronDown className="size-3.5" strokeWidth={1.75} />
           </FindButton>
           <FindButton
-            label="Close"
-            title="Close (Escape)"
+            label={t("files.filePreviewSearch.close")}
+            title={t("files.filePreviewSearch.closeTitle")}
             onClick={closeSearch}
           >
             <X className="size-3.5" strokeWidth={1.75} />

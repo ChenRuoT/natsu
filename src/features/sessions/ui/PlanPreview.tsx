@@ -1,4 +1,5 @@
 import { AiIdea, CircleDashed, PanelRight, Play } from "../../../shared/ui/icons";
+import { useT } from "../../../shared/i18n/i18n";
 import { planSummary, planTitle } from "../model/plan";
 import type { HarnessId, PlanBlockMeta, PlanBuildTarget } from "../model/session";
 import { BuildTargetButton } from "./SecondOpinionButton";
@@ -26,6 +27,7 @@ export function PlanPreview({
   onOpen,
   onBuild,
 }: Props) {
+  const t = useT();
   const title = planTitle(text);
   const summary = planSummary(text);
   const buildDisabled =
@@ -37,10 +39,10 @@ export function PlanPreview({
     plan?.status === "built";
   const buildLabel =
     plan?.status === "building"
-      ? "Building…"
+      ? t("sessions.planPreview.building")
       : plan?.status === "built"
-        ? "Built"
-        : "Build";
+        ? t("sessions.planPreview.built")
+        : t("sessions.planPreview.build");
 
   return (
     <div className="mb-2 overflow-hidden rounded-[12px] border border-content/10 bg-content/7">
@@ -84,20 +86,20 @@ export function PlanPreview({
               {onOpen ? (
                 <button
                   type="button"
-                  title="Open in pane"
-                  aria-label="Open plan in pane"
+                  title={t("sessions.planPreview.openInPane")}
+                  aria-label={t("sessions.planPreview.openPlanInPane")}
                   className="flex h-6 shrink-0 items-center gap-1 rounded-md bg-content/8 px-2 font-sans text-[11px] text-content/70 hover:bg-content/12 hover:text-content"
                   onClick={onOpen}
                 >
                   <PanelRight className="size-3" strokeWidth={1.75} />
-                  Open
+                  {t("sessions.planPreview.open")}
                 </button>
               ) : null}
               {onBuild ? (
                 <div className="flex items-center font-sans">
                   <button
                     type="button"
-                    title="Build this plan"
+                    title={t("sessions.planPreview.buildPlan")}
                     disabled={buildDisabled}
                     className={`flex h-6 shrink-0 items-center gap-1 bg-content px-2 font-sans text-[11px] text-background-base hover:bg-content/90 disabled:cursor-not-allowed disabled:opacity-40 ${
                       harness ? "rounded-l-md" : "rounded-md"

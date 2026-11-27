@@ -1,4 +1,5 @@
 import { dropContextWindow, type ContextUsage } from "./contextUsage";
+import type { MessageKey } from "../../../shared/i18n/i18n";
 import type { UserQuestionPrompt } from "./userQuestion";
 import type { HandoffComposerCard } from "./handoff";
 import type { InboxComposerCard } from "../../inbox/model/githubTasks";
@@ -437,6 +438,21 @@ export const RUNTIME_MODE_HINT: Record<RuntimeMode, string> = {
   "full-access":
     "Allow commands, edits, and supported MCP confirmations in non-plan turns without prompts.",
 };
+
+/** Translation keys for the mode text above; render with `t(key)`. */
+export const RUNTIME_MODE_LABEL_KEY = {
+  supervised: "sessions.session.runtimeModeSupervised",
+  "auto-accept-edits": "sessions.session.runtimeModeAutoAcceptEdits",
+  auto: "sessions.session.runtimeModeAuto",
+  "full-access": "sessions.session.runtimeModeFullAccess",
+} as const satisfies Record<RuntimeMode, MessageKey>;
+
+export const RUNTIME_MODE_HINT_KEY = {
+  supervised: "sessions.session.runtimeModeSupervisedHint",
+  "auto-accept-edits": "sessions.session.runtimeModeAutoAcceptEditsHint",
+  auto: "sessions.session.runtimeModeAutoHint",
+  "full-access": "sessions.session.runtimeModeFullAccessHint",
+} as const satisfies Record<RuntimeMode, MessageKey>;
 
 export type WorkspaceMode = "current" | "worktree";
 

@@ -1,3 +1,4 @@
+import { t as tNow } from "../../../shared/i18n/i18n";
 import type { Session } from "../../sessions/model/session";
 import { validateMobileUsageLimit } from "../../sessions/model/usageLimit";
 
@@ -13,21 +14,17 @@ export async function recoverMobileUsage(options: {
 }): Promise<void> {
   const { session, automatic, pending } = options;
   if (!session || session.worktreeRemoved)
-    throw new Error("Session is no longer available");
+    throw new Error(tNow("mobile.usageLimit.sessionGone"));
   if (automatic && typeof options.enabled !== "boolean")
-    throw new Error("Choose whether to resume at reset");
+    throw new Error(tNow("mobile.usageLimit.chooseResume"));
   validateMobileUsageLimit(session, options.token, automatic);
   if (pending.has(session.id))
-    throw new Error(
-      "Continuation is already in progress. Wait for the session to refresh.",
-    );
+    throw new Error(tNow("mobile.usageLimit.inProgress"));
   pending.add(session.id);
   try {
     if (automatic) options.setAutomatic(session.id, options.enabled as boolean);
     else if (!(await options.resume(session.id)))
-      throw new Error(
-        "Desktop could not continue this session. Check it on desktop and try again.",
-      );
+      throw new Error(tNow("mobile.usageLimit.continueFailed"));
   } finally {
     pending.delete(session.id);
   }

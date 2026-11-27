@@ -1,11 +1,10 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { loadToolDetail } from "../data/sessionStore";
 import type { Block } from "../model/session";
+import { t as tNow } from "../../../shared/i18n/i18n";
 
 /** The saved session that rows in this transcript fetch omitted output from. */
 export const ToolDetailSession = createContext<string | undefined>(undefined);
-
-const OUTPUT_UNAVAILABLE = "Output is no longer available.";
 
 /** Synthetic subagent-step rows read their output from the parent block. */
 const stepOwners = new WeakMap<Block, { blockId: string; stepId: string }>();
@@ -42,7 +41,11 @@ export function useToolDetail(block: Block, open: boolean): ToolDetail {
     if (!fetching || !sessionId) return;
     let cancelled = false;
     const settle = (detail: string | null) => {
-      if (!cancelled) setLoaded({ key, detail: detail ?? OUTPUT_UNAVAILABLE });
+      if (!cancelled)
+        setLoaded({
+          key,
+          detail: detail ?? tNow("sessions.useToolDetail.outputUnavailable"),
+        });
     };
     loadToolDetail(sessionId, blockId, stepId).then(settle, () => settle(null));
     return () => {

@@ -1,4 +1,9 @@
 import type { BuiltinSkill } from "../../skills/model/skills";
+import type { MessageKey } from "../../../shared/i18n/i18n";
+
+/** Translate with `t` when showing this command in a picker. */
+export const COMPACT_DESCRIPTION_KEY: MessageKey =
+  "sessions.compact.description";
 
 export const COMPACT_COMMAND: BuiltinSkill = {
   kind: "builtin",

@@ -3,10 +3,14 @@ import {
   MCP_PROVIDER_LABELS,
   type McpConnection,
 } from "../../settings/model/mcp";
+import type { MessageKey } from "../../../shared/i18n/i18n";
 
 export type McpPickerServer = McpConnection & {
   availability: "available" | "authentication" | "unavailable";
+  /** English text of `detailKey`, for code that reads it as a string. */
   detail: string;
+  /** Translate with `t(detailKey)` when rendering. */
+  detailKey: MessageKey;
 };
 
 export type McpTag = { server: McpConnection; token: string };
@@ -105,6 +109,13 @@ export function mcpPickerServers(
         matches &&
         status != null &&
         /failed|error|offline|unreachable|disconnected/i.test(status);
+      const detailKey: MessageKey = !matches
+        ? "sessions.mcpPicker.detailDifferentProvider"
+        : disabled
+          ? "sessions.mcpPicker.detailDisabled"
+          : failed
+            ? "sessions.mcpPicker.detailUnavailable"
+            : "sessions.mcpPicker.detailConfigured";
       return {
         ...server,
         availability:
@@ -120,6 +131,7 @@ export function mcpPickerServers(
             : failed
               ? "Connection unavailable"
               : "Configured for this provider",
+        detailKey,
       };
     })
     .sort(

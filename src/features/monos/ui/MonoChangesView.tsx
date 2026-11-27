@@ -43,6 +43,7 @@ import {
   type MonoProjectFile,
 } from "./MonoProjectCommit";
 import { lazySurface } from "../../../shared/ui/lazySurface";
+import { useT } from "../../../shared/i18n/i18n";
 import { isImagePath, isVideoPath } from "../../files/model/filePreview";
 import { BinaryFileView } from "../../files/ui/BinaryFileView";
 
@@ -75,6 +76,7 @@ export function MonoChangesView({
   /** Projects given to the Mono; each has a tab even before it has changes. */
   attachedProjects: readonly string[];
 }) {
+  const t = useT();
   const { projects, outside, loaded, error } = useSessionProjects(
     sessionId,
     cwd,
@@ -146,7 +148,9 @@ export function MonoChangesView({
             <div
               key={`${sessionId}:${cwd}:${entry.root}`}
               role="tabpanel"
-              aria-label={`Commit ${projectName(entry.root)}`}
+              aria-label={t("mono.changes.commitPanel", {
+                name: projectName(entry.root),
+              })}
               hidden={entry.root !== project.root}
               className="absolute inset-0 flex h-full flex-col"
             >
@@ -168,8 +172,8 @@ export function MonoChangesView({
           {loaded && !error ? (
             <EmptyState icon={FileDiff}>
               {outside.length > 0
-                ? "These files aren’t in a Git repository, so there’s nothing to commit."
-                : `Give ${agentName} a project to work on, and its changes show up here to commit.`}
+                ? t("mono.changes.outsideRepo")
+                : t("mono.changes.giveProject", { name: agentName })}
             </EmptyState>
           ) : null}
         </div>
@@ -211,6 +215,7 @@ function ProjectTabs({
   indexes: ReadonlyMap<string, GitDiffIndex | null>;
   onSelect: (root: string) => void;
 }) {
+  const t = useT();
   const { groupLabels, groupColors, groupCustomColors, groupMascots } =
     useProjectAppearance();
   const groupLogos = useTabGroupLogos();
@@ -232,7 +237,7 @@ function ProjectTabs({
   return (
     <div
       role="tablist"
-      aria-label="Projects"
+      aria-label={t("mono.changes.projects")}
       // Sideways only, with the native bounce at either end.
       className="flex h-9 shrink-0 items-center gap-px overflow-x-auto overflow-y-hidden overscroll-x-contain border-b border-stroke px-2"
     >
@@ -324,6 +329,7 @@ function CheckoutPicker({
   indexes: ReadonlyMap<string, GitDiffIndex | null>;
   onSelect: (root: string) => void;
 }) {
+  const t = useT();
   const [open, setOpen] = useState(false);
   const anchor = useRef<HTMLButtonElement>(null);
   return (
@@ -331,7 +337,7 @@ function CheckoutPicker({
       <button
         ref={anchor}
         type="button"
-        aria-label={`Switch ${project} working copy`}
+        aria-label={t("mono.changes.switchCheckout", { project })}
         aria-haspopup="listbox"
         aria-expanded={open}
         onClick={() => setOpen((value) => !value)}
@@ -348,7 +354,7 @@ function CheckoutPicker({
           maxHeight={320}
           onDismiss={() => setOpen(false)}
           role="listbox"
-          aria-label={`${project} working copies`}
+          aria-label={t("mono.changes.checkoutsLabel", { project })}
           className="overflow-y-auto overscroll-none p-1.5"
         >
           {checkouts.map(({ root, main, files }) => {
@@ -376,7 +382,9 @@ function CheckoutPicker({
                     {branch ?? projectName(root)}
                   </span>
                   <span className="block truncate text-[10px] text-content/40">
-                    {root === main ? "Project folder" : prettyCwd(root)}
+                    {root === main
+                      ? t("mono.changes.projectFolder")
+                      : prettyCwd(root)}
                   </span>
                 </span>
                 {files.length > 0 ? (

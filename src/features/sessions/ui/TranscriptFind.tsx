@@ -9,6 +9,7 @@ import { ChevronDown, ChevronUp, Search, X } from "../../../shared/ui/icons";
 import type { Block } from "../model/session";
 import { findTranscriptBlocks } from "../model/transcriptFind";
 import { keybindingPressed } from "../../settings/model/settings";
+import { useT } from "../../../shared/i18n/i18n";
 
 type Props = {
   blocks: Block[];
@@ -83,6 +84,7 @@ export function TranscriptFind({
       clearTimeout(timer);
     };
   }, [onSearch, open, query]);
+  const t = useT();
   const selected = matches[Math.min(active, matches.length - 1)] ?? null;
 
   const openFind = () => {
@@ -159,7 +161,7 @@ export function TranscriptFind({
     >
       <div
         role="search"
-        aria-label="Find in conversation"
+        aria-label={t("sessions.transcriptFind.label")}
         className="pointer-events-auto flex w-[min(360px,calc(100cqw-24px))] items-center gap-1 rounded-lg border border-content/10 bg-content/5 p-1 shadow-lg backdrop-blur-xl"
       >
         <Search
@@ -170,8 +172,8 @@ export function TranscriptFind({
           ref={input}
           type="text"
           value={query}
-          aria-label="Find in conversation"
-          placeholder="Find in conversation"
+          aria-label={t("sessions.transcriptFind.label")}
+          placeholder={t("sessions.transcriptFind.placeholder")}
           autoComplete="off"
           autoCorrect="off"
           autoCapitalize="off"
@@ -193,30 +195,36 @@ export function TranscriptFind({
           className="min-w-[10ch] shrink-0 whitespace-nowrap text-right font-mono text-[11px] tabular-nums text-content/50"
         >
           {searching
-            ? "Searching…"
+            ? t("sessions.transcriptFind.searching")
             : searchError
-              ? "Search failed"
+              ? t("sessions.transcriptFind.searchFailed")
               : query.trim()
                 ? matches.length
-                  ? `${Math.min(active, matches.length - 1) + 1} of ${matches.length}`
-                  : "No results"
+                  ? t("sessions.transcriptFind.position", {
+                      current: Math.min(active, matches.length - 1) + 1,
+                      total: matches.length,
+                    })
+                  : t("sessions.transcriptFind.noResults")
                 : ""}
         </span>
         <FindButton
-          label="Previous match"
+          label={t("sessions.transcriptFind.previousMatch")}
           onClick={() => step(-1)}
           disabled={!matches.length}
         >
           <ChevronUp className="size-3.5" strokeWidth={1.75} />
         </FindButton>
         <FindButton
-          label="Next match"
+          label={t("sessions.transcriptFind.nextMatch")}
           onClick={() => step(1)}
           disabled={!matches.length}
         >
           <ChevronDown className="size-3.5" strokeWidth={1.75} />
         </FindButton>
-        <FindButton label="Close find" onClick={closeFind}>
+        <FindButton
+          label={t("sessions.transcriptFind.closeFind")}
+          onClick={closeFind}
+        >
           <X className="size-3.5" strokeWidth={1.75} />
         </FindButton>
       </div>

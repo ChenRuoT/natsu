@@ -99,6 +99,7 @@ import {
 import { AccessPicker } from "./AccessPicker";
 import { ComposerRunner } from "./ComposerRunner";
 import { ContextMeter } from "./ContextMeter";
+import { useT, t as tNow } from "../../../shared/i18n/i18n";
 import { AttachmentChip } from "./AttachmentChip";
 import { BranchPicker } from "../../source-control/ui/BranchPicker";
 import { WorktreePicker } from "../../source-control/ui/WorktreePicker";
@@ -419,6 +420,7 @@ export function Composer({
   onEditingLastTurnChange,
   children,
 }: Props) {
+  const t = useT();
   const ref = useRef<HTMLTextAreaElement>(null);
   const boxRef = useRef<HTMLDivElement>(null);
   const plusRef = useRef<HTMLDivElement>(null);
@@ -762,9 +764,7 @@ export function Composer({
               return;
             }
             if (incoming.length === 0) {
-              setPasteError(
-                "Nothing to attach from that drop — the file may have been moved, renamed, or deleted.",
-              );
+              setPasteError(tNow("sessions.composer.nothingToAttachFromDrop"));
               return;
             }
             fileDropStateRef.current.addAttachments(incoming);
@@ -2049,7 +2049,7 @@ export function Composer({
         >
           {fileDrag ? (
             <div className="pointer-events-none absolute inset-0 z-20 grid place-items-center rounded-[inherit] bg-accent/8 text-[12px] text-content/70">
-              Drop files to attach
+              {t("sessions.composer.dropFiles")}
             </div>
           ) : null}
           {workspaceBarOutside ? null : workspaceBar}
@@ -2114,17 +2114,15 @@ export function Composer({
               defaultValue={mountDraft}
               placeholder={
                 worktreeRemoved
-                  ? "Select a branch or worktree to continue…"
+                  ? t("sessions.composer.placeholderWorktreeRemoved")
                   : inboxCard
-                    ? "Add a note, or send to start…"
+                    ? t("sessions.composer.placeholderInbox")
                     : noteCard
-                      ? "Add a message, or send…"
+                      ? t("sessions.composer.placeholderNote")
                       : handoffCard
-                        ? "Add context, or send to continue…"
+                        ? t("sessions.composer.placeholderHandoff")
                         : (placeholder ??
-                          (shell
-                            ? "Ask, build, / for commands, @ for references... "
-                            : "Ask, build, / for commands, @ for references... "))
+                          t("sessions.composer.placeholderDefault"))
               }
               aria-label={inputAriaLabel}
               disabled={disabled}
@@ -2175,7 +2173,7 @@ export function Composer({
               className={compact ? "hidden" : "relative shrink-0"}
             >
               <ToolButton
-                label="Add files or choose a mode"
+                label={t("sessions.composer.addFilesOrMode")}
                 active={plusOpen}
                 onClick={() => setPlusOpen((open) => !open)}
               >
@@ -2192,7 +2190,7 @@ export function Composer({
                   className="p-1.5"
                 >
                   <p className="px-2 pb-1 pt-0.5 text-[10px] font-medium uppercase tracking-wide text-content/40">
-                    Add to message
+                    {t("sessions.composer.addToMessage")}
                   </p>
                   <button
                     type="button"
@@ -2206,13 +2204,17 @@ export function Composer({
                   >
                     <FilePlus className="mt-0.5 size-4 shrink-0" />
                     <span className="min-w-0">
-                      <span className="block text-[13px]">Upload file</span>
+                      <span className="block text-[13px]">
+                        {t("sessions.composer.uploadFile")}
+                      </span>
                       <span className="block truncate whitespace-nowrap text-[11px] leading-4 text-content/45">
                         {attachmentsSupported
-                          ? "Attach files or images"
+                          ? t("sessions.composer.attachFilesOrImages")
                           : remote && !remoteFeatures?.attachments
-                            ? "Update this machine’s host to attach files"
-                            : `${HARNESS_TITLE[harness]} does not support attachments`}
+                            ? t("sessions.composer.updateHostToAttach")
+                            : t("sessions.composer.harnessNoAttachments", {
+                                harness: HARNESS_TITLE[harness],
+                              })}
                       </span>
                     </span>
                   </button>
@@ -2234,9 +2236,11 @@ export function Composer({
                     >
                       <AiIdea className="mt-0.5 size-4 shrink-0 text-yellow-300/80" />
                       <span className="min-w-0 flex-1">
-                        <span className="block text-[13px]">Plan mode</span>
+                        <span className="block text-[13px]">
+                          {t("sessions.composer.planMode")}
+                        </span>
                         <span className="block truncate whitespace-nowrap text-[11px] leading-4 text-content/45">
-                          Review a plan before building
+                          {t("sessions.composer.planModeHint")}
                         </span>
                       </span>
                       {planActive ? (
@@ -2264,9 +2268,11 @@ export function Composer({
                     >
                       <CursorMagicSelection className="mt-0.5 size-4 shrink-0 text-sky-300/80" />
                       <span className="min-w-0 flex-1">
-                        <span className="block text-[13px]">Operator</span>
+                        <span className="block text-[13px]">
+                          {t("sessions.composer.operator")}
+                        </span>
                         <span className="block truncate whitespace-nowrap text-[11px] leading-4 text-content/45">
-                          Give this thread access to Natsu
+                          {t("sessions.composer.operatorHint")}
                         </span>
                       </span>
                       {operatorActive ? (
@@ -2295,13 +2301,15 @@ export function Composer({
                       <Share className="mt-0.5 size-4 shrink-0 text-fuchsia-300/65" />
                       <span className="min-w-0 flex-1">
                         <span className="flex items-center gap-1.5">
-                          <span className="text-[13px]">Orchestrator</span>
+                          <span className="text-[13px]">
+                            {t("sessions.composer.orchestrator")}
+                          </span>
                           <span className="rounded-full bg-fuchsia-300/10 px-1.5 py-0.5 text-[9px] font-medium leading-none tracking-wide text-fuchsia-200/55 mb-px">
                             v1
                           </span>
                         </span>
                         <span className="block truncate whitespace-nowrap text-[11px] leading-4 text-content/45">
-                          Plan and coordinate agent work
+                          {t("sessions.composer.orchestratorHint")}
                         </span>
                       </span>
                       {orchestrationActive && (
@@ -2327,9 +2335,11 @@ export function Composer({
                     >
                       <CircleDashed className="mt-0.5 size-4 shrink-0 text-content/60" />
                       <span className="min-w-0 flex-1">
-                        <span className="block text-[13px]">Draft</span>
+                        <span className="block text-[13px]">
+                          {t("sessions.composer.draft")}
+                        </span>
                         <span className="block truncate whitespace-nowrap text-[11px] leading-4 text-content/45">
-                          Save this message without starting the agent
+                          {t("sessions.composer.draftHint")}
                         </span>
                       </span>
                       {draftActive ? (
@@ -2436,14 +2446,14 @@ export function Composer({
             {resendEdited ? (
               <button
                 type="button"
-                title="Stop editing last message"
-                aria-label="Stop editing last message"
+                title={t("sessions.composer.stopEditingLastMessage")}
+                aria-label={t("sessions.composer.stopEditingLastMessage")}
                 onMouseDown={(event) => event.preventDefault()}
                 onClick={exitEditMode}
                 className="edit-last-turn-button flex h-6.5 shrink-0 items-center gap-1 rounded-md border border-current/20 px-2 text-[11px] font-medium transition-[background-color,color,border-color] hover:border-current/35 hover:bg-content/15 hover:text-content focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
               >
                 <X className="size-3" strokeWidth={1.8} />
-                <span>Cancel edit</span>
+                <span>{t("sessions.composer.cancelEdit")}</span>
               </button>
             ) : null}
             <div className="flex shrink-0 items-center gap-1">
@@ -2452,7 +2462,11 @@ export function Composer({
                 disabled={disabled}
                 hasValue={hasValue && !worktreeRemoved}
                 allowBusySubmit={allowBusySubmit}
-                label={draftActive ? "Save draft" : "Send"}
+                label={
+                  draftActive
+                    ? t("sessions.composer.saveDraft")
+                    : t("sessions.composer.send")
+                }
                 onSend={() => submit(ref.current?.value ?? "")}
                 onStop={() => onStop?.()}
               />
@@ -2587,7 +2601,7 @@ export function ComposerAction({
   disabled = false,
   hasValue,
   allowBusySubmit = true,
-  label = "Send",
+  label,
   onSend,
   onStop,
 }: {
@@ -2599,12 +2613,14 @@ export function ComposerAction({
   onSend: () => void;
   onStop: () => void;
 }) {
+  const t = useT();
+  const sendLabel = label ?? t("sessions.composer.send");
   if (disabled) {
     return (
       <button
         type="button"
-        title={label}
-        aria-label={label}
+        title={sendLabel}
+        aria-label={sendLabel}
         disabled
         className="composer-send primary-action grid size-6.5 place-items-center rounded-md disabled:cursor-default"
       >
@@ -2616,8 +2632,8 @@ export function ComposerAction({
     return hasValue && allowBusySubmit ? (
       <button
         type="button"
-        title={label}
-        aria-label={label}
+        title={sendLabel}
+        aria-label={sendLabel}
         onClick={onSend}
         className="composer-send primary-action grid size-6.5 place-items-center rounded-md"
       >
@@ -2626,8 +2642,8 @@ export function ComposerAction({
     ) : (
       <button
         type="button"
-        title="Stop"
-        aria-label="Stop"
+        title={t("sessions.composer.stop")}
+        aria-label={t("sessions.composer.stop")}
         onClick={onStop}
         className="grid size-6.5 place-items-center rounded-md bg-white text-black hover:bg-white/90"
       >

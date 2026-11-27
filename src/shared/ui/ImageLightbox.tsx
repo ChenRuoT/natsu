@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { resolveZoomKeybinding } from "../../features/settings/model/zoomKeybinding";
 import { claimTrackpadMagnify } from "../../platform/tauri/trackpadZoom";
 import { LAYER } from "../lib/layers";
+import { useT } from "../i18n/i18n";
 import { X } from "./icons";
 
 type Props = {
@@ -20,6 +21,7 @@ const KEY_ZOOM_STEP = 1.25;
 const IDENTITY: View = { scale: 1, x: 0, y: 0 };
 
 export function ImageLightbox({ src, alt, onClose }: Props) {
+  const t = useT();
   const closeRef = useRef<HTMLButtonElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const imageRef = useRef<HTMLImageElement>(null);
@@ -191,7 +193,7 @@ export function ImageLightbox({ src, alt, onClose }: Props) {
       role="dialog"
       aria-modal="true"
       data-image-zoom
-      aria-label={`Image preview: ${alt}`}
+      aria-label={t("ui.imageLightbox.label", { alt })}
       className="fixed inset-0 flex items-center justify-center overflow-hidden bg-black/85 p-6 backdrop-blur-sm"
       style={{ zIndex: LAYER.dialog }}
       onMouseDown={(event) => {
@@ -221,8 +223,8 @@ export function ImageLightbox({ src, alt, onClose }: Props) {
       <button
         ref={closeRef}
         type="button"
-        aria-label="Close image preview"
-        title="Close"
+        aria-label={t("ui.imageLightbox.close")}
+        title={t("ui.imageLightbox.closeTitle")}
         onClick={onClose}
         className="absolute right-4 top-4 grid size-9 place-items-center rounded-full border border-white/15 bg-black/45 text-white/80 shadow-lg backdrop-blur-md hover:bg-black/65 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80"
       >

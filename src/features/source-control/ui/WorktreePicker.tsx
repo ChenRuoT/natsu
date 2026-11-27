@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useProjectBranchesState } from "../hooks/useProjectBranches";
 import { useProjectWorktrees } from "../hooks/useProjectWorktrees";
 import { pathKey, prettyCwd } from "../../../shared/lib/paths";
-import { NO_BRANCH_LABEL, type Worktree } from "../model/worktrees";
+import type { Worktree } from "../model/worktrees";
 import { BranchPicker } from "./BranchPicker";
 import { CreateWorktreeDialog } from "./CreateWorktreeDialog";
 import { GitPickerTrigger } from "./GitPickerTrigger";
@@ -16,6 +16,7 @@ import {
   Search,
   Settings,
 } from "../../../shared/ui/icons";
+import { useT } from "../../../shared/i18n/i18n";
 
 export function WorktreePicker({
   cwd,
@@ -38,6 +39,7 @@ export function WorktreePicker({
   onManage?: () => void;
   onClose?: () => void;
 }) {
+  const t = useT();
   const [open, setOpen] = useState(false);
   const [branchPicker, setBranchPicker] = useState(false);
   const [creating, setCreating] = useState(false);
@@ -133,10 +135,12 @@ export function WorktreePicker({
         }
         title={
           worktreeRemoved
-            ? "Select a branch or worktree to continue this session"
-            : `Working copy: ${prettyCwd(executionCwd)}`
+            ? t("scm.worktreePicker.continueSessionTitle")
+            : t("scm.worktreePicker.workingCopyTitle", {
+                path: prettyCwd(executionCwd),
+              })
         }
-        aria-label="Choose working copy"
+        aria-label={t("scm.worktreePicker.chooseWorkingCopy")}
         aria-haspopup="dialog"
         aria-expanded={open}
         onClick={() => {
@@ -148,16 +152,18 @@ export function WorktreePicker({
         }}
         label={
           worktreeRemoved
-            ? NO_BRANCH_LABEL
+            ? t("scm.worktreePicker.noBranchSelected")
             : branches?.current
               ? branches.detached
-                ? `detached ${branches.current}`
+                ? t("scm.worktreePicker.detachedLabel", {
+                    branch: branches.current,
+                  })
                 : branches.current
               : settled
                 ? inWorktree
-                  ? "Worktree unavailable"
-                  : "No repo"
-                : "Loading…"
+                  ? t("scm.worktreePicker.worktreeUnavailable")
+                  : t("scm.worktreePicker.noRepo")
+                : t("scm.worktreePicker.loading")
         }
         worktree={!worktreeRemoved && inWorktree}
       />
@@ -171,7 +177,7 @@ export function WorktreePicker({
             if (!busy) dismiss();
           }}
           role="dialog"
-          aria-label="Working copies"
+          aria-label={t("scm.worktreePicker.workingCopies")}
           data-branch-picker
           className="flex flex-col overflow-hidden"
         >
@@ -179,8 +185,8 @@ export function WorktreePicker({
             <Search className="size-3.5 text-content/40" />
             <input
               ref={search}
-              aria-label="Search working copies"
-              placeholder="Search working copies…"
+              aria-label={t("scm.worktreePicker.searchWorkingCopies")}
+              placeholder={t("scm.worktreePicker.searchPlaceholder")}
               value={query}
               onChange={(e) => {
                 setQuery(e.target.value);
@@ -208,24 +214,23 @@ export function WorktreePicker({
           </label>
           {worktreeRemoved && (
             <p className="shrink-0 px-3 pt-2 pb-1 text-[11px] text-content/50">
-              This session’s worktree was deleted. Select a working copy to
-              continue.
+              {t("scm.worktreePicker.worktreeDeletedNote")}
             </p>
           )}
           {opensNewSession && !worktreeRemoved && (
             <p className="shrink-0 px-3 pt-2 pb-1 text-[11px] text-content/50">
-              Another working copy opens a new session.
+              {t("scm.worktreePicker.opensNewSessionNote")}
             </p>
           )}
           <div
             className="min-h-0 overflow-y-auto p-1"
             role="listbox"
-            aria-label="Working copies"
+            aria-label={t("scm.worktreePicker.workingCopies")}
           >
             {!data && !loadError && (
               <div className="flex items-center gap-2 p-2 text-[12px] text-content/50">
                 <Loader className="size-3.5 animate-spin" />
-                Loading working copies…
+                {t("scm.worktreePicker.loadingWorkingCopies")}
               </div>
             )}
             {rows.map((tree, index) => (
@@ -251,11 +256,16 @@ export function WorktreePicker({
                 )}
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-[12px]">
-                    {tree.branch ?? `Detached ${tree.head.slice(0, 7)}`}
+                    {tree.branch ??
+                      t("scm.worktreePicker.detachedHead", {
+                        head: tree.head.slice(0, 7),
+                      })}
                   </span>
                   <span className="block truncate text-[10px] text-content/40">
-                    {tree.isMain ? "Project folder" : prettyCwd(tree.path)}
-                    {tree.missing ? " · Missing" : ""}
+                    {tree.isMain
+                      ? t("scm.worktreePicker.projectFolder")
+                      : prettyCwd(tree.path)}
+                    {tree.missing ? t("scm.worktreePicker.missingSuffix") : ""}
                   </span>
                 </span>
                 {!worktreeRemoved &&
@@ -266,7 +276,7 @@ export function WorktreePicker({
             ))}
             {data && !rows.length && (
               <p className="p-2 text-[12px] text-content/45">
-                No matching working copies
+                {t("scm.worktreePicker.noMatchingWorkingCopies")}
               </p>
             )}
             {(error || loadError) && (
@@ -286,7 +296,7 @@ export function WorktreePicker({
               className="flex w-full items-center gap-2 rounded-md px-2 py-2 text-left hover:bg-content/8"
             >
               <Plus className="size-3.5" />
-              Create worktree…
+              {t("scm.worktreePicker.createWorktree")}
             </button>
             <button
               type="button"
@@ -298,7 +308,7 @@ export function WorktreePicker({
               className="flex w-full items-center gap-2 rounded-md px-2 py-2 text-left text-content/55 hover:bg-content/8 disabled:opacity-40"
             >
               <GitBranch className="size-3.5" />
-              Switch branch in this working copy…
+              {t("scm.worktreePicker.switchBranch")}
             </button>
             {onManage && (
               <button
@@ -311,7 +321,7 @@ export function WorktreePicker({
                 className="flex w-full items-center gap-2 rounded-md px-2 py-2 text-left text-content/55 hover:bg-content/8"
               >
                 <Settings className="size-3.5" />
-                Manage worktrees…
+                {t("scm.worktreePicker.manageWorktrees")}
               </button>
             )}
           </div>

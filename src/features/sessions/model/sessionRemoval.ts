@@ -1,4 +1,5 @@
 import { stopStreaming } from "../../../integrations/harness/core/apply";
+import { t as tNow } from "../../../shared/i18n/i18n";
 import { forgetHarnessSession } from "../../../integrations/harness/core/registry";
 import {
   buildDeterministicHandoff,
@@ -165,7 +166,7 @@ async function removeSession(
   } else {
     if (stopped && shouldPersistSession(stopped)) {
       const saved = await upsertSession(stopped);
-      if (!saved) throw new Error("The conversation could not be saved.");
+      if (!saved) throw new Error(tNow("sessions.sessionRemoval.notSaved"));
       savedSummary = saved;
     }
     await setSessionArchived(sessionId, true);

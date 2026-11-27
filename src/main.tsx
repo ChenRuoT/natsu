@@ -9,6 +9,8 @@ import {
   initAppearance,
 } from "./features/settings/model/appearance";
 import { initSounds } from "./features/settings/model/sounds";
+import { initI18n } from "./shared/i18n/i18n";
+import { syncNativeLanguage } from "./platform/tauri/nativeLanguage";
 import {
   abortQuit,
   askQuitConfirmation,
@@ -29,6 +31,8 @@ performance.mark("natsu:bootstrap");
 // Let local boot IPC overlap loading/evaluating the workspace UI.
 const appLoaded = import("./app/App");
 
+initI18n();
+syncNativeLanguage();
 initAppearance();
 initSounds();
 installNativeContextMenuGuard();

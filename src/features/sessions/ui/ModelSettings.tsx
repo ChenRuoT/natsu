@@ -12,8 +12,10 @@ import {
   resolveModel,
   subscribeModels,
   type ModelSetting,
+  settingText,
 } from "../model/models";
 import type { HarnessId } from "../model/session";
+import { useT } from "../../../shared/i18n/i18n";
 
 type Props = {
   harness: HarnessId;
@@ -101,14 +103,15 @@ function ToggleSetting({
   value: string;
   onChange: (value: string) => void;
 }) {
+  const t = useT();
   const on = value === "true";
   const Icon =
     setting.id === "fast" ? Zap : setting.id === "thinking" ? AiIdea : Gauge;
   return (
     <button
       type="button"
-      title={setting.description ?? setting.label}
-      aria-label={setting.label}
+      title={setting.description ?? settingText(setting.label, t)}
+      aria-label={settingText(setting.label, t)}
       aria-pressed={on}
       onMouseDown={(e) => e.preventDefault()}
       onClick={() => onChange(on ? "false" : "true")}
@@ -119,7 +122,7 @@ function ToggleSetting({
       }`}
     >
       <Icon className="size-3.5 shrink-0" strokeWidth={1.75} />
-      <span className="text-[11px]">{setting.label}</span>
+      <span className="text-[11px]">{settingText(setting.label, t)}</span>
     </button>
   );
 }
@@ -135,6 +138,7 @@ function SelectSetting({
   onChange: (value: string) => void;
   onClose?: () => void;
 }) {
+  const t = useT();
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(() =>
     Math.max(
@@ -192,8 +196,11 @@ function SelectSetting({
     <div ref={root} className="relative">
       <button
         type="button"
-        title={setting.description ?? setting.label}
-        aria-label={`${setting.label}: ${current?.label ?? value}`}
+        title={setting.description ?? settingText(setting.label, t)}
+        aria-label={t("sessions.modelSettings.valueLabel", {
+          label: settingText(setting.label, t),
+          value: current ? settingText(current.label, t) : value,
+        })}
         aria-expanded={open}
         aria-haspopup="listbox"
         onMouseDown={(e) => e.preventDefault()}
@@ -212,7 +219,9 @@ function SelectSetting({
       >
         <Icon className="size-3.5 shrink-0" strokeWidth={1.75} />
         <span className="min-w-0 truncate text-[11px]">
-          {current?.label ?? setting.label}
+          {current
+            ? settingText(current.label, t)
+            : settingText(setting.label, t)}
         </span>
         <ChevronDown
           className={`size-3 shrink-0 text-content/50 ${open ? "rotate-180" : ""}`}
@@ -227,7 +236,7 @@ function SelectSetting({
           autoFocus
           onDismiss={(reason) => dismiss(reason === "escape")}
           role="listbox"
-          aria-label={setting.label}
+          aria-label={settingText(setting.label, t)}
           data-model-settings
           tabIndex={-1}
           onKeyDown={onMenuKey}
@@ -251,7 +260,7 @@ function SelectSetting({
                     : "text-content hover:bg-content/5"
                 }`}
               >
-                {option.label}
+                {settingText(option.label, t)}
               </button>
             );
           })}

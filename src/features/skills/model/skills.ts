@@ -1,3 +1,4 @@
+import { t as tNow } from "../../../shared/i18n/i18n";
 import {
   createPath,
   homeDir,
@@ -48,7 +49,7 @@ export function saveDisabledSkillPaths(paths: string[]): void {
   try {
     localStorage.setItem(DISABLED_SKILL_PATHS_KEY, JSON.stringify(paths));
   } catch {
-    throw new Error("Could not save skill preferences");
+    throw new Error(tNow("skills.skills.savePreferencesFailed"));
   }
   // The composer catalog caches per context; drop it so the next picker or
   // prompt sees the change immediately.
@@ -526,7 +527,7 @@ export async function createBlankSkill(input: {
 }): Promise<string> {
   const name = slugSkillName(input.name);
   if (!isValidSkillName(name)) {
-    throw new Error("Use a lowercase name with letters, numbers, and hyphens.");
+    throw new Error(tNow("skills.skills.invalidName"));
   }
   const root =
     input.scope === "user" || !isLocalProject(input.cwd)

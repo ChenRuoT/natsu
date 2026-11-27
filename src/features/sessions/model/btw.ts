@@ -1,6 +1,7 @@
 import { applyHarnessEvent } from "../../../integrations/harness/core/apply";
 import type { HarnessEvent } from "../../../integrations/harness/core/types";
 import { displayPath } from "../../../shared/lib/paths";
+import { t as tNow, type MessageKey } from "../../../shared/i18n/i18n";
 import type {
   Attachment,
   Block,
@@ -171,6 +172,9 @@ export function btwOpenTargetTurnId(
   return undefined;
 }
 
+/** Translate with `t` when showing this command in a picker. */
+export const BTW_DESCRIPTION_KEY: MessageKey = "sessions.btw.description";
+
 export const BTW_COMMAND: BuiltinSkill = {
   kind: "builtin",
   name: "btw",
@@ -336,7 +340,7 @@ export function serializeBtwSnapshot(
 ): string {
   const visible = btwVisibleBlocks(blocks, sourceEndBlockId);
   if (visible.length === 0) {
-    throw new Error("The completed turn is no longer available.");
+    throw new Error(tNow("sessions.btw.turnUnavailable"));
   }
   const serialized = visible
     .map((block) => serializeBtwBlock(block, cwd))

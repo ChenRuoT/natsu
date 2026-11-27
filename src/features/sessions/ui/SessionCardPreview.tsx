@@ -2,11 +2,11 @@ import { useEffect, type ReactNode } from "react";
 import { formatInteger } from "../../../shared/lib/numbers";
 import { prettyCwd } from "../../../shared/lib/paths";
 import { Popover } from "../../../shared/ui/Popover";
-import { NO_BRANCH_LABEL } from "../../source-control/model/worktrees";
 import type { SessionSummary } from "../data/sessionStore";
 import { resolveModel } from "../model/models";
 import { sessionDisplayTitle } from "../model/session";
 import { HarnessIcon } from "./HarnessIcon";
+import { useT } from "../../../shared/i18n/i18n";
 
 export function SessionCardPreview({
   anchor,
@@ -53,6 +53,7 @@ export function SessionCardPreview({
     };
   }, [anchor, onClose, session.id]);
 
+  const t = useT();
   const additions = session.additions ?? 0;
   const deletions = session.deletions ?? 0;
 
@@ -89,20 +90,24 @@ export function SessionCardPreview({
       </p>
       <dl className="mt-2 grid grid-cols-[4.5rem_minmax(0,1fr)] gap-x-2 gap-y-1.5 border-t border-stroke pt-2">
         {session.branch || session.worktreeRemoved ? (
-          <Detail label="Branch">
-            {session.worktreeRemoved ? NO_BRANCH_LABEL : session.branch}
+          <Detail label={t("sessions.sessionCardPreview.branch")}>
+            {session.worktreeRemoved
+              ? t("scm.worktreePicker.noBranchSelected")
+              : session.branch}
           </Detail>
         ) : null}
         <Detail
           label={
             session.worktreeCwd || session.worktreeRemoved
-              ? "Worktree"
-              : "Directory"
+              ? t("sessions.sessionCardPreview.worktree")
+              : t("sessions.sessionCardPreview.directory")
           }
         >
           {session.worktreeRemoved ? (
             <>
-              <span className="text-content/50">Removed</span>
+              <span className="text-content/50">
+                {t("sessions.sessionCardPreview.removed")}
+              </span>
               {session.worktreeCwd ? (
                 <span className="mt-0.5 block text-content/40">
                   {prettyCwd(session.worktreeCwd)}
@@ -114,7 +119,7 @@ export function SessionCardPreview({
           )}
         </Detail>
         {additions > 0 || deletions > 0 ? (
-          <Detail label="Changes">
+          <Detail label={t("sessions.sessionCardPreview.changes")}>
             <span className="flex gap-2 font-medium tabular-nums">
               {additions > 0 ? (
                 <span className="text-diff-add-fg">
@@ -132,7 +137,9 @@ export function SessionCardPreview({
         {session.linkedWorkItem ? (
           <Detail
             label={
-              session.linkedWorkItem.kind === "pr" ? "Pull request" : "Issue"
+              session.linkedWorkItem.kind === "pr"
+                ? t("sessions.sessionCardPreview.pullRequest")
+                : t("sessions.sessionCardPreview.issue")
             }
           >
             {session.linkedWorkItem.repo} #{session.linkedWorkItem.number}

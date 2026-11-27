@@ -179,3 +179,16 @@ it("ignores malformed persisted entries without losing valid project choices", (
     allowsProjectNotification({ projectId: "broken", category: "issues" }),
   ).toBe(true);
 });
+
+it("names every notification category in Chinese as well as English", async () => {
+  const { NOTIFICATION_CATEGORIES } = await import("./notificationPreferences");
+  const { translate } = await import("../../../shared/i18n/i18n");
+  for (const category of NOTIFICATION_CATEGORIES) {
+    expect(translate("en", category.labelKey), category.id).toBe(
+      category.label,
+    );
+    expect(translate("zh-CN", category.labelKey), category.id).not.toBe(
+      category.label,
+    );
+  }
+});

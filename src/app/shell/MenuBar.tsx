@@ -5,6 +5,7 @@ import {
   type ExplorerMenuItem,
 } from "../../features/files/ui/ExplorerMenu";
 import { ALT, MOD, SHIFT } from "../../platform/tauri/platform";
+import { useT } from "../../shared/i18n/i18n";
 import { runUpdateFlow } from "../model/updater";
 import {
   keybindingShortcutLabel,
@@ -66,6 +67,7 @@ export function MenuBar({
   const [, refreshShortcuts] = useState(loadKeybindingOverrides);
   const [autosave, setAutosave] = useState(loadAutosave);
   const barRef = useRef<HTMLDivElement>(null);
+  const t = useT();
 
   useEffect(
     () =>
@@ -239,77 +241,77 @@ export function MenuBar({
           {
             kind: "item",
             id: "new_tab",
-            label: "New Tab",
+            label: t("shell.menuBar.newTab"),
             shortcut: shortcut("Tab: New", `${MOD}T`),
           },
           {
             kind: "item",
             id: "new_terminal",
-            label: "New Terminal",
+            label: t("shell.menuBar.newTerminal"),
             shortcut: shortcut("Terminal: New", `${MOD}\``),
           },
           {
             kind: "item",
             id: "new_window",
-            label: "New Window",
+            label: t("shell.menuBar.newWindow"),
             shortcut: shortcut("App: New Window", `${MOD}${SHIFT}N`),
           },
           { kind: "sep" },
           {
             kind: "item",
             id: "toggle_autosave",
-            label: "Autosave",
+            label: t("shell.menuBar.autosave"),
             checked: autosave,
           },
           { kind: "sep" },
           {
             kind: "item",
             id: "open_project",
-            label: "Open Project…",
+            label: t("shell.menuBar.openProject"),
             shortcut: shortcut("App: Open Project", `${MOD}O`),
           },
           {
             kind: "item",
             id: "open_search",
-            label: "Search…",
+            label: t("shell.menuBar.search"),
             shortcut: shortcut("App: Search", `${MOD}K`),
           },
           {
             kind: "item",
             id: "go_to_file",
-            label: "Go to File…",
+            label: t("shell.menuBar.goToFile"),
             shortcut: shortcut("App: Go to File", `${MOD}P`),
           },
           {
             kind: "item",
             id: "find_in_project",
-            label: "Find in Files…",
+            label: t("shell.menuBar.findInFiles"),
             shortcut: shortcut("App: Find in Files", `${MOD}${SHIFT}F`),
           },
           { kind: "sep" },
           {
             kind: "item",
             id: "close_tab",
-            label: "Close Pane",
+            label: t("shell.menuBar.closePane"),
             shortcut: shortcut("Pane: Close", `${MOD}W`),
           },
           {
             kind: "item",
             id: "close_other_tabs",
-            label: "Close Other Tabs",
+            label: t("shell.menuBar.closeOtherTabs"),
             shortcut: shortcut("Tab: Close Others", `${MOD}${ALT}T`),
           },
           {
             kind: "item",
             id: "close_all_tabs",
-            label: "Close All Tabs",
+            label: t("shell.menuBar.closeAllTabs"),
             shortcut: shortcut("Tab: Close All", `${MOD}${SHIFT}W`),
           },
           { kind: "sep" },
           {
             kind: "item",
             id: "check_for_updates",
-            label: "Check for Updates…",
+            label: t("shell.menuBar.checkForUpdates"),
           },
         ];
       case "view":
@@ -317,52 +319,66 @@ export function MenuBar({
           {
             kind: "item",
             id: "toggle_sidebar",
-            label: "Toggle Sidebar",
+            label: t("shell.menuBar.toggleSidebar"),
             shortcut: shortcut("App: Toggle Sidebar", `${MOD}B`),
           },
           {
             kind: "item",
             id: "toggle_session_sidebar",
-            label: "Toggle Session Sidebar",
+            label: t("shell.menuBar.toggleSessionSidebar"),
             shortcut: shortcut(
               "App: Toggle Session Sidebar",
               `${MOD}${SHIFT}B`,
             ),
           },
-          { kind: "item", id: "open_inbox", label: "Inbox" },
+          {
+            kind: "item",
+            id: "open_inbox",
+            label: t("shell.menuBar.inbox"),
+          },
           ...(onOpenNotes
-            ? [{ kind: "item" as const, id: "open_notes", label: "Notes" }]
+            ? [
+                {
+                  kind: "item" as const,
+                  id: "open_notes",
+                  label: t("shell.menuBar.notes"),
+                },
+              ]
             : []),
           {
             kind: "item",
             id: "toggle_terminal",
-            label: "Toggle Terminal",
+            label: t("shell.menuBar.toggleTerminal"),
             shortcut: shortcut("Terminal: Toggle Dock", `${MOD}J`),
           },
           {
             kind: "item",
             id: "open_model_picker",
-            label: "Switch Model…",
+            label: t("shell.menuBar.switchModel"),
             shortcut: shortcut("App: Switch Model", `${MOD}.`),
           },
-          { kind: "item", id: "toggle_diff", label: "Toggle Changes" },
+          {
+            kind: "item",
+            id: "toggle_diff",
+            label: t("shell.menuBar.toggleChanges"),
+          },
           { kind: "sep" },
           {
             kind: "item",
             id: "zoom_in",
-            label: "Zoom In",
+            label: t("shell.menuBar.zoomIn"),
             shortcut: shortcut("View: Zoom In", `${MOD}+`),
           },
           {
             kind: "item",
             id: "zoom_out",
-            label: "Zoom Out",
+            label: t("shell.menuBar.zoomOut"),
             shortcut: shortcut("View: Zoom Out", `${MOD}-`),
           },
           {
             kind: "item",
             id: "zoom_reset",
-            label: "Reset Zoom",
+            label: t("shell.menuBar.resetZoom"),
             shortcut: shortcut("View: Reset Zoom", `${MOD}0`),
           },
         ];
@@ -371,13 +387,13 @@ export function MenuBar({
           {
             kind: "item",
             id: "new_terminal",
-            label: "New Terminal",
+            label: t("shell.menuBar.newTerminal"),
             shortcut: shortcut("Terminal: New", `${MOD}\``),
           },
           {
             kind: "item",
             id: "toggle_terminal",
-            label: "Toggle Terminal",
+            label: t("shell.menuBar.toggleTerminal"),
             shortcut: shortcut("Terminal: Toggle Dock", `${MOD}J`),
           },
         ];
@@ -388,10 +404,22 @@ export function MenuBar({
     return null;
   }
 
-  const MENUS: { key: MenuKey; label: string }[] = [
-    { key: "file", label: "File" },
-    { key: "view", label: "View" },
-    { key: "terminal", label: "Terminal" },
+  const MENUS: { key: MenuKey; label: string; ariaLabel: string }[] = [
+    {
+      key: "file",
+      label: t("shell.menuBar.file"),
+      ariaLabel: t("shell.menuBar.fileMenuLabel"),
+    },
+    {
+      key: "view",
+      label: t("shell.menuBar.view"),
+      ariaLabel: t("shell.menuBar.viewMenuLabel"),
+    },
+    {
+      key: "terminal",
+      label: t("shell.menuBar.terminal"),
+      ariaLabel: t("shell.menuBar.terminalMenuLabel"),
+    },
   ];
 
   return (
@@ -435,7 +463,9 @@ export function MenuBar({
           x={menuAnchor.x}
           y={menuAnchor.y}
           items={getMenuItems(activeMenu)}
-          ariaLabel={`${activeMenu} menu`}
+          ariaLabel={
+            MENUS.find((menu) => menu.key === activeMenu)?.ariaLabel ?? ""
+          }
           onPick={handlePick}
           onClose={closeMenu}
         />

@@ -30,6 +30,7 @@ import {
   type GraphRef,
   type HistoryItemViewModel,
 } from "../model/gitGraph";
+import { useT } from "../../../shared/i18n/i18n";
 
 type Props = {
   cwd: string;
@@ -60,6 +61,7 @@ export function GitHistoryGraph({
   onToggleExpanded,
   onOpenCommit,
 }: Props) {
+  const t = useT();
   const lockOverscroll = useLockOverscroll<HTMLDivElement>();
   const standalone = !onToggleExpanded;
   const { commits, loading, error, refresh } = useGitHistory(
@@ -102,13 +104,17 @@ export function GitHistoryGraph({
           type="button"
           onClick={onToggleExpanded}
           aria-expanded={expanded}
-          aria-label={expanded ? "Collapse graph" : "Expand graph"}
+          aria-label={
+            expanded
+              ? t("scm.gitHistoryGraph.collapseGraph")
+              : t("scm.gitHistoryGraph.expandGraph")
+          }
           className={`flex w-full shrink-0 items-center gap-1 px-3 text-left leading-none hover:bg-content/5 ${
             expanded ? "h-7" : "h-full"
           }`}
         >
           <span className="text-[10px] font-semibold tracking-[0.04em] text-content/55 uppercase">
-            Graph
+            {t("scm.gitHistoryGraph.graph")}
           </span>
           {expanded ? (
             <ChevronDown
@@ -141,7 +147,7 @@ export function GitHistoryGraph({
         >
           {!cwd || cwd === "~" ? (
             <p className="px-3 py-2 text-[12px] text-content/45">
-              No project folder
+              {t("scm.gitHistoryGraph.noProjectFolder")}
             </p>
           ) : error && commits.length === 0 ? (
             standalone ? null : (
@@ -149,11 +155,13 @@ export function GitHistoryGraph({
             )
           ) : commits.length === 0 ? (
             <p className="px-3 py-2 text-[12px] text-content/45">
-              {loading ? "Loading history…" : "No commits yet"}
+              {loading
+                ? t("scm.gitHistoryGraph.loadingHistory")
+                : t("scm.gitHistoryGraph.noCommitsYet")}
             </p>
           ) : items.length === 0 ? (
             <p className="px-3 py-4 text-center text-[12px] text-content/45">
-              No matching commits
+              {t("scm.gitHistoryGraph.noMatchingCommits")}
             </p>
           ) : (
             <ul className="min-w-0 max-w-full">
@@ -193,6 +201,7 @@ function HistoryToolbar({
   query: string;
   onQueryChange: (query: string) => void;
 }) {
+  const t = useT();
   const [searchOpen, setSearchOpen] = useState(false);
   const searchInput = useRef<HTMLInputElement>(null);
   const searchButton = useRef<HTMLButtonElement>(null);
@@ -212,15 +221,19 @@ function HistoryToolbar({
     "flex size-6 shrink-0 items-center justify-center rounded-md text-content/50 hover:bg-content/5 hover:text-content disabled:pointer-events-none disabled:opacity-40";
   return (
     <div className="shrink-0">
-      <PaneHeader compact role="toolbar" aria-label="History">
+      <PaneHeader
+        compact
+        role="toolbar"
+        aria-label={t("scm.gitHistoryGraph.history")}
+      >
         {searchOpen ? (
           <>
             <Search aria-hidden className="size-3.5 shrink-0 text-content/45" />
             <input
               ref={searchInput}
               type="text"
-              aria-label="Search commits"
-              placeholder="Search history…"
+              aria-label={t("scm.gitHistoryGraph.searchCommits")}
+              placeholder={t("scm.gitHistoryGraph.searchHistoryPlaceholder")}
               value={query}
               onChange={(event) => onQueryChange(event.target.value)}
               onKeyDown={(event) => {
@@ -234,8 +247,8 @@ function HistoryToolbar({
             />
             <button
               type="button"
-              aria-label="Close history search"
-              title="Close search"
+              aria-label={t("scm.gitHistoryGraph.closeHistorySearch")}
+              title={t("scm.gitHistoryGraph.closeSearch")}
               className={actionClass}
               onClick={closeSearch}
             >
@@ -248,17 +261,23 @@ function HistoryToolbar({
               <GitBranch className="size-3.5 shrink-0 text-content/45" />
               <span
                 className="truncate"
-                title={branch ?? (head ? "Detached HEAD" : "History")}
+                title={
+                  branch ??
+                  (head
+                    ? t("scm.gitHistoryGraph.detachedHead")
+                    : t("scm.gitHistoryGraph.history"))
+                }
               >
-                {branch ?? (head ? head.shortSha : "History")}
+                {branch ??
+                  (head ? head.shortSha : t("scm.gitHistoryGraph.history"))}
               </span>
             </div>
             <div className="flex shrink-0 items-center gap-0.5">
               <button
                 ref={searchButton}
                 type="button"
-                aria-label="Search history"
-                title="Search history"
+                aria-label={t("scm.gitHistoryGraph.searchHistory")}
+                title={t("scm.gitHistoryGraph.searchHistory")}
                 className={actionClass}
                 onClick={() => setSearchOpen(true)}
               >
@@ -266,8 +285,8 @@ function HistoryToolbar({
               </button>
               <button
                 type="button"
-                aria-label="Refresh history"
-                title="Refresh history"
+                aria-label={t("scm.gitHistoryGraph.refreshHistory")}
+                title={t("scm.gitHistoryGraph.refreshHistory")}
                 disabled={!cwd || cwd === "~" || loading}
                 className={actionClass}
                 onClick={() => void onRefresh()}
@@ -551,6 +570,7 @@ export function GraphResizeSash({
   onHeightCommit: (height: number) => void;
   maxHeight: () => number;
 }) {
+  const t = useT();
   const drag = useRef<{ start: number; size: number } | null>(null);
   const [dragging, setDragging] = useState(false);
   const paintedRef = useRef(height);
@@ -617,7 +637,7 @@ export function GraphResizeSash({
     <div
       role="separator"
       aria-orientation="horizontal"
-      aria-label="Resize graph"
+      aria-label={t("scm.gitHistoryGraph.resizeGraph")}
       aria-valuenow={height}
       className={`z-10 h-1.5 shrink-0 cursor-row-resize touch-none ${
         dragging ? "bg-content/15" : "hover:bg-content/10"

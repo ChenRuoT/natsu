@@ -17,9 +17,10 @@ import { prepareUnifiedDiff } from "../model/diffWorker";
 import {
   prioritizeWorkingTreeDiffEntries,
   workingTreeDiffEntries,
-  workingTreeDiffEntryLabel,
+  workingTreeDiffEntryLabelWith,
   workingTreeDiffFocusId,
 } from "../model/workingTreeDiff";
+import { useT } from "../../../shared/i18n/i18n";
 import { stageChunkText } from "../../files/editor/editorGit";
 import { LINE_DIFF_CONFIG } from "../model/lineDiff";
 import { UnifiedDiffView, type UnifiedDiffFileModel } from "./UnifiedDiffView";
@@ -49,6 +50,7 @@ export function WorkingTreeDiff({
   focusKind,
   visible = true,
 }: Props) {
+  const t = useT();
   const [files, setFiles] = useState<GitChangedFile[] | null>(null);
   const [diffs, setDiffs] = useState<Map<string, LoadedDiff>>(new Map());
   const [error, setError] = useState<string | null>(null);
@@ -208,18 +210,23 @@ export function WorkingTreeDiff({
       return {
         id: entry.id,
         path: file.path,
-        label: workingTreeDiffEntryLabel(entry),
+        label: workingTreeDiffEntryLabelWith(entry, (side) =>
+          side === "staged"
+            ? t("scm.workingTreeDiff.staged")
+            : t("scm.workingTreeDiff.unstaged"),
+        ),
         binary: loaded?.binary,
         tooLarge: loaded?.tooLarge,
+        loading: loaded == null,
         emptyMessage:
           loaded == null
-            ? "Loading…"
+            ? t("scm.workingTreeDiff.loadingDiff")
             : loaded.error
-              ? `Couldn’t load diff: ${loaded.error}`
+              ? t("scm.workingTreeDiff.loadDiffFailed", { error: loaded.error })
               : unchanged
                 ? kind === "staged"
-                  ? "No staged changes"
-                  : "No unstaged changes"
+                  ? t("scm.workingTreeDiff.noStagedChanges")
+                  : t("scm.workingTreeDiff.noUnstagedChanges")
                 : undefined,
         additions:
           unified?.additions ?? (canUseIndexCounts ? file.additions : 0),
@@ -232,7 +239,7 @@ export function WorkingTreeDiff({
           kind === "unstaged" && !loaded?.binary && !loaded?.tooLarge,
       };
     });
-  }, [diffs, entries, files]);
+  }, [diffs, entries, files, t]);
 
   const totals = useMemo(
     () =>
@@ -310,7 +317,7 @@ export function WorkingTreeDiff({
   if (!cwd || cwd === "~") {
     return (
       <p className="grid h-full place-items-center text-[13px] text-content/45">
-        No project folder
+        {t("scm.workingTreeDiff.noProjectFolder")}
       </p>
     );
   }
@@ -318,7 +325,9 @@ export function WorkingTreeDiff({
     return (
       <div className="grid h-full place-items-center p-6 text-center">
         <AlertCircle className="mx-auto mb-3 size-5 text-red-400" />
-        <p className="text-[13px] text-content">Couldn’t load changes</p>
+        <p className="text-[13px] text-content">
+          {t("scm.workingTreeDiff.loadChangesFailed")}
+        </p>
         <p className="mt-1 text-[12px] text-content/50">{error}</p>
       </div>
     );

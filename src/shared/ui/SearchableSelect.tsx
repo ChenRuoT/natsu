@@ -11,6 +11,7 @@ import { Check, ChevronDown, Search } from "./icons";
 import { LAYER } from "../lib/layers";
 import type { PopoverAlign } from "../lib/popover";
 import { Popover } from "./Popover";
+import { useT } from "../i18n/i18n";
 
 export type SearchableSelectOption = {
   value: string;
@@ -23,9 +24,9 @@ export function SearchableSelect({
   value,
   options,
   onChange,
-  placeholder = "Choose an option…",
-  searchPlaceholder = "Search options…",
-  emptyLabel = "No matching options",
+  placeholder: placeholderProp,
+  searchPlaceholder: searchPlaceholderProp,
+  emptyLabel: emptyLabelProp,
   disabled = false,
   layer,
   variant = "field",
@@ -45,6 +46,11 @@ export function SearchableSelect({
   searchable?: boolean;
   align?: PopoverAlign;
 }) {
+  const t = useT();
+  const placeholder = placeholderProp ?? t("ui.searchableSelect.placeholder");
+  const searchPlaceholder =
+    searchPlaceholderProp ?? t("ui.searchableSelect.searchPlaceholder");
+  const emptyLabel = emptyLabelProp ?? t("ui.searchableSelect.emptyLabel");
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [active, setActive] = useState(0);
@@ -188,7 +194,10 @@ export function SearchableSelect({
         ref={trigger}
         type="button"
         disabled={disabled}
-        aria-label={`${label}: ${selected?.label ?? placeholder}`}
+        aria-label={t("ui.searchableSelect.triggerLabel", {
+          label,
+          value: selected?.label ?? placeholder,
+        })}
         aria-expanded={open}
         aria-haspopup="dialog"
         onClick={() => (open ? close() : openMenu())}
@@ -231,7 +240,7 @@ export function SearchableSelect({
           constrainHeight={longMenu}
           layer={popoverLayer}
           role="dialog"
-          aria-label={`${label} options`}
+          aria-label={t("ui.searchableSelect.optionsLabel", { label })}
           data-dialog-popover
           onDismiss={(reason) => close(reason === "escape")}
           className="flex flex-col overflow-hidden"

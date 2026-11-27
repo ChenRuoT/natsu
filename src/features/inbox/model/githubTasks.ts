@@ -1,4 +1,5 @@
 import { invoke } from "@tauri-apps/api/core";
+import { t as tNow, type TFunction } from "../../../shared/i18n/i18n";
 import { clearKnownInboxItems } from "./inboxSeen";
 import {
   linearConnected,
@@ -582,58 +583,83 @@ export async function githubPrAction(
   return item;
 }
 
-export function githubReviewDecisionLabel(decision: string): string {
+export function githubReviewDecisionLabel(
+  decision: string,
+  t: TFunction = tNow,
+): string {
   switch (decision.trim().toUpperCase()) {
     case "APPROVED":
-      return "Approved";
+      return t("inbox.review.approved");
     case "CHANGES_REQUESTED":
-      return "Changes requested";
+      return t("inbox.review.changesRequested");
     case "REVIEW_REQUIRED":
-      return "Review required";
+      return t("inbox.review.required");
     default:
       return "";
   }
 }
 
-export function githubReviewStateLabel(state: string): string {
+export function githubReviewStateLabel(
+  state: string,
+  t: TFunction = tNow,
+): string {
   switch (state.trim().toUpperCase()) {
     case "APPROVED":
-      return "Approved";
+      return t("inbox.reviewState.approved");
     case "CHANGES_REQUESTED":
-      return "Requested changes";
+      return t("inbox.reviewState.requestedChanges");
     case "DISMISSED":
-      return "Dismissed";
+      return t("inbox.reviewState.dismissed");
     case "COMMENTED":
-      return "Commented";
+      return t("inbox.reviewState.commented");
     default:
       return "";
   }
 }
 
-export function gitlabAttentionLabel(reason: string): string {
+/** Canonical English status for filtering; display it through `inboxItemStatusLabel`. */
+export function inboxItemStatusLabel(status: string, t: TFunction = tNow) {
+  switch (status) {
+    case "Open":
+      return t("inbox.status.open");
+    case "Closed":
+      return t("inbox.status.closed");
+    case "Draft":
+      return t("inbox.status.draft");
+    case "Merged":
+      return t("inbox.status.merged");
+    default:
+      return status;
+  }
+}
+
+export function gitlabAttentionLabel(
+  reason: string,
+  t: TFunction = tNow,
+): string {
   const action = reason.trim().toLowerCase();
   switch (action) {
     case "assigned":
-      return "Assigned to you";
+      return t("inbox.attention.assigned");
     case "mentioned":
     case "directly_addressed":
-      return "Mentioned you";
+      return t("inbox.attention.mentioned");
     case "review_requested":
-      return "Review requested";
+      return t("inbox.attention.reviewRequested");
     case "review_submitted":
-      return "Review submitted";
+      return t("inbox.attention.reviewSubmitted");
     case "approval_required":
-      return "Approval required";
+      return t("inbox.attention.approvalRequired");
     case "build_failed":
-      return "Pipeline failed";
+      return t("inbox.attention.pipelineFailed");
     case "unmergeable":
-      return "Cannot be merged";
+      return t("inbox.attention.cannotMerge");
     case "merge_train_removed":
-      return "Removed from merge train";
+      return t("inbox.attention.mergeTrainRemoved");
     case "member_access_requested":
-      return "Access requested";
+      return t("inbox.attention.accessRequested");
     case "marked":
-      return "Added to your to-dos";
+      return t("inbox.attention.addedToTodos");
     default:
       return action
         .split("_")

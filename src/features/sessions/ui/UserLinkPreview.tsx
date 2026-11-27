@@ -19,6 +19,7 @@ import {
   type IconComponent,
 } from "../../../shared/ui/icons";
 import { Popover } from "../../../shared/ui/Popover";
+import { useT, type TFunction } from "../../../shared/i18n/i18n";
 import {
   formatRelativeTime,
   githubWorkItem,
@@ -77,6 +78,7 @@ function GenericLinkPreview({ link }: { link: UserLink }) {
     };
   }, [link.url]);
 
+  const t = useT();
   const title = metadata?.title?.trim() || link.host;
   const favicon = faviconFailed ? null : metadata?.faviconDataUrl;
 
@@ -85,7 +87,7 @@ function GenericLinkPreview({ link }: { link: UserLink }) {
       href={link.url}
       data-user-link-preview
       title={link.url}
-      aria-label={`Open ${title}`}
+      aria-label={t("sessions.userLinkPreview.open", { title })}
       className="user-link-preview group mx-0.5 text-sky-400/90 hover:text-sky-300 hover:underline"
       onClick={(event) => openExternalLink(event, link.url)}
     >
@@ -230,8 +232,13 @@ function GithubWorkItemPreview({
     setOpen(false);
   };
 
-  const kindLabel = workItem.kind === "pr" ? "Pull request" : "Issue";
-  const compactKind = workItem.kind === "pr" ? "PR" : "Issue";
+  const t = useT();
+  const kindLabel =
+    workItem.kind === "pr"
+      ? t("sessions.userLinkPreview.pullRequest")
+      : t("sessions.userLinkPreview.issue");
+  const compactKind =
+    workItem.kind === "pr" ? "PR" : t("sessions.userLinkPreview.issue");
   const itemTitle = item?.title.trim();
 
   return (
@@ -242,7 +249,20 @@ function GithubWorkItemPreview({
         data-user-link-preview
         data-github-work-item-chip={workItem.kind}
         data-compact={compact || undefined}
-        aria-label={`Open ${kindLabel.toLowerCase()} #${workItem.number} in ${workItem.repo}${itemTitle ? `: ${itemTitle}` : ""}`}
+        aria-label={
+          itemTitle
+            ? t("sessions.userLinkPreview.openItemTitled", {
+                kind: kindLabel.toLowerCase(),
+                number: workItem.number,
+                repo: workItem.repo,
+                title: itemTitle,
+              })
+            : t("sessions.userLinkPreview.openItem", {
+                kind: kindLabel.toLowerCase(),
+                number: workItem.number,
+                repo: workItem.repo,
+              })
+        }
         aria-describedby={open ? tooltipId : undefined}
         className={`group mx-px inline-flex max-w-full items-center gap-1 rounded-md border-0 bg-transparent p-0 text-content/70 no-underline shadow-none outline-none transition-[color,transform] duration-[140ms] ease-[var(--motion-ease-out)] hover:text-content focus-visible:ring-2 focus-visible:ring-accent/60 active:scale-[0.98] motion-reduce:transition-none pb-px ${
           compact
@@ -322,7 +342,8 @@ function GithubWorkItemCard({
   details: GithubWorkItemDetails | null;
   loadState: "idle" | "loading" | "ready" | "unavailable";
 }) {
-  const status = workItemStatus(parsed.kind, item);
+  const t = useT();
+  const status = workItemStatus(parsed.kind, item, t);
   const summary = plainTextSummary(details?.body ?? "");
   const updated = item?.updatedAt ? formatRelativeTime(item.updatedAt) : "";
   const assignees = item?.assignees ?? [];
@@ -367,7 +388,10 @@ function GithubWorkItemCard({
       ) : (
         <div className="mt-2">
           <h3 className="text-[13px] font-semibold text-content">
-            {parsed.kind === "pr" ? "Pull request" : "Issue"} #{parsed.number}
+            {parsed.kind === "pr"
+              ? t("sessions.userLinkPreview.pullRequest")
+              : t("sessions.userLinkPreview.issue")}{" "}
+            #{parsed.number}
           </h3>
           {summary ? (
             <p className="mt-1.5 line-clamp-3 text-[11px] leading-[1.45] text-content/55">
@@ -375,8 +399,7 @@ function GithubWorkItemCard({
             </p>
           ) : (
             <p className="mt-1 text-[11px] leading-relaxed text-content/50">
-              Details aren&apos;t available here, but the link can still be
-              opened on GitHub.
+              {t("sessions.userLinkPreview.detailsUnavailable")}
             </p>
           )}
         </div>
@@ -429,7 +452,9 @@ function GithubWorkItemCard({
           {assignees.length > 0 ? (
             <div
               className="flex shrink-0 -space-x-1"
-              aria-label={`Assigned to ${assignees.map((person) => person.login).join(", ")}`}
+              aria-label={t("sessions.userLinkPreview.assignedTo", {
+                people: assignees.map((person) => person.login).join(", "),
+              })}
             >
               {assignees.slice(0, 3).map((person) => (
                 <GithubAvatar
@@ -446,15 +471,19 @@ function GithubWorkItemCard({
 
       <div className="mt-3 flex items-center gap-1.5 border-t border-content/[0.07] pt-2 text-[10px] text-content/35">
         <ExternalLink className="size-3" aria-hidden="true" />
-        Click the chip to open on GitHub
+        {t("sessions.userLinkPreview.openOnGithub")}
       </div>
     </div>
   );
 }
 
 function GithubWorkItemCardSkeleton() {
+  const t = useT();
   return (
-    <div aria-label="Loading GitHub details" className="mt-2.5 space-y-2">
+    <div
+      aria-label={t("sessions.userLinkPreview.loadingDetails")}
+      className="mt-2.5 space-y-2"
+    >
       <div className="h-3 w-4/5 rounded bg-content/10 motion-safe:animate-pulse" />
       <div className="h-2 w-full rounded bg-content/[0.07] motion-safe:animate-pulse" />
       <div className="h-2 w-2/3 rounded bg-content/[0.07] motion-safe:animate-pulse" />
@@ -522,38 +551,42 @@ function GithubAvatar({
 function workItemStatus(
   kind: GithubWorkItemLink["kind"],
   item: GithubWorkItem | null,
+  t: TFunction,
 ): { Icon: IconComponent; label: string; className: string } {
   if (!item) {
     return {
       Icon: kind === "pr" ? GitPullRequest : CircleDot,
-      label: kind === "pr" ? "Pull request" : "Issue",
+      label:
+        kind === "pr"
+          ? t("sessions.userLinkPreview.pullRequest")
+          : t("sessions.userLinkPreview.issue"),
       className: "text-content/50",
     };
   }
   if (item?.draft) {
     return {
       Icon: GitPullRequestDraft,
-      label: "Draft",
+      label: t("sessions.userLinkPreview.statusDraft"),
       className: "text-content/50",
     };
   }
   if (item?.state === "merged") {
     return {
       Icon: GitMerge,
-      label: "Merged",
+      label: t("sessions.userLinkPreview.statusMerged"),
       className: "text-violet-400/90",
     };
   }
   if (item?.state === "closed") {
     return {
       Icon: kind === "pr" ? GitPullRequestClosed : CircleX,
-      label: "Closed",
+      label: t("sessions.userLinkPreview.statusClosed"),
       className: "text-rose-400/90",
     };
   }
   return {
     Icon: kind === "pr" ? GitPullRequest : CircleDot,
-    label: "Open",
+    label: t("sessions.userLinkPreview.statusOpen"),
     className: "text-emerald-400/90",
   };
 }

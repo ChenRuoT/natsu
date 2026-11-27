@@ -5,6 +5,7 @@ import {
   type ExplorerFilePointerDragDetail,
 } from "../../../shared/lib/drag";
 import { dragPointToClient } from "../../../shared/lib/dragPoint";
+import { t as tNow } from "../../../shared/i18n/i18n";
 import type { Attachment } from "../model/session";
 import {
   attachmentsFromFiles,
@@ -130,9 +131,7 @@ export function useFileDrop({
         setFileDrag(false);
         if (!over || !supported) return;
         if (event.payload.paths.length === 0) {
-          onError(
-            "This drag did not provide a file. Save the image, then drag the saved file here.",
-          );
+          onError(tNow("sessions.useFileDrop.noFilePayload"));
           return;
         }
         nativeDropAt = Date.now();

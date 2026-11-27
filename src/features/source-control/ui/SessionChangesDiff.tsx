@@ -17,6 +17,7 @@ import type { UnifiedFileDiff } from "../model/unifiedDiff";
 import { prepareUnifiedDiff } from "../model/diffWorker";
 import { UnifiedDiffView, type UnifiedDiffFileModel } from "./UnifiedDiffView";
 import { pruneMap } from "../model/stableDiff";
+import { useT } from "../../../shared/i18n/i18n";
 
 type Props = {
   cwd: string;
@@ -49,6 +50,7 @@ export function SessionChangesDiff({
   initialExpansion,
   visible = true,
 }: Props) {
+  const t = useT();
   const scope = paths == null ? undefined : JSON.stringify(paths);
   // Only the load order uses the focus; moving it must not restart the load.
   const focusRef = useRef(focusPath);
@@ -183,23 +185,24 @@ export function SessionChangesDiff({
         label: file.relative,
         binary: loaded?.binary,
         tooLarge: loaded?.tooLarge,
+        loading: loaded == null,
         emptyMessage:
           loaded == null
-            ? "Loading…"
+            ? t("scm.sessionChangesDiff.loadingDiff")
             : loaded.error
               ? loaded.error
               : unified != null &&
                   unified.additions === 0 &&
                   unified.deletions === 0 &&
                   !loaded.binary
-                ? "No textual diff"
+                ? t("scm.sessionChangesDiff.noTextualDiff")
                 : undefined,
         additions: file.additions,
         deletions: file.deletions,
         blocks: unified?.blocks ?? [],
       };
     });
-  }, [diffs, files]);
+  }, [diffs, files, t]);
 
   const totals = useMemo(
     () =>
@@ -216,7 +219,7 @@ export function SessionChangesDiff({
   if (!cwd || cwd === "~") {
     return (
       <p className="grid h-full place-items-center text-[13px] text-content/45">
-        No project folder
+        {t("scm.sessionChangesDiff.noProjectFolder")}
       </p>
     );
   }
@@ -225,7 +228,7 @@ export function SessionChangesDiff({
       <div className="grid h-full place-items-center p-6 text-center">
         <AlertCircle className="mx-auto mb-3 size-5 text-red-400" />
         <p className="text-[13px] text-content">
-          Couldn’t load session changes
+          {t("scm.sessionChangesDiff.loadChangesFailed")}
         </p>
         <p className="mt-1 text-[12px] text-content/50">{error}</p>
       </div>
@@ -241,7 +244,7 @@ export function SessionChangesDiff({
   if (files.length === 0) {
     return (
       <p className="grid h-full place-items-center text-[13px] text-content/45">
-        No session changes
+        {t("scm.sessionChangesDiff.noSessionChanges")}
       </p>
     );
   }

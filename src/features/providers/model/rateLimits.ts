@@ -1,4 +1,5 @@
 import { asRecord } from "../../../integrations/harness/providers/codex/codexProtocol";
+import { t as tNow, type TFunction } from "../../../shared/i18n/i18n";
 
 export type RateLimitProvider = "claude" | "codex" | "opencode" | "devin";
 
@@ -173,8 +174,8 @@ export function formatWindowLabel(windowMinutes: number): string {
  * Compact remaining duration, flooring to whole units: "47m", "3h 54m",
  * "6d 7h". Returns "now" once the window has already reset.
  */
-export function formatResetDuration(ms: number): string {
-  if (ms <= 0) return "now";
+export function formatResetDuration(ms: number, t: TFunction = tNow): string {
+  if (ms <= 0) return t("providers.rateLimits.now");
   const totalMins = Math.floor(ms / 60_000);
   if (totalMins < 60) return `${totalMins}m`;
   const hours = Math.floor(totalMins / 60);
@@ -187,9 +188,12 @@ export function formatResetDuration(ms: number): string {
   return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
 }
 
-export function formatResetCountdown(ms: number): string {
-  const duration = formatResetDuration(ms);
-  return duration === "now" ? "Resets now" : `Resets in ${duration}`;
+export function formatResetCountdown(ms: number, t: TFunction = tNow): string {
+  return ms <= 0
+    ? t("providers.rateLimits.resetsNow")
+    : t("providers.rateLimits.resetsIn", {
+        duration: formatResetDuration(ms, t),
+      });
 }
 
 /**
@@ -210,13 +214,26 @@ export function rateLimitWindowTooltip(
   window: RateLimitWindow,
   now = Date.now(),
   showRemaining = false,
+  t: TFunction = tNow,
 ): string {
   const pct = clampUsedPercent(window.usedPercent);
-  const usage = `${formatUsagePercent(showRemaining ? 100 - pct : pct)} ${showRemaining ? "remaining" : "used"}`;
+  const usage = showRemaining
+    ? t("providers.rateLimits.percentRemaining", {
+        percent: formatUsagePercent(100 - pct),
+      })
+    : t("providers.rateLimits.percentUsed", {
+        percent: formatUsagePercent(pct),
+      });
   if (window.resetsAt == null) {
-    return `${usage} · ${formatWindowLabel(window.windowMinutes)} window`;
+    return t("providers.rateLimits.tooltipWindow", {
+      usage,
+      window: formatWindowLabel(window.windowMinutes),
+    });
   }
-  return `${usage} · ${formatResetCountdown(window.resetsAt - now)}`;
+  return t("providers.rateLimits.tooltipReset", {
+    usage,
+    reset: formatResetCountdown(window.resetsAt - now, t),
+  });
 }
 
 /** When a used-up window resets; the later one when several are spent. */
@@ -283,11 +300,11 @@ export function parseClaudeOAuthUsage(body: string): ProviderRateLimits {
   try {
     parsed = JSON.parse(body);
   } catch {
-    return errorRateLimits("claude", "Claude usage response was not JSON");
+    return errorRateLimits("claude", tNow("providers.rateLimits.claudeNotJson"));
   }
   const rec = asRecord(parsed);
   if (!rec) {
-    return errorRateLimits("claude", "Claude usage response was empty");
+    return errorRateLimits("claude", tNow("providers.rateLimits.claudeEmpty"));
   }
   return {
     provider: "claude",

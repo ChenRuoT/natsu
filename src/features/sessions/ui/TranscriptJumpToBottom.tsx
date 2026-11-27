@@ -1,5 +1,6 @@
 import { useState, useSyncExternalStore } from "react";
 import { ChevronDown } from "../../../shared/ui/icons";
+import { useT } from "../../../shared/i18n/i18n";
 
 /** Scroll events update the button without rerendering the session pane. */
 export function useTranscriptJumpVisibility() {
@@ -34,13 +35,14 @@ export function TranscriptJumpToBottom({
     visibility.getSnapshot,
     visibility.getSnapshot,
   );
+  const t = useT();
   if (!visible) return null;
   return (
     <div className="pointer-events-none absolute inset-x-0 bottom-2 z-30 flex justify-center">
       <button
         type="button"
-        title="Jump to latest"
-        aria-label="Jump to latest"
+        title={t("sessions.transcriptJumpToBottom.label")}
+        aria-label={t("sessions.transcriptJumpToBottom.label")}
         data-jump-to-bottom
         onClick={onJump}
         className="pointer-events-auto grid size-6 place-items-center rounded-md border border-content/15 bg-content/10 text-content shadow-md hover:bg-content/5 backdrop-blur-md"
