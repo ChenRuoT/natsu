@@ -1,6 +1,8 @@
 //! OS bridge. Call initialization and Dock updates on the UI thread. All other
 //! results are channels so authorization/dispatch never block the UI thread.
 
+// Only the non-macOS stubs below need it; macOS has the real implementation.
+#[cfg(not(target_os = "macos"))]
 use natsu_core::i18n::tr;
 use std::sync::mpsc::{self, Receiver};
 
