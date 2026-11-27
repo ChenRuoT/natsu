@@ -1,5 +1,7 @@
 import { Platform } from "react-native";
 
+import { t as tNow } from "@/i18n/i18n";
+
 // Dictation is transcribed on the phone, by Apple's SpeechTranscriber (iOS 26
 // and up)
 
@@ -43,14 +45,14 @@ export function canDictate() {
 /** Fetches the language's speech assets if they aren't on the phone yet. */
 export async function prepareDictation() {
   const native = transcriber();
-  if (!native) throw new Error("Dictation isn't available on this device.");
+  if (!native) throw new Error(tNow("sessions.dictation.unavailable"));
   await native.prepare(dictationLocale());
 }
 
 /** The words in a recording, or "" when there were none. */
 export async function transcribe(audio: ArrayBuffer) {
   const native = transcriber();
-  if (!native) throw new Error("Dictation isn't available on this device.");
+  if (!native) throw new Error(tNow("sessions.dictation.unavailable"));
   const result = await native.transcribe(audio, dictationLocale());
   return result.segments
     .map((segment) => segment.text.trim())

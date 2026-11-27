@@ -19,6 +19,7 @@ import { SettingsPage } from "@/features/settings/SettingsUI";
 import { useDefaultModel } from "@/features/settings/defaultModel";
 import { projectForRoute } from "@/features/workspace/routing";
 import { useWorkspace } from "@/features/workspace/WorkspaceProvider";
+import { useT } from "@/i18n/i18n";
 import { Icon, type IconName } from "@/ui/Icon";
 import { withAlpha, themedStyles, useColors } from "@/ui/theme";
 
@@ -68,6 +69,7 @@ function useModelPicker(
   sessionId: string | undefined,
 ) {
   const { projects } = useWorkspace();
+  const t = useT();
   const project = projectForRoute(projects, projectId);
   // A Mono's conversation needs no project: the desktop answers for it alone.
   const mono = sessionId?.startsWith("mono:") ? sessionId.slice("mono:".length) : undefined;
@@ -147,18 +149,18 @@ function useModelPicker(
           ? [
               {
                 id: fast.setting.id,
-                label: "Fast mode",
+                label: t("app.modelPicker.fastMode"),
                 value: settingValue(choice, fast.setting),
                 choices: [
                   {
                     value: fast.off,
-                    label: "Off",
-                    hint: "Standard speed and cost.",
+                    label: t("app.modelPicker.off"),
+                    hint: t("app.modelPicker.offHint"),
                   },
                   {
                     value: fast.on,
-                    label: "On",
-                    hint: "Quicker replies, at a higher cost.",
+                    label: t("app.modelPicker.on"),
+                    hint: t("app.modelPicker.onHint"),
                   },
                 ],
                 onPick: (next: string) => setSetting(fast.setting.id, next),
@@ -178,12 +180,12 @@ function useModelPicker(
           ? [
               {
                 id: "access",
-                label: "Access",
+                label: t("app.modelPicker.access"),
                 value: access,
                 choices: ACCESS_MODES.map((mode) => ({
                   value: mode.id,
-                  label: mode.label,
-                  hint: mode.hint,
+                  label: t(mode.labelKey),
+                  hint: t(mode.hintKey),
                   icon: mode.icon,
                   warm: mode.id === "full-access",
                 })),
@@ -198,7 +200,7 @@ function useModelPicker(
     .map((option) =>
       fast && option.id === fast.setting.id
         ? option.value === fast.on
-          ? "Fast"
+          ? t("app.modelPicker.fast")
           : null
         : option.choices.find((entry) => entry.value === option.value)?.label,
     )
@@ -240,6 +242,7 @@ export function ModelList({
   const colors = useColors();
   const styles = useStyles();
   const defaultModel = useDefaultModel();
+  const t = useT();
   const {
     catalog,
     error,
@@ -308,7 +311,7 @@ export function ModelList({
       <View style={styles.body}>
         {!searching && providerAccounts.length > 0 ? (
           <View style={styles.block}>
-            <Text style={[styles.heading, styles.cardHeading]}>Account</Text>
+            <Text style={[styles.heading, styles.cardHeading]}>{t("app.modelPicker.accountHeading")}</Text>
             <AccountPicker
               key={choice.harness}
               accounts={providerAccounts}
@@ -322,11 +325,14 @@ export function ModelList({
         {searching || options.length === 0 ? null : (
           <View style={styles.block}>
             <Text style={[styles.heading, styles.cardHeading]}>
-              Selected provider
+              {t("app.modelPicker.selectedProviderHeading")}
             </Text>
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel={`Options for ${model?.name ?? choice.model}: ${summary}`}
+              accessibilityLabel={t("app.modelPicker.optionsA11y", {
+                name: model?.name ?? choice.model,
+                summary,
+              })}
               onPress={() => {
                 void Haptics.selectionAsync();
                 onOpenOptions();
@@ -348,17 +354,17 @@ export function ModelList({
                   ]}
                   numberOfLines={1}
                 >
-                  {summary || "Options"}
+                  {summary || t("app.modelPicker.options")}
                 </Text>
               </View>
-              <Text style={styles.optionsLabel}>Options</Text>
+              <Text style={styles.optionsLabel}>{t("app.modelPicker.options")}</Text>
               <Icon name="chevronRight" size={14} color={colors.muted} />
             </Pressable>
           </View>
         )}
 
         {sections.length === 0 ? (
-          <Text style={[styles.muted, styles.empty]}>No matching models.</Text>
+          <Text style={[styles.muted, styles.empty]}>{t("app.modelPicker.noMatching")}</Text>
         ) : null}
         <View>
           {sections.map((section, sectionIndex) => {
@@ -406,7 +412,7 @@ export function ModelList({
                       <View style={styles.divider} />
                       {section.models.length === 0 ? (
                         <Text style={[styles.muted, styles.groupEmpty]}>
-                          No models from this provider yet.
+                          {t("app.modelPicker.noModelsFromProvider")}
                         </Text>
                       ) : (
                         section.models.map((entry, index) => {
@@ -439,7 +445,7 @@ export function ModelList({
                                     {entry.id === defaultModel?.pick.model ? (
                                       <View style={styles.badge}>
                                         <Text style={styles.badgeLabel}>
-                                          Default
+                                          {t("app.modelPicker.defaultBadge")}
                                         </Text>
                                       </View>
                                     ) : null}

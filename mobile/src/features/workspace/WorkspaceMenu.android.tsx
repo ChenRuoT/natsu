@@ -1,5 +1,6 @@
 import { Text, View } from "react-native";
 import { formatCount, useDiffTheme } from "@/features/changes/diffTheme";
+import { useT } from "@/i18n/i18n";
 import { ChoiceMenu } from "@/ui/ChoiceMenu";
 import { Icon } from "@/ui/Icon";
 import { useColors } from "@/ui/theme";
@@ -26,18 +27,21 @@ export function WorkspaceMenu({
   loading: boolean;
   onOpenChanges: () => void;
 }) {
+  const t = useT();
   return (
     <ChoiceMenu
       style={{ maxWidth: "100%", flexShrink: 1 }}
-      label={`Workspace: ${branch}`}
+      label={t("workspace.workspaceMenuAndroid.triggerLabel", { branch })}
       actions={[
         {
-          label: `Current checkout${checkoutBranch ? ` (${checkoutBranch})` : ""}`,
+          label: checkoutBranch
+            ? t("workspace.workspaceMenuAndroid.currentCheckoutBranch", { branch: checkoutBranch })
+            : t("workspace.workspaceMenuAndroid.currentCheckout"),
           selected: value.mode === "current",
           onPress: () => onChange({ mode: "current" }),
         },
         {
-          label: "New worktree",
+          label: t("workspace.workspaceMenuAndroid.newWorktree"),
           selected: value.mode === "worktree",
           onPress: () => onChange({ mode: "worktree" }),
         },
@@ -48,7 +52,7 @@ export function WorkspaceMenu({
           onPress: () => onChange({ mode: "existing", worktree }),
         })),
         {
-          label: "View changes",
+          label: t("workspace.workspaceMenuAndroid.viewChanges"),
           disabled: value.mode === "worktree",
           onPress: onOpenChanges,
         },
@@ -76,6 +80,7 @@ export function WorkspaceLine({
   files: ChangedFile[];
   loading?: boolean;
 }) {
+  const t = useT();
   const colors = useColors();
   const diff = useDiffTheme();
   return (
@@ -109,8 +114,8 @@ export function WorkspaceLine({
       </Text>
       <Text numberOfLines={1} style={{ color: colors.muted, flexShrink: 0 }}>
         {loading
-          ? "· Loading changes…"
-          : `· ${formatCount(files.length)} files`}
+          ? `· ${t("workspace.workspaceMenuAndroid.loadingChanges")}`
+          : `· ${t("workspace.workspaceMenuAndroid.fileCount", { count: formatCount(files.length) })}`}
       </Text>
       {!loading ? (
         <>

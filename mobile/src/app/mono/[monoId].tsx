@@ -14,6 +14,7 @@ import { hasNativeTranscript } from "@/features/connection/nativeLink";
 
 import { PixelMascot } from "@/features/mascots/PixelMascot";
 import { useMonoModel } from "@/features/models/useMonoModel";
+import { useT } from "@/i18n/i18n";
 import { useDrawerActions, useDrawerSwipe } from "@/ui/ScenePager";
 import { Timed } from "@/ui/Timed";
 import { useConnection, useMonoTools } from "@/features/connection/ConnectionProvider";
@@ -69,6 +70,7 @@ function MonoScreen({ monoOnly }: { monoOnly: boolean }) {
   const { monoId } = useLocalSearchParams<{ monoId: string }>();
   const { monos, sendMessage, stop } = useWorkspace();
   useDrawerSwipe(!monoOnly);
+  const t = useT();
   const mono = monos.find((m) => m.id === monoId);
   const conversationId = mono ? monoConversationId(mono.id) : null;
   const conversation = useConversation(conversationId);
@@ -139,7 +141,7 @@ function MonoScreen({ monoOnly }: { monoOnly: boolean }) {
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       await refresh();
     } catch (reason) {
-      Alert.alert("Couldn’t do that", reason instanceof Error ? reason.message : String(reason));
+      Alert.alert(t("app.monoRoute.actFailedTitle"), reason instanceof Error ? reason.message : String(reason));
     }
   };
   if (!mono || !conversationId) return <Redirect href="/" />;
@@ -149,12 +151,12 @@ function MonoScreen({ monoOnly }: { monoOnly: boolean }) {
   // Both clear what can't come back, so each asks first, as the desktop does.
   const confirmReset = () =>
     Alert.alert(
-      "Reset conversation?",
-      `The chat with ${mono.name} will be cleared. Its soul, memory and habits stay.`,
+      t("app.monoRoute.resetTitle"),
+      t("app.monoRoute.resetMessage", { name: mono.name }),
       [
-        { text: "Cancel", style: "cancel" },
+        { text: t("app.monoRoute.cancel"), style: "cancel" },
         {
-          text: "Reset",
+          text: t("app.monoRoute.reset"),
           style: "destructive",
           onPress: () => void act(() => command("mono.reset", { monoId: mono.id })),
         },
@@ -162,12 +164,12 @@ function MonoScreen({ monoOnly }: { monoOnly: boolean }) {
     );
   const confirmDelete = () =>
     Alert.alert(
-      `Delete ${mono.name}?`,
-      "Its scheduled habits stop. Sessions and notes it created stay saved.",
+      t("app.monoRoute.deleteTitle", { name: mono.name }),
+      t("app.monoRoute.deleteMessage"),
       [
-        { text: "Cancel", style: "cancel" },
+        { text: t("app.monoRoute.cancel"), style: "cancel" },
         {
-          text: "Delete",
+          text: t("app.monoRoute.delete"),
           style: "destructive",
           onPress: () => void act(() => command("mono.delete", { monoId: mono.id })),
         },
@@ -197,7 +199,7 @@ function MonoScreen({ monoOnly }: { monoOnly: boolean }) {
           : undefined,
       }}
       // Without them, settings on the right, as on a project.
-      action={tools ? undefined : { icon: "settings", label: "Settings", onPress: () => router.push("/settings") }}
+      action={tools ? undefined : { icon: "settings", label: t("app.monoRoute.settings"), onPress: () => router.push("/settings") }}
       // Its details, a fresh start or deleting it, from ⋯ on the right.
       trailing={
         tools ? (
@@ -261,21 +263,21 @@ function MonoScreen({ monoOnly }: { monoOnly: boolean }) {
           />
           <Stack.Toolbar placement="right">
             {tools ? (
-              <Stack.Toolbar.Menu icon="ellipsis" accessibilityLabel="More">
+              <Stack.Toolbar.Menu icon="ellipsis" accessibilityLabel={t("app.monoRoute.more")}>
                 <Stack.Toolbar.MenuAction icon="info.circle" onPress={openDetails}>
-                  View details
+                  {t("app.monoRoute.viewDetails")}
                 </Stack.Toolbar.MenuAction>
                 <Stack.Toolbar.MenuAction icon="arrow.counterclockwise" onPress={confirmReset}>
-                  Reset conversation
+                  {t("app.monoRoute.resetConversation")}
                 </Stack.Toolbar.MenuAction>
                 <Stack.Toolbar.MenuAction icon="trash" destructive onPress={confirmDelete}>
-                  Delete Mono
+                  {t("app.monoRoute.deleteMono")}
                 </Stack.Toolbar.MenuAction>
               </Stack.Toolbar.Menu>
             ) : (
               <Stack.Toolbar.Button
                 icon="gearshape"
-                accessibilityLabel="Settings"
+                accessibilityLabel={t("app.monoRoute.settings")}
                 onPress={() => router.push("/settings")}
               />
             )}

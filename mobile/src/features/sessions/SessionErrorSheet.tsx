@@ -2,6 +2,7 @@ import { BottomSheet, RNHostView } from "@expo/ui";
 import { ScrollView, StyleSheet, Text, useWindowDimensions, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { useT } from "@/i18n/i18n";
 import { Icon } from "@/ui/Icon";
 import { LiquidView } from "@/ui/LiquidView";
 import { themedStyles, useColors, withAlpha } from "@/ui/theme";
@@ -22,7 +23,8 @@ export function SessionErrorSheet({
   const styles = useStyles();
   const { width, height } = useWindowDimensions();
   const { bottom } = useSafeAreaInsets();
-  const content = sessionErrorContent(message);
+  const t = useT();
+  const content = sessionErrorContent(message, t);
   return (
     <BottomSheet
       isPresented={isPresented}
@@ -46,7 +48,7 @@ export function SessionErrorSheet({
               <View style={styles.recovery}>
                 <Icon name="computer" size={22} color={colors.muted} />
                 <View style={styles.recoveryText}>
-                  <Text style={styles.recoveryTitle}>Switch accounts</Text>
+                  <Text style={styles.recoveryTitle}>{t("sessions.sessionErrorSheet.switchAccounts")}</Text>
                   <Text style={styles.recoveryMessage}>{content.recovery}</Text>
                 </View>
               </View>
@@ -54,12 +56,12 @@ export function SessionErrorSheet({
           </ScrollView>
           <LiquidView
             onPress={onDismiss}
-            accessibilityLabel="Got it"
+            accessibilityLabel={t("sessions.sessionErrorSheet.gotIt")}
             pressedScale={1.03}
             style={styles.button}
             innerStyle={styles.buttonSurface}
           >
-            <Text style={styles.buttonLabel}>Got it</Text>
+            <Text style={styles.buttonLabel}>{t("sessions.sessionErrorSheet.gotIt")}</Text>
           </LiquidView>
         </View>
       </RNHostView>

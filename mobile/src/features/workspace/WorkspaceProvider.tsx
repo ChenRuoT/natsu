@@ -25,6 +25,7 @@ import {
 import { selectedWorkspace } from "@/features/connection/selection";
 import type { ModelCatalog, ModelChoice } from "@/features/models/types";
 import { toWire, type Attachment } from "@/features/sessions/attachments";
+import { t as tNow } from "@/i18n/i18n";
 import type { DisplayedQuestionPrompt, Message, UsageLimitState, Mono, MonoSubsessions, Project, QuestionPrompt, QuestionReply, SessionSummary, Turn, TurnItem } from "./types";
 import { applyFrames, type WatchFrame } from "./watchUpdates";
 /**
@@ -483,7 +484,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
             // A Mono's chat shows it thinking at once, as the desktop's turn
             // will, so taking that turn over moves nothing on screen.
             ...(conversationId.startsWith("mono:")
-              ? [{ type: "header" as const, id: `${id}:header`, live: true, label: "Thinking…", entries: [] }]
+              ? [{ type: "header" as const, id: `${id}:header`, live: true, label: tNow("workspace.workspaceProvider.thinking"), entries: [] }]
               : []),
           ],
         },

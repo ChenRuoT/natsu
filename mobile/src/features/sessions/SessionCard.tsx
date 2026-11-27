@@ -12,6 +12,7 @@ import Animated, {
 
 import { relativeTime } from "@/features/workspace/relativeTime";
 import type { SessionSummary } from "@/features/workspace/types";
+import { useT } from "@/i18n/i18n";
 import { Icon, type IconName } from "@/ui/Icon";
 import { radii, withAlpha, themedStyles, useColors } from "@/ui/theme";
 
@@ -63,16 +64,21 @@ export function SessionCard({
   const styles = useStyles();
   const swipeable = useRef<SwipeableMethods>(null);
   const opened = useRef(false);
+  const t = useT();
 
   const row = (
     <Pressable
       accessibilityRole="button"
       accessibilityState={{ selected: active, busy: !!session.busy }}
-      accessibilityLabel={session.busy ? `${session.title}, working` : session.title}
+      accessibilityLabel={
+        session.busy
+          ? t("sessions.sessionCard.busyLabel", { title: session.title })
+          : session.title
+      }
       // A tap on a row with its actions out puts them away instead.
       onPress={() => (opened.current ? swipeable.current?.close() : onPress())}
       onLongPress={onLongPress}
-      accessibilityActions={onLongPress ? [{ name: "longpress", label: "Rename or delete" }] : undefined}
+      accessibilityActions={onLongPress ? [{ name: "longpress", label: t("sessions.sessionCard.renameOrDelete") }] : undefined}
       onAccessibilityAction={({ nativeEvent }) => {
         if (nativeEvent.actionName === "longpress") onLongPress?.();
       }}
@@ -145,6 +151,7 @@ function SessionDetails({ session }: { session: SessionSummary }) {
   const colors = useColors();
   const styles = useStyles();
   const model = session.modelName || session.model;
+  const t = useT();
   return (
     <>
       <View style={styles.line}>
@@ -154,7 +161,7 @@ function SessionDetails({ session }: { session: SessionSummary }) {
         {session.busy ? (
           <View style={styles.status}>
             <TerminalSpinner style={styles.statusLabel} />
-            <Text style={styles.statusLabel}>Working...</Text>
+            <Text style={styles.statusLabel}>{t("sessions.sessionCard.working")}</Text>
           </View>
         ) : (
           <Text style={styles.time}>{relativeTime(session.updatedAt)}</Text>
@@ -164,7 +171,7 @@ function SessionDetails({ session }: { session: SessionSummary }) {
         <View style={styles.branch}>
           <Icon name="branch" size={13} color={colors.faint} />
           <Text style={[styles.meta, !session.branch && styles.noBranch]} numberOfLines={1}>
-            {session.branch || "No branch"}
+            {session.branch || t("sessions.sessionCard.noBranch")}
           </Text>
         </View>
         <View style={styles.model}>
@@ -195,13 +202,14 @@ function RowActions({
 }) {
   const colors = useColors();
   const styles = useStyles();
+  const t = useT();
   return (
     <View style={styles.actions}>
       <RowAction
         progress={progress}
         from={0.35}
         icon="edit"
-        label="Rename"
+        label={t("sessions.sessionCard.rename")}
         color={colors.content}
         background={colors.surfaceRaised}
         onPress={onRename}
@@ -210,7 +218,7 @@ function RowActions({
         progress={progress}
         from={0}
         icon="trash"
-        label="Delete"
+        label={t("sessions.sessionCard.delete")}
         color={colors.deletions}
         background={withAlpha(colors.deletions, 0.16)}
         onPress={onDelete}

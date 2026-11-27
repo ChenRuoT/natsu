@@ -18,6 +18,7 @@ import { SettingsPage, SettingsRow } from "@/features/settings/SettingsUI";
 import { projectForRoute } from "@/features/workspace/routing";
 import type { Harness } from "@/features/workspace/types";
 import { useWorkspace } from "@/features/workspace/WorkspaceProvider";
+import { useT } from "@/i18n/i18n";
 import { Icon } from "@/ui/Icon";
 import { radii, themedStyles, useColors } from "@/ui/theme";
 
@@ -27,6 +28,7 @@ import { radii, themedStyles, useColors } from "@/ui/theme";
 export default function ModelsScreen() {
   const colors = useColors();
   const styles = useStyles();
+  const t = useT();
   const { projectId, harness } = useLocalSearchParams<{ projectId?: string; harness: Harness }>();
   const { projects } = useWorkspace();
   const project = projectForRoute(projects, projectId) ?? projects[0];
@@ -76,9 +78,9 @@ export default function ModelsScreen() {
     <>
       <Stack.Screen
         options={{
-          title: label ?? "Models",
+          title: label ?? t("app.settingsModels.modelsTitle"),
           headerSearchBarOptions: {
-            placeholder: "Search models",
+            placeholder: t("app.settingsModels.searchPlaceholder"),
             hideWhenScrolling: false,
             autoCapitalize: "none",
             onChangeText: (event) => setQuery(event.nativeEvent.text),
@@ -100,7 +102,7 @@ export default function ModelsScreen() {
               {fast ? (
                 <SettingsRow
                   icon="automation"
-                  label="Fast mode"
+                  label={t("app.settingsModels.fastMode")}
                   accessory={
                     <Switch
                       value={settingValue(current, fast.setting) === fast.on}
@@ -127,7 +129,7 @@ export default function ModelsScreen() {
                 </View>
               </View>
             ))}
-            <Text style={styles.heading}>Models</Text>
+            <Text style={styles.heading}>{t("app.settingsModels.modelsHeading")}</Text>
           </>
         ) : null}
 
@@ -148,7 +150,9 @@ export default function ModelsScreen() {
           </View>
         ) : catalog ? (
           <Text style={styles.empty}>
-            {needle ? "No models match." : "No models from this provider yet."}
+            {needle
+              ? t("app.settingsModels.noMatch")
+              : t("app.settingsModels.noModels")}
           </Text>
         ) : error ? (
           <Text style={styles.error}>{error}</Text>

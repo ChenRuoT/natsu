@@ -11,6 +11,7 @@ import type {
   WorkKind,
   WorkPhase,
 } from "@/features/workspace/types";
+import { useT } from "@/i18n/i18n";
 import { Collapsible } from "@/ui/Collapsible";
 import { Icon, type IconName } from "@/ui/Icon";
 import { Shimmer } from "@/ui/Shimmer";
@@ -128,18 +129,19 @@ export const TranscriptTurn = memo(function TranscriptTurn({
 function ErrorNotice({ item, onPress }: { item: SessionErrorNotice; onPress: () => void }) {
   const colors = useColors();
   const styles = useStyles();
-  const { title, recovery } = sessionErrorContent(item.text);
+  const t = useT();
+  const { title, recovery } = sessionErrorContent(item.text, t);
   return (
     <Pressable
       onPress={onPress}
       accessibilityRole="button"
-      accessibilityLabel={`${title}. View details`}
+      accessibilityLabel={t("sessions.transcriptTurn.errorNoticeLabel", { title })}
       style={({ pressed }) => [styles.errorNotice, pressed && styles.pressed]}
     >
       <Icon name={recovery ? "lock" : "chat"} size={18} color={colors.muted} />
       <View style={styles.errorNoticeText}>
         <Text style={styles.errorNoticeTitle}>{title}</Text>
-        <Text style={styles.errorNoticeHint}>View details</Text>
+        <Text style={styles.errorNoticeHint}>{t("sessions.transcriptTurn.viewDetails")}</Text>
       </View>
       <Icon name="chevronRight" size={16} color={colors.faint} />
     </Pressable>
@@ -158,6 +160,7 @@ function TurnFooter({ turn }: { turn: Turn }) {
   // Mounted on first open and kept, so the sheet can animate closed.
   const [metricsOpened, setMetricsOpened] = useState(false);
   const metrics = hasTurnMetrics(turn.metrics) ? turn.metrics : undefined;
+  const t = useT();
   return (
     <View style={styles.footer}>
       {metricsOpened && metrics ? (
@@ -178,7 +181,7 @@ function TurnFooter({ turn }: { turn: Turn }) {
               setShowMetrics(true);
             }}
             accessibilityRole="button"
-            accessibilityLabel="Turn metrics"
+            accessibilityLabel={t("sessions.transcriptTurn.turnMetrics")}
             hitSlop={6}
             style={({ pressed }) => [
               styles.footerButton,
@@ -202,6 +205,7 @@ function TurnFooter({ turn }: { turn: Turn }) {
 function CopyButton({ text }: { text: string }) {
   const colors = useColors();
   const styles = useStyles();
+  const t = useT();
   const [copied, setCopied] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
   useEffect(() => () => clearTimeout(timer.current), []);
@@ -219,7 +223,7 @@ function CopyButton({ text }: { text: string }) {
         timer.current = setTimeout(() => setCopied(false), 2000);
       }}
       accessibilityRole="button"
-      accessibilityLabel={copied ? "Copied" : "Copy response"}
+      accessibilityLabel={copied ? t("sessions.transcriptTurn.copied") : t("sessions.transcriptTurn.copyResponse")}
       hitSlop={6}
       style={({ pressed }) => [styles.footerButton, pressed && styles.footerButtonActive]}
     >
@@ -242,7 +246,8 @@ function Reply({ text, streaming }: { text: string; streaming: boolean }) {
 
 function DaySeparator({ at }: { at: number }) {
   const styles = useStyles();
-  const [day, time] = dayStamp(at);
+  const t = useT();
+  const [day, time] = dayStamp(at, undefined, t);
   return (
     <View style={styles.daySeparator} accessibilityLabel={`${day} ${time}`}>
       <View style={styles.dayPill}>
@@ -265,6 +270,7 @@ function UserMessage({
   const [singleLine, setSingleLine] = useState(false);
   const [overflows, setOverflows] = useState(false);
   const [expanded, setExpanded] = useState(false);
+  const t = useT();
 
   // In a Mono's chat a few emoji stand alone, like a reaction: no bubble.
   if (mono && item.emojiOnly) {
@@ -288,7 +294,9 @@ function UserMessage({
       >
         {item.attachments ? (
           <Text style={styles.attachments}>
-            {item.attachments === 1 ? "1 attachment" : `${item.attachments} attachments`}
+            {item.attachments === 1
+              ? t("sessions.transcriptTurn.attachmentsOne")
+              : t("sessions.transcriptTurn.attachmentsOther", { count: item.attachments })}
           </Text>
         ) : null}
         {item.text ? (
@@ -307,7 +315,11 @@ function UserMessage({
         ) : null}
         {overflows ? (
           <Pressable onPress={() => setExpanded((value) => !value)} hitSlop={8}>
-            <Text style={styles.showMore}>{expanded ? "Show less" : "Show more"}</Text>
+            <Text style={styles.showMore}>
+              {expanded
+                ? t("sessions.transcriptTurn.showLess")
+                : t("sessions.transcriptTurn.showMore")}
+            </Text>
           </Pressable>
         ) : null}
         {item.reaction ? <Reaction emoji={item.reaction} /> : null}
@@ -327,8 +339,9 @@ function isClamped(lines: { text: string }[], text: string) {
 /** A Mono's emoji answer, on the corner of the message it answers. */
 function Reaction({ emoji }: { emoji: string }) {
   const styles = useStyles();
+  const t = useT();
   return (
-    <View style={styles.reaction} accessibilityLabel={`Reacted ${emoji}`}>
+    <View style={styles.reaction} accessibilityLabel={t("sessions.transcriptTurn.reacted", { emoji })}>
       <Text style={styles.reactionText}>{emoji}</Text>
     </View>
   );
@@ -345,11 +358,12 @@ function FoldLine({ item }: { item: HeaderItem }) {
   const styles = useStyles();
   const [open, setOpen] = useState(false);
   const elapsed = useElapsed(item.live ? item.startedAt : undefined);
+  const t = useT();
   const label =
     item.label ??
     (item.live
-      ? (item.waiting ?? formatWorkingDuration(elapsed, item.model))
-      : formatWorkingDuration(item.durationMs ?? null, item.model, true));
+      ? (item.waiting ?? formatWorkingDuration(elapsed, item.model, false, t))
+      : formatWorkingDuration(item.durationMs ?? null, item.model, true, t));
   const expandable = item.entries.length > 0;
   const shown = open && expandable;
   const mark = shown ? (
@@ -368,7 +382,13 @@ function FoldLine({ item }: { item: HeaderItem }) {
         }}
         accessibilityRole={expandable ? "button" : undefined}
         accessibilityState={expandable ? { expanded: shown } : undefined}
-        accessibilityLabel={expandable ? (shown ? "Hide the work" : "Show the work") : label}
+        accessibilityLabel={
+          expandable
+            ? shown
+              ? t("sessions.transcriptTurn.hideWork")
+              : t("sessions.transcriptTurn.showWork")
+            : label
+        }
         style={styles.foldLine}
       >
         {mark}
@@ -410,6 +430,7 @@ function FoldLine({ item }: { item: HeaderItem }) {
 /** A Mono signs its turns with its mascot and name; live, its status runs beside. */
 function MonoHeader({ item, agent }: { item: HeaderItem; agent: TranscriptAgent }) {
   const styles = useStyles();
+  const t = useT();
   const signature = (name: string) => (
     <View style={styles.signature}>
       <PixelMascot name={agent.mascot} color={agent.color} size={14} />
@@ -423,7 +444,7 @@ function MonoHeader({ item, agent }: { item: HeaderItem; agent: TranscriptAgent 
     <View style={styles.monoHeader}>
       <View style={styles.signatureLive}>{signature(agent.name)}</View>
       <Text style={styles.dot}>·</Text>
-      <Shimmer style={styles.monoStatus}>{item.label ?? "Thinking…"}</Shimmer>
+      <Shimmer style={styles.monoStatus}>{item.label ?? t("sessions.transcriptTurn.thinking")}</Shimmer>
     </View>
   );
 }

@@ -3,6 +3,8 @@ import type { ReactNode } from "react";
 import { Platform, Pressable, Text, View } from "react-native";
 import Svg, { Path } from "react-native-svg";
 
+import { useT } from "@/i18n/i18n";
+
 import { themedStyles, useColors } from "./theme";
 
 /** Keep the back target and title together, without Android toolbar's extra title inset. */
@@ -18,9 +20,10 @@ export function androidBackHeader(title: ReactNode): NativeStackNavigationOption
 function AndroidBackTitle({ children }: { children: ReactNode }) {
   const colors = useColors();
   const styles = useStyles();
+  const t = useT();
   return (
     <View style={styles.row}>
-      <Pressable accessibilityRole="button" accessibilityLabel="Back"
+      <Pressable accessibilityRole="button" accessibilityLabel={t("app.androidHeader.back")}
         onPress={() => router.back()} style={styles.back}>
         <Svg width={24} height={24} viewBox="0 0 24 24">
           <Path d="M20 12H4m7-7-7 7 7 7" fill="none" stroke={colors.content}

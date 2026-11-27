@@ -15,6 +15,7 @@ import { useWorkspace, type MonoChange } from "@/features/workspace/WorkspacePro
 import { Icon } from "@/ui/Icon";
 import { SWATCHES } from "@/features/workspace/monoLook";
 import { setMonoAccent, useMonoAccent, type MonoAccent } from "@/features/workspace/monoAccent";
+import { useT } from "@/i18n/i18n";
 import { ACCENTS, paletteFor, radii, themedStyles, useColors, useScheme } from "@/ui/theme";
 
 const TILE_GAP = 10;
@@ -34,6 +35,7 @@ export default function EditMonoScreen() {
   const styles = useStyles();
   const colors = useColors();
   const scheme = useScheme();
+  const t = useT();
   const [name, setName] = useState(mono?.name ?? "");
   // The mascot grid's inner width: five square tiles to a row, sized exactly
   // so each figure sits in the middle of a true square.
@@ -46,7 +48,7 @@ export default function EditMonoScreen() {
   const save = (change: MonoChange) => {
     if (!mono) return;
     editMono(mono, change).catch((reason: unknown) =>
-      Alert.alert("Couldn’t save", reason instanceof Error ? reason.message : String(reason)),
+      Alert.alert(t("app.monoProfileEdit.saveFailedTitle"), reason instanceof Error ? reason.message : String(reason)),
     );
   };
   // The name saves once typing pauses, not on every key, or as the screen
@@ -81,13 +83,13 @@ export default function EditMonoScreen() {
         <PixelMascot name={mascot} color={color} size={88} centered />
       </View>
 
-      <Text style={styles.heading}>Name</Text>
+      <Text style={styles.heading}>{t("app.monoProfileEdit.nameHeading")}</Text>
       <View style={styles.card}>
         <TextInput
           value={name}
           onChangeText={setName}
           maxLength={40}
-          placeholder="Name"
+          placeholder={t("app.monoProfileEdit.namePlaceholder")}
           placeholderTextColor={colors.muted}
           keyboardAppearance={scheme}
           returnKeyType="done"
@@ -96,35 +98,35 @@ export default function EditMonoScreen() {
         />
       </View>
 
-      <Text style={styles.heading}>Model</Text>
+      <Text style={styles.heading}>{t("app.monoProfileEdit.modelHeading")}</Text>
       <View style={[styles.card, offline && styles.off]} pointerEvents={offline ? "none" : "auto"}>
         <SettingsRow
           icon={harness ? <ProviderLogo harness={harness} size={18} /> : "sparkle"}
-          label={model || "Choose a model"}
+          label={model || t("app.monoProfileEdit.chooseModel")}
           onPress={() => router.push({ pathname: "/mono-profile/[monoId]/model", params: { monoId } })}
         />
       </View>
 
-      <Text style={styles.heading}>Sessions it starts</Text>
+      <Text style={styles.heading}>{t("app.monoProfileEdit.sessionsHeading")}</Text>
       <View style={[styles.card, offline && styles.off]} pointerEvents={offline ? "none" : "auto"}>
         <SettingsRow
           icon={subsessions.harness ? <ProviderLogo harness={subsessions.harness} size={18} /> : "sparkle"}
-          label={subsessions.modelLabel || "Choose a model"}
+          label={subsessions.modelLabel || t("app.monoProfileEdit.chooseModel")}
           value={subsessions.effort ? subsessions.effortLabel : undefined}
           onPress={() =>
             router.push({ pathname: "/mono-profile/[monoId]/subsessions", params: { monoId } })
           }
         />
       </View>
-      <Text style={styles.note}>The model and effort for sessions it starts without naming one.</Text>
+      <Text style={styles.note}>{t("app.monoProfileEdit.subsessionsNote")}</Text>
 
       {files ? (
         <>
-          <Text style={styles.heading}>Mind</Text>
+          <Text style={styles.heading}>{t("app.monoProfileEdit.mindHeading")}</Text>
           <View style={[styles.card, offline && styles.off]} pointerEvents={offline ? "none" : "auto"}>
             <SettingsRow
               icon="sparkle"
-              label="Soul"
+              label={t("app.monoProfileEdit.soul")}
               onPress={() =>
                 router.push({ pathname: "/mono-profile/[monoId]/file", params: { monoId, file: "soul" } })
               }
@@ -132,7 +134,7 @@ export default function EditMonoScreen() {
             <View style={styles.divider} />
             <SettingsRow
               icon="note"
-              label="Memory"
+              label={t("app.monoProfileEdit.memory")}
               onPress={() =>
                 router.push({ pathname: "/mono-profile/[monoId]/file", params: { monoId, file: "memory" } })
               }
@@ -141,7 +143,7 @@ export default function EditMonoScreen() {
         </>
       ) : null}
 
-      <Text style={styles.heading}>Mascot</Text>
+      <Text style={styles.heading}>{t("app.monoProfileEdit.mascotHeading")}</Text>
       <View
         style={[styles.card, styles.grid, offline && styles.off]}
         pointerEvents={offline ? "none" : "auto"}
@@ -165,7 +167,7 @@ export default function EditMonoScreen() {
         ))}
       </View>
 
-      <Text style={styles.heading}>Color</Text>
+      <Text style={styles.heading}>{t("app.monoProfileEdit.colorHeading")}</Text>
       <View style={[styles.card, styles.swatches, offline && styles.off]} pointerEvents={offline ? "none" : "auto"}>
         {SWATCHES.map((swatch) => (
           <Pressable
@@ -190,7 +192,7 @@ export default function EditMonoScreen() {
 
       <ChatColor monoId={monoId} />
       {offline ? (
-        <Text style={styles.note}>Connect to your desktop to change this Mono.</Text>
+        <Text style={styles.note}>{t("app.monoProfileEdit.offlineNote")}</Text>
       ) : null}
     </SettingsPage>
   );
@@ -204,9 +206,10 @@ function ChatColor({ monoId }: { monoId: string }) {
   const styles = useStyles();
   const scheme = useScheme();
   const picked = useMonoAccent(monoId);
+  const t = useT();
   return (
     <>
-      <Text style={styles.heading}>Chat color</Text>
+      <Text style={styles.heading}>{t("app.monoProfileEdit.chatColorHeading")}</Text>
       <View style={[styles.card, styles.swatches]}>
         {CHAT_ACCENTS.map((accent) => {
           const fill = accent === "theme" ? paletteFor(scheme).accent : ACCENTS[accent][scheme];
@@ -215,7 +218,7 @@ function ChatColor({ monoId }: { monoId: string }) {
             <Pressable
               key={accent}
               accessibilityRole="radio"
-              accessibilityLabel={accent === "theme" ? "App accent" : ACCENTS[accent].label}
+              accessibilityLabel={accent === "theme" ? t("app.monoProfileEdit.appAccent") : ACCENTS[accent].label}
               accessibilityState={{ selected }}
               hitSlop={4}
               onPress={() => {
@@ -238,8 +241,8 @@ function ChatColor({ monoId }: { monoId: string }) {
       </View>
       <Text style={styles.note}>
         {picked === "theme"
-          ? "This chat uses the app's accent."
-          : `This chat's bubbles and links are ${ACCENTS[picked].label.toLowerCase()}, whatever the app's accent.`}
+          ? t("app.monoProfileEdit.chatAccentTheme")
+          : t("app.monoProfileEdit.chatAccentNote", { accent: ACCENTS[picked].label.toLowerCase() })}
       </Text>
     </>
   );

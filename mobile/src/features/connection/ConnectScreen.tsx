@@ -27,6 +27,7 @@ import { themedStyles, useColors, withAlpha, type Palette } from "@/ui/theme";
 import { AsciiField } from "@/features/background/AsciiField";
 import { MascotRain } from "@/features/mascots/MascotRain";
 import type { Collider } from "@/features/mascots/mascotPhysics";
+import { useT } from "@/i18n/i18n";
 import { useConnection } from "./ConnectionProvider";
 import { PairingLinkSheet } from "./PairingLinkSheet";
 
@@ -41,6 +42,7 @@ export function ConnectScreen() {
   const colors = useColors();
   const connectionStyles = useConnectionStyles();
   const styles = useStyles();
+  const t = useT();
   const connection = useConnection();
   const insets = useSafeAreaInsets();
   const [permission, requestPermission] = useCameraPermissions();
@@ -53,9 +55,7 @@ export function ConnectScreen() {
       setCameraError("");
       setScanning(true);
     } else
-      setCameraError(
-        "Allow camera access in your phone’s settings, or paste a pairing link.",
-      );
+      setCameraError(t("workspace.connectScreen.cameraDenied"));
   };
   const error = connection.error || cameraError;
   const colliders = useScreenColliders();
@@ -97,15 +97,14 @@ export function ConnectScreen() {
             onLayout={colliders.layout("title")}
             onTextLayout={colliders.lines("title")}
           >
-            Keep coding,{"\n"}wherever you are.
+            {t("workspace.connectScreen.title")}
           </Text>
           <Text
             style={styles.subtitle}
             onLayout={colliders.layout("subtitle")}
             onTextLayout={colliders.lines("subtitle")}
           >
-            Pair this phone with Natsu on your desktop to pick up your
-            sessions on the go.
+            {t("workspace.connectScreen.subtitle")}
           </Text>
         </Animated.View>
         <Animated.View
@@ -122,25 +121,25 @@ export function ConnectScreen() {
             <LiquidView
               onPress={() => void scan()}
               disabled={connection.working}
-              accessibilityLabel="Connect to desktop"
+              accessibilityLabel={t("workspace.connectScreen.connectButton")}
               pressedScale={1.03}
               tintColor={colors.inverseSurface}
               style={styles.button}
               innerStyle={styles.buttonSurface}
             >
-              <Text style={styles.primaryLabel}>Connect to desktop</Text>
+              <Text style={styles.primaryLabel}>{t("workspace.connectScreen.connectButton")}</Text>
             </LiquidView>
           </View>
           <View onLayout={colliders.layout("secondary")}>
             <LiquidView
               onPress={() => setPasting(true)}
               disabled={connection.working}
-              accessibilityLabel="Paste a pairing link"
+              accessibilityLabel={t("workspace.connectScreen.pasteLink")}
               pressedScale={1.03}
               style={styles.button}
               innerStyle={styles.buttonSurface}
             >
-              <Text style={styles.secondaryLabel}>Paste a pairing link</Text>
+              <Text style={styles.secondaryLabel}>{t("workspace.connectScreen.pasteLink")}</Text>
             </LiquidView>
           </View>
         </Animated.View>
@@ -171,10 +170,10 @@ export function ConnectScreen() {
           ) : null}
           <View style={{ padding: 24, paddingBottom: insets.bottom + 24 }}>
             <Text style={[connectionStyles.subtitle, { textAlign: "center" }]}>
-              Scan the code in desktop Settings → Connections
+              {t("workspace.connectScreen.scanHint")}
             </Text>
             <Pressable onPress={() => setScanning(false)}>
-              <Text style={connectionStyles.secondary}>Cancel</Text>
+              <Text style={connectionStyles.secondary}>{t("workspace.connectScreen.cancel")}</Text>
             </Pressable>
           </View>
         </View>

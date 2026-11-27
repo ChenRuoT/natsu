@@ -4,6 +4,8 @@ import { Platform, Pressable, View } from "react-native";
 import Animated, { FadeIn, SlideInDown } from "react-native-reanimated";
 import { SafeAreaInsetsContext, useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { useT } from "@/i18n/i18n";
+
 import { themedStyles } from "./theme";
 
 /**
@@ -41,6 +43,7 @@ export function ModalSheet({
 }) {
   const styles = useStyles();
   const insets = useSafeAreaInsets();
+  const t = useT();
   if (Platform.OS !== "android")
     return (
       <View style={styles.fill}>
@@ -53,7 +56,7 @@ export function ModalSheet({
       <Animated.View entering={FadeIn.duration(180)} style={styles.dim}>
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="Close"
+          accessibilityLabel={t("app.modalSheet.close")}
           onPress={onClose}
           style={styles.fill}
         />

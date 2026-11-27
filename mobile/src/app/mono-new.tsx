@@ -18,6 +18,7 @@ import { PIXEL_MASCOT_NAMES } from "@/features/mascots/pixelMascots";
 import { SWATCHES } from "@/features/workspace/monoLook";
 import { monoCreated } from "@/features/workspace/newMono";
 import { HeaderBlur, HeaderButton } from "@/features/files/codeScreen";
+import { useT } from "@/i18n/i18n";
 import { GradualBlur } from "@/ui/GradualBlur";
 import { radii, themedStyles, useColors, useScheme } from "@/ui/theme";
 
@@ -38,6 +39,7 @@ export default function NewMonoScreen() {
   const styles = useStyles();
   const colors = useColors();
   const scheme = useScheme();
+  const t = useT();
   const [name, setName] = useState("");
   // A fresh look each time, for the user to keep or change.
   const [mascot, setMascot] = useState(() => pick(PIXEL_MASCOT_NAMES));
@@ -64,7 +66,7 @@ export default function NewMonoScreen() {
     } catch (reason) {
       setCreating(false);
       Alert.alert(
-        "Couldn’t create a Mono",
+        t("app.monoNew.createFailedTitle"),
         reason instanceof Error ? reason.message : String(reason),
       );
     }
@@ -91,7 +93,7 @@ export default function NewMonoScreen() {
           value={name}
           onChangeText={setName}
           maxLength={40}
-          placeholder="Name your Mono"
+          placeholder={t("app.monoNew.namePlaceholder")}
           placeholderTextColor={colors.muted}
           keyboardAppearance={scheme}
           returnKeyType="done"
@@ -158,9 +160,9 @@ export default function NewMonoScreen() {
           with close on the left. */}
       <Stack.Screen
         options={{
-          title: "New Mono",
+          title: t("app.monoNew.title"),
           headerLeft: () => (
-            <HeaderButton icon="close" label="Close" onPress={() => router.back()} />
+            <HeaderButton icon="close" label={t("app.monoNew.close")} onPress={() => router.back()} />
           ),
         }}
       />
@@ -177,7 +179,7 @@ export default function NewMonoScreen() {
       <View style={[styles.foot, { paddingBottom: Math.max(insets.bottom, 16) }]}>
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="Create"
+          accessibilityLabel={t("app.monoNew.create")}
           accessibilityState={{ disabled: !ready }}
           disabled={!ready}
           onPress={() => void create()}
@@ -191,7 +193,7 @@ export default function NewMonoScreen() {
             <ActivityIndicator color={colors.background} />
           ) : (
             <Text style={[styles.buttonLabel, { color: ready ? colors.background : colors.muted }]}>
-              Create
+              {t("app.monoNew.create")}
             </Text>
           )}
         </Pressable>

@@ -2,6 +2,7 @@ import { useState, type ReactNode } from "react";
 import { StyleSheet, View } from "react-native";
 import Animated, { useAnimatedStyle } from "react-native-reanimated";
 
+import { useT } from "@/i18n/i18n";
 import { useScenePager } from "@/ui/ScenePager";
 import { useContentWidth } from "@/ui/ContentPane";
 import { SegmentedSwitch } from "@/ui/SegmentedSwitch";
@@ -35,12 +36,13 @@ export type ProjectPagesState = ReturnType<typeof useProjectPages>;
 
 /** The header's switch between a project screen's pages. */
 export function ProjectSwitch({ pages }: { pages: ProjectPagesState }) {
+  const t = useT();
   return (
     <SegmentedSwitch<ProjectView>
       value={pages.view}
       onChange={pages.setView}
       progress={pages.progress}
-      segments={projectSegments()}
+      segments={projectSegments(t)}
     />
   );
 }

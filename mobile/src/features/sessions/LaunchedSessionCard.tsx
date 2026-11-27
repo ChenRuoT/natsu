@@ -8,6 +8,7 @@ import type {
 } from "@/features/workspace/types";
 import { projectForRoute } from "@/features/workspace/routing";
 import { useWorkspace } from "@/features/workspace/WorkspaceProvider";
+import { t as tNow, useT, type MessageKey } from "@/i18n/i18n";
 import { Icon, type IconName } from "@/ui/Icon";
 import { Shimmer } from "@/ui/Shimmer";
 import { themedStyles, useColors, withAlpha, type Palette } from "@/ui/theme";
@@ -26,8 +27,8 @@ export function useOpenLaunchedSession() {
       const project = projectForRoute(projects, projectId);
       if (!project) {
         Alert.alert(
-          "Open it on your desktop",
-          "This session runs in a project the desktop no longer lists.",
+          tNow("sessions.launchedSessionCard.openOnDesktopTitle"),
+          tNow("sessions.launchedSessionCard.noProjectMessage"),
         );
         return;
       }
@@ -42,14 +43,14 @@ export function useOpenLaunchedSession() {
 
 const STATUS: Record<
   LaunchedSessionState,
-  { label: string; icon: IconName; color: (colors: Palette) => string }
+  { labelKey: MessageKey; icon: IconName; color: (colors: Palette) => string }
 > = {
-  working: { label: "Working", icon: "terminal", color: (c) => withAlpha(c.content, 0.55) },
-  input: { label: "Needs input", icon: "chat", color: () => "#fbbf24" },
-  draft: { label: "Draft", icon: "edit", color: (c) => withAlpha(c.content, 0.45) },
-  failed: { label: "Failed", icon: "minus", color: (c) => c.deletions },
-  stopped: { label: "Stopped", icon: "minus", color: (c) => withAlpha(c.content, 0.45) },
-  done: { label: "Done", icon: "check", color: () => "rgba(52,211,153,0.9)" },
+  working: { labelKey: "sessions.launchedSessionCard.statusWorking", icon: "terminal", color: (c) => withAlpha(c.content, 0.55) },
+  input: { labelKey: "sessions.launchedSessionCard.statusInput", icon: "chat", color: () => "#fbbf24" },
+  draft: { labelKey: "sessions.launchedSessionCard.statusDraft", icon: "edit", color: (c) => withAlpha(c.content, 0.45) },
+  failed: { labelKey: "sessions.launchedSessionCard.statusFailed", icon: "minus", color: (c) => c.deletions },
+  stopped: { labelKey: "sessions.launchedSessionCard.statusStopped", icon: "minus", color: (c) => withAlpha(c.content, 0.45) },
+  done: { labelKey: "sessions.launchedSessionCard.statusDone", icon: "check", color: () => "rgba(52,211,153,0.9)" },
 };
 
 /** The sessions a Mono started, as the desktop's cards under its reply. */
@@ -72,11 +73,16 @@ function LaunchedSessionCard({ session }: { session: LaunchedSession }) {
   const styles = useStyles();
   const colors = useColors();
   const open = useOpenLaunchedSession();
+  const t = useT();
   const status = STATUS[session.state] ?? STATUS.done;
+  const statusLabel = t(status.labelKey);
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={`Open session ${session.title}, ${status.label.toLowerCase()}`}
+      accessibilityLabel={t("sessions.launchedSessionCard.openSessionLabel", {
+        title: session.title,
+        status: statusLabel.toLowerCase(),
+      })}
       onPress={() => open(session.projectId, session.id, session.title)}
       style={({ pressed }) => [styles.card, pressed && styles.pressed]}
     >

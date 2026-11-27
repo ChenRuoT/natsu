@@ -7,6 +7,7 @@ import { useConnection } from "@/features/connection/ConnectionProvider";
 import { VisualTree } from "@/features/visuals/VisualTree";
 import type { VisualNode } from "@/features/visuals/types";
 import { Markdown } from "@/features/sessions/Markdown";
+import { useT } from "@/i18n/i18n";
 import { themedStyles, useColors } from "@/ui/theme";
 
 import { CodeHeaderTitle, HeaderBlur, HeaderButton } from "./codeScreen";
@@ -36,6 +37,7 @@ export function DocumentScreen({
   /** Pushed inside another sheet, as a Mono's profile: it goes back, not closes. */
   stacked?: boolean;
 }) {
+  const t = useT();
   const styles = useStyles();
   const colors = useColors();
   const { command } = useConnection();
@@ -63,15 +65,15 @@ export function DocumentScreen({
       <Stack.Screen
         options={{
           headerTitle: () => (
-            <CodeHeaderTitle name={document?.title || title || "Document"}>
-              {visual ? "Visual" : "Document"}
+            <CodeHeaderTitle name={document?.title || title || t("files.documentScreen.documentFallback")}>
+              {visual ? t("files.documentScreen.visualKind") : t("files.documentScreen.documentKind")}
             </CodeHeaderTitle>
           ),
           ...(stacked
             ? {}
             : {
                 headerLeft: () => (
-                  <HeaderButton icon="close" label="Close" onPress={() => router.back()} />
+                  <HeaderButton icon="close" label={t("files.documentScreen.close")} onPress={() => router.back()} />
                 ),
               }),
         }}
@@ -87,7 +89,7 @@ export function DocumentScreen({
         </ScrollView>
       ) : document && visual ? (
         <Text style={styles.note}>
-          {document.treeError ?? "Open this visual on your desktop to see it."}
+          {document.treeError ?? t("files.documentScreen.openVisual")}
         </Text>
       ) : document ? (
         <ScrollView

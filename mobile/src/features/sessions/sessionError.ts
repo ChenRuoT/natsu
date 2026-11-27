@@ -1,5 +1,6 @@
 import { useEffect, useSyncExternalStore } from "react";
 
+import { t as tNow, useT, type TFunction } from "@/i18n/i18n";
 import type { Turn, TurnItem } from "@/features/workspace/types";
 
 export type SessionErrorNotice = Extract<TurnItem, { type: "notice" }>;
@@ -12,15 +13,19 @@ export function latestSessionError(turns: Turn[]): SessionErrorNotice | undefine
 }
 
 /** Desktop errors sometimes refer to controls that only exist on the desktop. */
-export function sessionErrorContent(text: string) {
+export function sessionErrorContent(text: string, t: TFunction = tNow) {
   if (/\bremoved provider account\b/i.test(text)) {
     return {
-      title: "Account unavailable",
-      message: "The account used for this conversation has been removed.",
-      recovery: "Tap the model in the composer, open Account, and choose another account to start a new conversation.",
+      title: t("sessions.sessionError.accountUnavailableTitle"),
+      message: t("sessions.sessionError.accountUnavailableMessage"),
+      recovery: t("sessions.sessionError.accountUnavailableRecovery"),
     };
   }
-  return { title: "Couldn’t continue", message: text, recovery: undefined };
+  return {
+    title: t("sessions.sessionError.couldntContinueTitle"),
+    message: text,
+    recovery: undefined,
+  };
 }
 
 // The latest error of each open session, as its transcript last reported it,
@@ -67,11 +72,12 @@ export function useReportSessionError(
  * taps it away or the session moves past it.
  */
 export function useSessionErrorNotice(sessionId: string | undefined) {
+  const t = useT();
   useSyncExternalStore(subscribe, () => version);
   const notice = sessionId ? reported.get(sessionId) : undefined;
   if (!notice || dismissed.has(keyOf(notice))) return null;
   return {
-    text: sessionErrorContent(notice.text).message,
+    text: sessionErrorContent(notice.text, t).message,
     dismiss: () => {
       dismissed.add(keyOf(notice));
       changed();

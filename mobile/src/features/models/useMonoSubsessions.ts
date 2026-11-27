@@ -1,6 +1,7 @@
 import { effortSetting } from "@/features/models/modelChoice";
 import type { CatalogModel } from "@/features/models/types";
 import { useModelCatalog } from "@/features/models/useModelCatalog";
+import { useT } from "@/i18n/i18n";
 import type { Mono } from "@/features/workspace/types";
 import { monoConversationId } from "@/features/workspace/WorkspaceProvider";
 
@@ -27,6 +28,7 @@ export const isModel = (entry: CatalogModel, harness: string | undefined, id: st
  */
 export function useMonoSubsessions(mono: Mono | undefined) {
   const conversationId = mono ? monoConversationId(mono.id) : undefined;
+  const t = useT();
   const { catalog, error } = useModelCatalog(conversationId, conversationId);
   const set = mono?.subsessions ?? null;
   const inherited = !set?.harness;
@@ -38,7 +40,9 @@ export function useMonoSubsessions(mono: Mono | undefined) {
     models.find((entry) => isModel(entry, harness, modelId)) ?? (inherited ? undefined : models[0]);
   const effort = effortSetting(model);
   const name = mono?.name ?? "";
-  const unsetEffort = inherited ? `Same as ${name}` : "Model default";
+  const unsetEffort = inherited
+    ? t("app.monoSubsessions.sameAs", { name })
+    : t("app.monoSubsessions.modelDefault");
   return {
     catalog,
     error,
@@ -46,7 +50,7 @@ export function useMonoSubsessions(mono: Mono | undefined) {
     harness: inherited ? undefined : harness,
     model,
     modelLabel: inherited
-      ? `Same as ${name}`
+      ? t("app.monoSubsessions.sameAs", { name })
       : (model?.name ??
         set?.model ??
         catalog?.harnesses.find((entry) => entry.id === harness)?.label ??

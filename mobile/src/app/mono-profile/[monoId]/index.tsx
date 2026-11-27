@@ -11,6 +11,7 @@ import { SettingsPage, SettingsRow } from "@/features/settings/SettingsUI";
 import { MonoDocumentRows } from "@/features/workspace/MonoDocuments";
 import { useMonoProfile, type MonoProfile } from "@/features/workspace/monoProfile";
 import { useWorkspace } from "@/features/workspace/WorkspaceProvider";
+import { useT } from "@/i18n/i18n";
 import { Icon } from "@/ui/Icon";
 import { radii, themedStyles, useColors } from "@/ui/theme";
 
@@ -29,6 +30,7 @@ export default function MonoProfileScreen() {
   const { model, harness, effort } = useMonoModel(mono);
   const styles = useStyles();
   const colors = useColors();
+  const t = useT();
   if (!mono) return null;
   const assigned = allProjects.filter((project) => mono.projectIds.includes(project.id));
   return (
@@ -50,7 +52,7 @@ export default function MonoProfileScreen() {
           onPress={() => router.push({ pathname: "/mono-profile/[monoId]/edit", params: { monoId } })}
           style={({ pressed }) => [styles.edit, pressed && styles.pressed]}
         >
-          <Text style={styles.editLabel}>Edit</Text>
+          <Text style={styles.editLabel}>{t("app.monoProfileIndex.edit")}</Text>
         </Pressable>
       </View>
 
@@ -62,7 +64,7 @@ export default function MonoProfileScreen() {
         <ActivityIndicator color={colors.muted} style={styles.loading} />
       )}
 
-      <Text style={styles.heading}>Projects</Text>
+      <Text style={styles.heading}>{t("app.monoProfileIndex.projectsHeading")}</Text>
       <View style={styles.card}>
         {assigned.map((project) => (
           <Fragment key={project.id}>
@@ -83,11 +85,15 @@ export default function MonoProfileScreen() {
           <View style={styles.addIcon}>
             <Icon name="add" size={18} color={colors.accent} />
           </View>
-          <Text style={styles.addLabel}>{assigned.length ? "Assign projects" : "Assign a project"}</Text>
+          <Text style={styles.addLabel}>
+            {assigned.length
+              ? t("app.monoProfileIndex.assignProjects")
+              : t("app.monoProfileIndex.assignProject")}
+          </Text>
         </Pressable>
       </View>
       {assigned.length ? null : (
-        <Text style={styles.note}>Without a project it works from your home folder.</Text>
+        <Text style={styles.note}>{t("app.monoProfileIndex.noProjectNote")}</Text>
       )}
     </SettingsPage>
   );
@@ -97,14 +103,15 @@ function Overview({ profile, name, monoId }: { profile: MonoProfile; name: strin
   const styles = useStyles();
   const colors = useColors();
   const { today, contributions } = profile;
+  const t = useT();
   // A habit or document opens beside the profile, inside its sheet.
   const openHabit = (habitId: string) =>
     router.push({ pathname: "/mono-profile/[monoId]/habit", params: { monoId, habitId } });
   return (
     <>
-      <Text style={styles.heading}>Today</Text>
+      <Text style={styles.heading}>{t("app.monoProfileIndex.todayHeading")}</Text>
       <View style={styles.tiles}>
-        <Tile value={String(today.merged)} label="PRs merged" />
+        <Tile value={String(today.merged)} label={t("app.monoProfileIndex.prsMerged")} />
         <Tile
           value={
             <Text style={styles.figure}>
@@ -112,25 +119,27 @@ function Overview({ profile, name, monoId }: { profile: MonoProfile; name: strin
               <Text style={{ color: colors.deletions }}> −{today.deletions.toLocaleString()}</Text>
             </Text>
           }
-          label="Lines changed"
+          label={t("app.monoProfileIndex.linesChanged")}
         />
-        <Tile value={String(today.sessions)} label="Sessions" />
-        <Tile value={`${today.habitsRan}/${today.habitsTotal}`} label="Habits run" />
+        <Tile value={String(today.sessions)} label={t("app.monoProfileIndex.sessions")} />
+        <Tile value={`${today.habitsRan}/${today.habitsTotal}`} label={t("app.monoProfileIndex.habitsRun")} />
       </View>
 
-      <Text style={styles.heading}>Contributions</Text>
+      <Text style={styles.heading}>{t("app.monoProfileIndex.contributionsHeading")}</Text>
       <View style={[styles.card, styles.padded]}>
         <View style={styles.contributionsLine}>
           <Text style={styles.total}>{contributions.total.toLocaleString()}</Text>
-          <Text style={styles.caption}>in the last 6 months</Text>
+          <Text style={styles.caption}>{t("app.monoProfileIndex.contributionsCaption")}</Text>
           {contributions.streak > 1 ? (
-            <Text style={[styles.caption, styles.streak]}>{contributions.streak}-day streak</Text>
+            <Text style={[styles.caption, styles.streak]}>
+              {t("app.monoProfileIndex.streak", { days: contributions.streak })}
+            </Text>
           ) : null}
         </View>
         <ContributionGraph levels={contributions.levels} />
       </View>
 
-      <Text style={styles.heading}>Up next</Text>
+      <Text style={styles.heading}>{t("app.monoProfileIndex.upNextHeading")}</Text>
       <View style={styles.card}>
         {profile.upNext.length ? (
           profile.upNext.map((habit, index) => (
@@ -153,13 +162,13 @@ function Overview({ profile, name, monoId }: { profile: MonoProfile; name: strin
             </Fragment>
           ))
         ) : (
-          <Text style={styles.empty}>Nothing scheduled. Ask {name} to put recurring work on a habit.</Text>
+          <Text style={styles.empty}>{t("app.monoProfileIndex.nothingScheduled", { name })}</Text>
         )}
       </View>
 
       {profile.habits.length ? (
         <>
-          <Text style={styles.heading}>Habits</Text>
+          <Text style={styles.heading}>{t("app.monoProfileIndex.habitsHeading")}</Text>
           <View style={styles.card}>
             {profile.habits.map((habit, index) => (
               <Fragment key={habit.id}>
@@ -167,7 +176,7 @@ function Overview({ profile, name, monoId }: { profile: MonoProfile; name: strin
                 <SettingsRow
                   icon="automation"
                   label={habit.name}
-                  value={habit.enabled ? habit.schedule : "Paused"}
+                  value={habit.enabled ? habit.schedule : t("app.monoProfileIndex.paused")}
                   onPress={() => openHabit(habit.id)}
                 />
               </Fragment>
@@ -176,7 +185,7 @@ function Overview({ profile, name, monoId }: { profile: MonoProfile; name: strin
         </>
       ) : null}
 
-      <Text style={styles.heading}>Documents</Text>
+      <Text style={styles.heading}>{t("app.monoProfileIndex.documentsHeading")}</Text>
       <View style={styles.card}>
         {/* The newest few; "See all" under them opens the rest. */}
         <MonoDocumentRows monoId={monoId} documents={profile.documents} limit={DOCUMENTS_SHOWN} />

@@ -16,6 +16,7 @@ import { PixelMascot } from "@/features/mascots/PixelMascot";
 import { HeaderBlur } from "@/features/files/codeScreen";
 import { plainText } from "@/features/sessions/markdownParser";
 import { useKeyboardLift } from "@/features/sessions/SessionScreen";
+import { t as tNow, useT } from "@/i18n/i18n";
 import { NATSU_MARK } from "@/ui/brand";
 import { CircleButton } from "@/ui/CircleButton";
 import { GradualBlur } from "@/ui/GradualBlur";
@@ -57,6 +58,7 @@ export function MonoHome() {
   const insets = useSafeAreaInsets();
   const colors = useColors();
   const styles = useStyles();
+  const t = useT();
   const { monos: roster } = useWorkspace();
   const { pairing, command, refresh, selection, select } = useConnection();
   const tools = useMonoTools();
@@ -139,7 +141,7 @@ export function MonoHome() {
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       await refresh();
     } catch (reason) {
-      Alert.alert("Couldn’t do that", reason instanceof Error ? reason.message : String(reason));
+      Alert.alert(tNow("workspace.monoHome.couldntDo"), reason instanceof Error ? reason.message : String(reason));
     }
   };
   // Out of the list now, and back if the desktop refuses.
@@ -150,7 +152,7 @@ export function MonoHome() {
       .then(() => refresh())
       .catch((reason: unknown) => {
         setGoneId(mono.id, false);
-        Alert.alert("Couldn’t do that", reason instanceof Error ? reason.message : String(reason));
+        Alert.alert(tNow("workspace.monoHome.couldntDo"), reason instanceof Error ? reason.message : String(reason));
       });
   };
   const handlers: RowActions = {
@@ -162,12 +164,12 @@ export function MonoHome() {
     reset: tools
       ? (mono) =>
           Alert.alert(
-            "Reset conversation?",
-            `The chat with ${mono.name} will be cleared. Its soul, memory and habits stay.`,
+            tNow("workspace.monoHome.resetTitle"),
+            tNow("workspace.monoHome.resetMessage", { name: mono.name }),
             [
-              { text: "Cancel", style: "cancel" },
+              { text: tNow("workspace.monoHome.cancel"), style: "cancel" },
               {
-                text: "Reset",
+                text: tNow("workspace.monoHome.reset"),
                 style: "destructive",
                 onPress: () => void act(() => command("mono.reset", { monoId: mono.id })),
               },
@@ -184,12 +186,12 @@ export function MonoHome() {
     remove: tools
       ? (mono) =>
           Alert.alert(
-            `Delete ${mono.name}?`,
-            "Its scheduled habits stop. Sessions and notes it created stay saved.",
+            tNow("workspace.monoHome.deleteTitle", { name: mono.name }),
+            tNow("workspace.monoHome.deleteMessage"),
             [
-              { text: "Cancel", style: "cancel" },
+              { text: tNow("workspace.monoHome.cancel"), style: "cancel" },
               {
-                text: "Delete",
+                text: tNow("workspace.monoHome.delete"),
                 style: "destructive",
                 onPress: () => removeNow(mono, () => command("mono.delete", { monoId: mono.id })),
               },
@@ -258,11 +260,11 @@ export function MonoHome() {
         {monos.length ? null : (
           <View style={styles.empty}>
             <Text style={styles.emptyText}>
-              {needle ? "Nothing matches." : "No Monos on this phone yet."}
+              {needle ? t("workspace.monoHome.nothingMatches") : t("workspace.monoHome.noneYet")}
             </Text>
             {needle ? null : (
               <Text style={styles.emptyLink} onPress={() => router.push("/settings/workspace")}>
-                Choose Monos
+                {t("workspace.monoHome.chooseMonos")}
               </Text>
             )}
           </View>
@@ -290,7 +292,7 @@ export function MonoHome() {
         <Stack.Toolbar placement="right">
           <Stack.Toolbar.Button
             icon="plus"
-            accessibilityLabel="New Mono"
+            accessibilityLabel={t("workspace.monoHome.newMonoLabel")}
             onPress={() => router.push("/mono-new")}
           />
         </Stack.Toolbar>
@@ -312,7 +314,7 @@ export function MonoHome() {
         <View style={styles.footer}>
           <CircleButton
             icon="settings"
-            label="Settings"
+            label={t("workspace.monoHome.settingsLabel")}
             onPress={() => router.push("/settings")}
             size={FOOTER_HEIGHT}
           />
@@ -326,7 +328,7 @@ export function MonoHome() {
               ref={search}
               value={query}
               onChangeText={setQuery}
-              placeholder="Search"
+              placeholder={t("workspace.monoHome.searchPlaceholder")}
               placeholderTextColor={colors.muted}
               keyboardAppearance={scheme}
               returnKeyType="search"
@@ -374,13 +376,14 @@ const MonoRow = memo(function MonoRow({
   tools: boolean;
   actions: RowActions;
 }) {
+  const t = useT();
   const styles = useStyles();
   const detail =
     mono.status === "working"
-      ? "Working…"
+      ? t("workspace.monoHome.working")
       : mono.status === "needs-you"
-        ? "Needs you"
-        : oneLine(mono.lastMessage) || "No messages yet";
+        ? t("workspace.monoHome.needsYou")
+        : oneLine(mono.lastMessage, t) || t("workspace.monoHome.noMessages");
   return (
     <Link
       href={{ pathname: "/mono/[monoId]", params: { monoId: mono.id } }}
@@ -392,7 +395,7 @@ const MonoRow = memo(function MonoRow({
       <Link.Trigger>
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel={`${mono.name}, ${detail}`}
+          accessibilityLabel={t("workspace.monoHome.rowLabel", { name: mono.name, detail })}
           style={styles.row}
         >
           <PixelMascot name={mono.mascot} color={mono.color} status={mono.status} size={MASCOT} centered />
@@ -403,7 +406,7 @@ const MonoRow = memo(function MonoRow({
               </Text>
               {mono.lastActiveAt ? (
                 <Text style={[styles.rowTime, unread && styles.rowTimeUnread]}>
-                  {when(mono.lastActiveAt)}
+                  {when(mono.lastActiveAt, undefined, t)}
                 </Text>
               ) : null}
             </View>
@@ -435,24 +438,24 @@ const MonoRow = memo(function MonoRow({
           icon={unread ? "message" : "message.badge"}
           onPress={() => actions.toggleRead(mono)}
         >
-          {unread ? "Mark as Read" : "Mark as Unread"}
+          {unread ? t("workspace.monoHome.markRead") : t("workspace.monoHome.markUnread")}
         </Link.MenuAction>
         {tools ? (
           <Link.MenuAction icon="info.circle" onPress={() => actions.details?.(mono)}>
-            View Details
+            {t("workspace.monoHome.viewDetails")}
           </Link.MenuAction>
         ) : null}
         {tools ? (
           <Link.MenuAction icon="arrow.counterclockwise" onPress={() => actions.reset?.(mono)}>
-            Reset Conversation
+            {t("workspace.monoHome.resetConversation")}
           </Link.MenuAction>
         ) : null}
         <Link.MenuAction icon="eye.slash" onPress={() => actions.hide?.(mono)}>
-          Hide
+          {t("workspace.monoHome.hide")}
         </Link.MenuAction>
         {tools ? (
           <Link.MenuAction icon="trash" destructive onPress={() => actions.remove?.(mono)}>
-            Delete Mono
+            {t("workspace.monoHome.deleteMono")}
           </Link.MenuAction>
         ) : null}
       </Link.Menu>
@@ -463,11 +466,12 @@ const MonoRow = memo(function MonoRow({
 /** What a long press lifts: the Mono's name over its latest message, in a
  *  bubble as its chat shows it. */
 function MonoPreview({ mono }: { mono: Mono }) {
+  const t = useT();
   const styles = useStyles();
   const text =
     mono.status === "working"
-      ? "Working…"
-      : plainText(mono.lastMessage.slice(0, 1200)).trim() || "No messages yet";
+      ? t("workspace.monoHome.working")
+      : plainText(mono.lastMessage.slice(0, 1200)).trim() || t("workspace.monoHome.noMessages");
   return (
     <View style={styles.previewCard}>
       <View style={styles.previewHeader}>

@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { ActionSheetIOS, Alert } from "react-native";
 import type { SwipeableMethods } from "react-native-gesture-handler/ReanimatedSwipeable";
 
+import { t as tNow } from "@/i18n/i18n";
 import type { SessionSummary } from "@/features/workspace/types";
 import { useWorkspace } from "@/features/workspace/WorkspaceProvider";
 import { useScheme } from "@/ui/theme";
@@ -41,7 +42,10 @@ export function useSessionActions(
   useEffect(() => {
     if (!removing) return;
     deleteSession(removing.id)
-      .then(() => onDeleted(removing), failed("Could not delete the session"))
+      .then(
+        () => onDeleted(removing),
+        failed(tNow("sessions.useSessionActions.deleteFailedTitle")),
+      )
       .finally(() => setTimeout(() => setRemoving(null), REMOVE_MS));
     // Runs once per delete, with the rest as it was when it was asked for.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -49,18 +53,18 @@ export function useSessionActions(
 
   const rename = (session: SessionSummary) =>
     Alert.prompt(
-      "Rename session",
+      tNow("sessions.useSessionActions.renameTitle"),
       undefined,
       [
-        { text: "Cancel", style: "cancel" },
+        { text: tNow("sessions.useSessionActions.cancelButton"), style: "cancel" },
         {
-          text: "Rename",
+          text: tNow("sessions.useSessionActions.renameButton"),
           isPreferred: true,
           onPress: (title?: string) => {
             const trimmed = title?.trim();
             if (trimmed && trimmed !== session.title)
               renameSession(session, trimmed).catch(
-                failed("Could not rename the session"),
+                failed(tNow("sessions.useSessionActions.renameFailedTitle")),
               );
           },
         },
@@ -69,20 +73,28 @@ export function useSessionActions(
       session.title,
     );
   const remove = (session: SessionSummary) =>
-    Alert.alert(`Delete “${session.title}”?`, "This can’t be undone.", [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Delete",
-        style: "destructive",
-        onPress: () => setRemoving(session),
-      },
-    ]);
+    Alert.alert(
+      tNow("sessions.useSessionActions.deleteTitle", { title: session.title }),
+      tNow("sessions.useSessionActions.deleteMessage"),
+      [
+        { text: tNow("sessions.useSessionActions.cancelButton"), style: "cancel" },
+        {
+          text: tNow("sessions.useSessionActions.deleteButton"),
+          style: "destructive",
+          onPress: () => setRemoving(session),
+        },
+      ],
+    );
   const showActions = (session: SessionSummary) => {
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     ActionSheetIOS.showActionSheetWithOptions(
       {
         title: session.title,
-        options: ["Rename", "Delete", "Cancel"],
+        options: [
+          tNow("sessions.useSessionActions.renameButton"),
+          tNow("sessions.useSessionActions.deleteButton"),
+          tNow("sessions.useSessionActions.cancelButton"),
+        ],
         destructiveButtonIndex: 1,
         cancelButtonIndex: 2,
         userInterfaceStyle: scheme,

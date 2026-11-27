@@ -9,6 +9,7 @@ import { ProviderLogo } from "@/features/sessions/ProviderLogo";
 import { SettingsPage, SettingsRow } from "@/features/settings/SettingsUI";
 import type { MonoSubsessions } from "@/features/workspace/types";
 import { useWorkspace } from "@/features/workspace/WorkspaceProvider";
+import { useT } from "@/i18n/i18n";
 import { Icon } from "@/ui/Icon";
 import { radii, themedStyles, useColors } from "@/ui/theme";
 
@@ -20,6 +21,7 @@ export default function MonoSubsessionsScreen() {
   const mono = monos.find((m) => m.id === monoId);
   const colors = useColors();
   const styles = useStyles();
+  const t = useT();
   const [query, setQuery] = useState("");
   const { catalog, error, inherited, harness, model, effort, effortValue, unsetEffort } =
     useMonoSubsessions(mono);
@@ -28,7 +30,7 @@ export default function MonoSubsessionsScreen() {
   const save = (next: MonoSubsessions | null) => {
     void Haptics.selectionAsync();
     editMono(mono, { subsessions: next }).catch((reason: unknown) =>
-      Alert.alert("Couldn’t save", reason instanceof Error ? reason.message : String(reason)),
+      Alert.alert(t("app.monoProfileSubsessions.saveFailedTitle"), reason instanceof Error ? reason.message : String(reason)),
     );
   };
   const set = mono.subsessions ?? {};
@@ -64,7 +66,7 @@ export default function MonoSubsessionsScreen() {
       <Stack.Screen
         options={{
           headerSearchBarOptions: {
-            placeholder: "Find a model",
+            placeholder: t("app.monoProfileSubsessions.searchPlaceholder"),
             hideWhenScrolling: false,
             autoCapitalize: "none",
             onChangeText: (event) => setQuery(event.nativeEvent.text),
@@ -73,7 +75,7 @@ export default function MonoSubsessionsScreen() {
       />
       <SettingsPage>
         <Text style={styles.note}>
-          For sessions {mono.name} starts without naming a model. Ones that name their own keep it.
+          {t("app.monoProfileSubsessions.note", { name: mono.name })}
         </Text>
 
         {effort && !needle ? (
@@ -99,7 +101,7 @@ export default function MonoSubsessionsScreen() {
           <View style={[styles.card, styles.first]}>
             <SettingsRow
               icon="sparkle"
-              label={`Same as ${mono.name}`}
+              label={t("app.monoProfileSubsessions.sameAs", { name: mono.name })}
               showChevron={false}
               accessory={inherited ? check : null}
               onPress={() => {
@@ -135,7 +137,7 @@ export default function MonoSubsessionsScreen() {
         ))}
 
         {catalog && needle && !sections.length ? (
-          <Text style={styles.empty}>No models match.</Text>
+          <Text style={styles.empty}>{t("app.monoProfileSubsessions.noMatch")}</Text>
         ) : !catalog && error ? (
           <Text style={styles.error}>{error}</Text>
         ) : !catalog ? (

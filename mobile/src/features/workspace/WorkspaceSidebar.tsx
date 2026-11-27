@@ -4,6 +4,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { ProjectMascot } from "@/features/mascots/ProjectMascot";
 import { ProviderLogo } from "@/features/sessions/ProviderLogo";
+import { useT } from "@/i18n/i18n";
 import { Icon } from "@/ui/Icon";
 import { themedStyles, useColors } from "@/ui/theme";
 
@@ -15,6 +16,7 @@ const RECENT_LIMIT = 20;
 
 /** Reuses the workspace catalog; opening the sidebar never starts a second watch. */
 export function WorkspaceSidebar() {
+  const t = useT();
   const styles = useStyles();
   const colors = useColors();
   const insets = useSafeAreaInsets();
@@ -32,10 +34,10 @@ export function WorkspaceSidebar() {
       style={[styles.sidebar, { paddingTop: insets.top, paddingLeft: insets.left }]}
     >
       <View style={styles.header}>
-        <Text accessibilityRole="header" style={styles.heading}>Projects</Text>
+        <Text accessibilityRole="header" style={styles.heading}>{t("workspace.sidebar.projectsHeading")}</Text>
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="Settings"
+          accessibilityLabel={t("workspace.sidebar.settingsLabel")}
           onPress={() => router.push("/settings")}
           style={styles.button}
         >
@@ -51,7 +53,7 @@ export function WorkspaceSidebar() {
           <Pressable
             key={project.id}
             accessibilityRole="button"
-            accessibilityLabel={`Open project ${project.name}`}
+            accessibilityLabel={t("workspace.sidebar.openProjectLabel", { name: project.name })}
             accessibilityState={{ selected: selected?.id === project.id }}
             onPress={() => router.navigate({
               pathname: "/project/[projectId]",
@@ -64,14 +66,14 @@ export function WorkspaceSidebar() {
             <Icon name="compose" size={16} color={colors.muted} />
           </Pressable>
         ))}
-        {!projects.length ? <Text style={styles.empty}>No projects selected.</Text> : null}
+        {!projects.length ? <Text style={styles.empty}>{t("workspace.sidebar.noProjects")}</Text> : null}
 
-        {monos.length ? <Text accessibilityRole="header" style={styles.section}>Monos</Text> : null}
+        {monos.length ? <Text accessibilityRole="header" style={styles.section}>{t("workspace.sidebar.monosHeading")}</Text> : null}
         {monos.map((mono) => (
           <Pressable
             key={mono.id}
             accessibilityRole="button"
-            accessibilityLabel={`Open mono ${mono.name}`}
+            accessibilityLabel={t("workspace.sidebar.openMonoLabel", { name: mono.name })}
             accessibilityState={{ selected: params.monoId === mono.id }}
             onPress={() => router.navigate({ pathname: "/mono/[monoId]", params: { monoId: mono.id } })}
             style={({ pressed }) => [styles.row, params.monoId === mono.id && styles.selected, pressed && styles.pressed]}
@@ -81,12 +83,12 @@ export function WorkspaceSidebar() {
           </Pressable>
         ))}
 
-        <Text accessibilityRole="header" style={styles.section}>Recent sessions</Text>
+        <Text accessibilityRole="header" style={styles.section}>{t("workspace.sidebar.recentHeading")}</Text>
         {recent.map((session) => (
           <Pressable
             key={session.id}
             accessibilityRole="button"
-            accessibilityLabel={`Open session ${session.title || "Untitled session"}`}
+            accessibilityLabel={t("workspace.sidebar.openSessionLabel", { title: session.title || t("workspace.sidebar.untitled") })}
             accessibilityState={{ selected: params.sessionId === session.id }}
             onPress={() => {
               if (params.sessionId === session.id) return;
@@ -99,10 +101,10 @@ export function WorkspaceSidebar() {
           >
             <ProviderLogo harness={session.harness} size={18} color={colors.muted} />
             <View style={styles.session}>
-              <Text numberOfLines={2} style={styles.sessionTitle}>{session.title || "Untitled session"}</Text>
+              <Text numberOfLines={2} style={styles.sessionTitle}>{session.title || t("workspace.sidebar.untitled")}</Text>
               <Text numberOfLines={1} style={styles.meta}>
                 {projects.find((project) => project.id === session.projectId)?.name}
-                {" · "}{session.waiting ? "Needs attention" : session.busy ? "Working" : relativeTime(session.updatedAt)}
+                {" · "}{session.waiting ? t("workspace.sidebar.needsAttention") : session.busy ? t("workspace.sidebar.working") : relativeTime(session.updatedAt, undefined, t)}
               </Text>
             </View>
             {session.busy || session.waiting ? (
@@ -110,7 +112,7 @@ export function WorkspaceSidebar() {
             ) : null}
           </Pressable>
         ))}
-        {!recent.length ? <Text style={styles.empty}>No recent sessions.</Text> : null}
+        {!recent.length ? <Text style={styles.empty}>{t("workspace.sidebar.noRecent")}</Text> : null}
       </ScrollView>
     </View>
   );

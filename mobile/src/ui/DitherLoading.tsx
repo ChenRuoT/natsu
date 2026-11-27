@@ -12,6 +12,7 @@ import Animated, {
 } from "react-native-reanimated";
 
 import { encodePng } from "@/features/background/dither";
+import { useT } from "@/i18n/i18n";
 
 import { traceSwitch } from "./ScenePager";
 import { useColors } from "./theme";
@@ -140,6 +141,7 @@ export function DitherLoading({
   onGone?: () => void;
 }) {
   const colors = useColors();
+  const t = useT();
   const reduced = useReducedMotion();
   const source = strip();
   const turn = useSharedValue(0);
@@ -177,7 +179,7 @@ export function DitherLoading({
   }));
   return (
     <Animated.View
-      accessibilityLabel="Loading"
+      accessibilityLabel={t("app.ditherLoading.loading")}
       pointerEvents="none"
       style={[styles.fill, { backgroundColor: colors.background }, groundStyle]}
     >

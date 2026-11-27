@@ -13,6 +13,7 @@ import * as Clipboard from "expo-clipboard";
 import { Linking, Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 
 import { FileTypeIcon } from "@/features/files/FileTypeIcon";
+import { useT } from "@/i18n/i18n";
 import { Icon } from "@/ui/Icon";
 import { withAlpha, themedStyles, useColors } from "@/ui/theme";
 
@@ -170,6 +171,7 @@ const BlockView = memo(function BlockView({ block, fade }: { block: MarkdownBloc
 function CodeBlock({ text, language }: { text: string; language: string }) {
   const styles = useStyles();
   const colors = useColors();
+  const t = useT();
   const header = codeFenceHeader(language);
   const body = useMemo(() => ({ text }), [text]);
   const [copiedBody, setCopiedBody] = useState<typeof body>();
@@ -192,7 +194,7 @@ function CodeBlock({ text, language }: { text: string; language: string }) {
         </View>
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel={copied ? "Copied" : "Copy code"}
+          accessibilityLabel={copied ? t("sessions.markdown.copied") : t("sessions.markdown.copyCode")}
           style={({ pressed }) => [styles.codeCopy, pressed && styles.codeCopyPressed]}
           onPress={async () => {
             const attempt = ++copyAttempt.current.id;

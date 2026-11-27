@@ -18,6 +18,7 @@ import { PixelMascot } from "@/features/mascots/PixelMascot";
 import { ProjectMascot } from "@/features/mascots/ProjectMascot";
 import { plainText } from "@/features/sessions/markdownParser";
 import { HEADER_GAP, HEADER_HEIGHT, useKeyboardLift } from "@/features/sessions/SessionScreen";
+import { t as tNow, useT, type MessageKey, type TFunction } from "@/i18n/i18n";
 import { NATSU_MARK } from "@/ui/brand";
 import { ChoiceMenu } from "@/ui/ChoiceMenu";
 import { CircleButton } from "@/ui/CircleButton";
@@ -72,6 +73,7 @@ export function WorkspaceDrawer() {
   const insets = useSafeAreaInsets();
   const colors = useColors();
   const styles = useStyles();
+  const t = useT();
   const { projects, monos: roster } = useWorkspace();
   const { pairing } = useConnection();
   const tools = useMonoTools();
@@ -173,7 +175,7 @@ export function WorkspaceDrawer() {
         >
           {listedMonos.length ? (
             <View style={styles.list}>
-              <Text style={styles.sectionLabel}>Monos</Text>
+              <Text style={styles.sectionLabel}>{t("workspace.workspaceDrawer.sectionMonos")}</Text>
               {listedMonos.map((mono) => (
                 <MonoRow
                   key={mono.id}
@@ -187,7 +189,7 @@ export function WorkspaceDrawer() {
           ) : null}
           {listedProjects.length ? (
             <View style={[styles.list, listedMonos.length > 0 && styles.section]}>
-              <Text style={styles.sectionLabel}>Projects</Text>
+              <Text style={styles.sectionLabel}>{t("workspace.workspaceDrawer.sectionProjects")}</Text>
               {listedProjects.map((project) => (
                 <ProjectRow
                   key={project.id}
@@ -201,8 +203,8 @@ export function WorkspaceDrawer() {
           {nothing ? (
             <Text style={styles.empty}>
               {needle || filter !== "all" || show !== "both"
-                ? "Nothing matches."
-                : "No Monos or projects on this phone yet."}
+                ? t("workspace.workspaceDrawer.nothingMatches")
+                : t("workspace.workspaceDrawer.noneYet")}
             </Text>
           ) : null}
         </ScrollView>
@@ -219,19 +221,19 @@ export function WorkspaceDrawer() {
           <View style={styles.headerActions}>
             <FilterMenu filter={filter} onFilter={setFilter} show={show} onShow={setShow} />
             {/* The older desktop app can't make a Mono from the phone. */}
-            {tools ? <CircleButton icon="add" label="New Mono" onPress={createMono} /> : null}
+            {tools ? <CircleButton icon="add" label={t("workspace.workspaceDrawer.newMonoLabel")} onPress={createMono} /> : null}
           </View>
         </View>
 
         <Animated.View style={[styles.foot, { bottom: footerBottom }, lift]}>
           <View style={styles.footer}>
-          <CircleButton icon="settings" label="Settings" onPress={openSettings} size={FOOTER_HEIGHT} />
+          <CircleButton icon="settings" label={t("workspace.workspaceDrawer.settingsLabel")} onPress={openSettings} size={FOOTER_HEIGHT} />
           <LiquidView borderRadius={FOOTER_HEIGHT / 2} style={styles.searchFrame} innerStyle={styles.search}>
             <Icon name="search" size={18} color={colors.muted} />
             <TextInput
               value={query}
               onChangeText={setQuery}
-              placeholder="Search"
+              placeholder={t("workspace.workspaceDrawer.searchPlaceholder")}
               placeholderTextColor={colors.muted}
               keyboardAppearance={useScheme()}
               returnKeyType="search"
@@ -250,24 +252,24 @@ export function WorkspaceDrawer() {
 // Each with its SF Symbol for the iOS menu and its icon for Android's sheet.
 const FILTERS: {
   value: Filter;
-  label: string;
+  labelKey: MessageKey;
   symbol: "tray.full" | "circlebadge" | "bolt";
   icon: IconName;
 }[] = [
-  { value: "all", label: "All", symbol: "tray.full", icon: "inbox" },
-  { value: "unread", label: "Unread", symbol: "circlebadge", icon: "circle" },
-  { value: "working", label: "Working now", symbol: "bolt", icon: "automation" },
+  { value: "all", labelKey: "workspace.workspaceDrawer.filterAll", symbol: "tray.full", icon: "inbox" },
+  { value: "unread", labelKey: "workspace.workspaceDrawer.filterUnread", symbol: "circlebadge", icon: "circle" },
+  { value: "working", labelKey: "workspace.workspaceDrawer.filterWorking", symbol: "bolt", icon: "automation" },
 ];
 
 const SHOWS: {
   value: Show;
-  label: string;
+  labelKey: MessageKey;
   symbol: "square.stack" | "person.2" | "folder";
   icon: IconName;
 }[] = [
-  { value: "both", label: "Monos and projects", symbol: "square.stack", icon: "layers" },
-  { value: "monos", label: "Monos", symbol: "person.2", icon: "people" },
-  { value: "projects", label: "Projects", symbol: "folder", icon: "folder" },
+  { value: "both", labelKey: "workspace.workspaceDrawer.showBoth", symbol: "square.stack", icon: "layers" },
+  { value: "monos", labelKey: "workspace.workspaceDrawer.showMonos", symbol: "person.2", icon: "people" },
+  { value: "projects", labelKey: "workspace.workspaceDrawer.showProjects", symbol: "folder", icon: "folder" },
 ];
 
 /** The round button beside a new Mono: a native menu of which kinds to show
@@ -283,19 +285,23 @@ function FilterMenu({
   show: Show;
   onShow: (value: Show) => void;
 }) {
+  const t = useT();
   const colors = useColors();
   const on = filter !== "all" || show !== "both";
   // The SwiftUI menu has no Android view, so Android groups the same choices in a sheet.
   if (Platform.OS === "android") return (
-    <ChoiceMenu label={on ? "Filter, on" : "Filter"} title="Filter" sections={[
+    <ChoiceMenu
+      label={on ? t("workspace.workspaceDrawer.filterOnLabel") : t("workspace.workspaceDrawer.filterLabel")}
+      title={t("workspace.workspaceDrawer.filterTitle")}
+      sections={[
       SHOWS.map((option) => ({
-        label: option.label,
+        label: t(option.labelKey),
         icon: option.icon,
         selected: show === option.value,
         onPress: () => onShow(option.value),
       })),
       FILTERS.map((option) => ({
-        label: option.label,
+        label: t(option.labelKey),
         icon: option.icon,
         selected: filter === option.value,
         onPress: () => onFilter(option.value),
@@ -315,7 +321,7 @@ function FilterMenu({
           the button's size, as in SessionFilterMenu. */}
       <Host style={StyleSheet.absoluteFill}>
         <Menu
-          modifiers={[accessibilityLabel(on ? "Filter, on" : "Filter")]}
+          modifiers={[accessibilityLabel(on ? t("workspace.workspaceDrawer.filterOnLabel") : t("workspace.workspaceDrawer.filterLabel"))]}
           label={
             <HStack modifiers={[frame({ width: HEADER_HEIGHT, height: HEADER_HEIGHT }), contentShape(shapes.circle())]}>
               <Spacer />
@@ -328,7 +334,7 @@ function FilterMenu({
             modifiers={[pickerStyle("inline")]}
           >
             {SHOWS.map((option) => (
-              <Label key={option.value} title={option.label} systemImage={option.symbol} modifiers={[tag(option.value)]} />
+              <Label key={option.value} title={t(option.labelKey)} systemImage={option.symbol} modifiers={[tag(option.value)]} />
             ))}
           </Picker>
           <Picker
@@ -337,7 +343,7 @@ function FilterMenu({
             modifiers={[pickerStyle("inline")]}
           >
             {FILTERS.map((option) => (
-              <Label key={option.value} title={option.label} systemImage={option.symbol} modifiers={[tag(option.value)]} />
+              <Label key={option.value} title={t(option.labelKey)} systemImage={option.symbol} modifiers={[tag(option.value)]} />
             ))}
           </Picker>
         </Menu>
@@ -367,19 +373,20 @@ const MonoRow = memo(function MonoRow({
   active: boolean;
   onPress: (id: string) => void;
 }) {
+  const t = useT();
   const styles = useStyles();
   // The shimmer only runs where it can be seen.
   const shown = useDrawerOpen();
   const detail =
     mono.status === "working"
-      ? "Working…"
+      ? t("workspace.workspaceDrawer.monoWorking")
       : mono.status === "needs-you"
-        ? "Needs you"
-        : oneLine(mono.lastMessage) || "No messages yet";
+        ? t("workspace.workspaceDrawer.monoNeedsYou")
+        : oneLine(mono.lastMessage, t) || t("workspace.workspaceDrawer.monoNoMessages");
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={`${mono.name}, ${detail}`}
+      accessibilityLabel={t("workspace.workspaceDrawer.monoRowLabel", { name: mono.name, detail })}
       accessibilityState={{ selected: active }}
       onPress={() => onPress(mono.id)}
       style={({ pressed }) => [styles.row, (active || pressed) && styles.rowActive]}
@@ -391,7 +398,7 @@ const MonoRow = memo(function MonoRow({
             {mono.name}
           </Text>
           {mono.lastActiveAt ? (
-            <Text style={[styles.rowTime, unread && styles.rowTimeUnread]}>{when(mono.lastActiveAt)}</Text>
+            <Text style={[styles.rowTime, unread && styles.rowTimeUnread]}>{when(mono.lastActiveAt, undefined, t)}</Text>
           ) : null}
         </View>
         <View style={styles.rowTop}>
@@ -414,24 +421,24 @@ const MonoRow = memo(function MonoRow({
 
 /** When a Mono was last active, as a chat list dates its rows: the time
  *  today, Yesterday, else the day. */
-export function when(at: number) {
+export function when(at: number, today = new Date(), t: TFunction = tNow) {
   const date = new Date(at);
-  const today = new Date();
   if (date.toDateString() === today.toDateString())
     return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
   const yesterday = new Date(today);
   yesterday.setDate(today.getDate() - 1);
-  if (date.toDateString() === yesterday.toDateString()) return "Yesterday";
+  if (date.toDateString() === yesterday.toDateString())
+    return t("workspace.workspaceDrawer.yesterday");
   return date.toLocaleDateString([], { month: "short", day: "numeric" });
 }
 
 /** The start of a message as one plain line: its markdown read for its
  *  words, so **bold** shows as bold rather than its asterisks. Only as much
  *  as one line can show is read. */
-export function oneLine(text: string) {
+export function oneLine(text: string, t: TFunction = tNow) {
   // A reply that is only a reaction, as the chat shows it, by its emoji.
   const reaction = text.trim().match(/^<reaction>\s*(.{1,16}?)\s*<\/reaction>$/su);
-  if (reaction) return `Reacted ${reaction[1]}`;
+  if (reaction) return t("workspace.workspaceDrawer.reacted", { emoji: reaction[1] });
   return plainText(text.slice(0, 600));
 }
 

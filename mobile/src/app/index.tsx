@@ -7,6 +7,7 @@ import { SessionScreen } from "@/features/sessions/SessionScreen";
 import { useConnectionStyles } from "@/features/connection/ConnectScreen";
 import { useMonoOnlyLayout } from "@/features/settings/monoOnly";
 import { MonoHome } from "@/features/workspace/MonoHome";
+import { useT } from "@/i18n/i18n";
 export default function Index() {
   const [monoOnly] = useMonoOnlyLayout();
   // Monos only: the list of them, each chat pushed over it.
@@ -17,6 +18,7 @@ export default function Index() {
 
 function WorkspaceIndex() {
   const styles = useConnectionStyles();
+  const t = useT();
   const { projects, monos } = useWorkspace();
   // Back where the user last was, while it is still on the phone.
   const last = readLastPlace(useConnection().pairing?.desktop.fingerprint);
@@ -42,17 +44,17 @@ function WorkspaceIndex() {
       />
     );
   return (
-    <SessionScreen title="Workspace">
+    <SessionScreen title={t("app.index.title")}>
       <View style={[styles.screen, { justifyContent: "center", gap: 24 }]}>
-        <Text style={styles.title}>Make yourself at home.</Text>
+        <Text style={styles.title}>{t("app.index.emptyTitle")}</Text>
         <Text style={styles.subtitle}>
-          Choose the projects and monos you want on your phone.
+          {t("app.index.emptySubtitle")}
         </Text>
         <Pressable
           style={styles.primary}
           onPress={() => router.push("/settings")}
         >
-          <Text style={styles.primaryLabel}>Choose workspace</Text>
+          <Text style={styles.primaryLabel}>{t("app.index.chooseWorkspace")}</Text>
         </Pressable>
       </View>
     </SessionScreen>

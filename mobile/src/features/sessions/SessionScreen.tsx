@@ -55,6 +55,7 @@ import { GlassBlurTarget, GlassPresence, LiquidView } from "@/ui/LiquidView";
 import { DitherLoading } from "@/ui/DitherLoading";
 import { useDrawerActions, useSceneSwapping, useSceneSwitching } from "@/ui/ScenePager";
 import { UnreadDot, useAnyUnreadMono } from "@/features/workspace/UnreadDot";
+import { useT } from "@/i18n/i18n";
 import { themedStyles, useColors } from "@/ui/theme";
 
 export const HEADER_HEIGHT = 44;
@@ -324,6 +325,7 @@ export function SessionFrame({
 }) {
   const colors = useColors();
   const styles = useStyles();
+  const t = useT();
   const native = nativeHeaderHeight !== undefined;
   // A screen under a native header draws its own frame inside this one;
   // this one's header and composer stand aside meanwhile.
@@ -642,7 +644,7 @@ export function SessionFrame({
                 <View>
                   <CircleButton
                     icon="sidebar"
-                    label={unread ? "Projects and monos, new replies" : "Projects and monos"}
+                    label={unread ? t("sessions.sessionScreen.projectsAndMonosUnread") : t("sessions.sessionScreen.projectsAndMonos")}
                     onPress={drawer.open}
                   />
                   {unread ? <UnreadDot /> : null}
@@ -724,7 +726,7 @@ export function SessionFrame({
                   >
                     <LiquidView
                       onPress={() => jumpTarget.current?.()}
-                      accessibilityLabel="Scroll to bottom"
+                      accessibilityLabel={t("sessions.sessionScreen.scrollToBottom")}
                       borderRadius={JUMP / 2}
                       innerStyle={styles.jumpButton}
                     >

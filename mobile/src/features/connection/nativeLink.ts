@@ -1,6 +1,8 @@
 import { requireOptionalNativeModule } from "expo";
 import { Platform } from "react-native";
 
+import { t as tNow } from "@/i18n/i18n";
+
 type NativeLink = {
   execute(input: string): Promise<string>;
   hideScrollEdgeEffects?(testID: string): Promise<boolean>;
@@ -27,10 +29,10 @@ export type Pairing = { desktop: Desktop; identity: Identity };
 
 export async function nativeCall<T>(input: object): Promise<T> {
   if (!module)
-    throw new Error("Rebuild the mobile app to enable desktop connections.");
+    throw new Error(tNow("workspace.nativeLink.rebuild"));
   const response = JSON.parse(await module.execute(JSON.stringify(input)));
   if (!response.ok)
-    throw new Error(response.error ?? "Desktop connection failed");
+    throw new Error(response.error ?? tNow("workspace.nativeLink.failed"));
   return response.result as T;
 }
 export function request<T>(

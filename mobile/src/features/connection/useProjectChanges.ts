@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { AppState } from "react-native";
 import type { ChangedFile } from "@/features/workspace/types";
+import { t as tNow } from "@/i18n/i18n";
 import { useConnection } from "./ConnectionProvider";
 type Changes = { branch: string; files: ChangedFile[]; worktreePath?: string };
 /** The last changes read for each working copy, so a screen moved to shows
@@ -38,7 +39,7 @@ export function useProjectChanges(projectId: string, enabled: boolean, worktreeP
           // A desktop that predates worktrees answers with the checkout's
           // changes; say so rather than show them as the worktree's.
           if (value.worktreePath !== worktreePath)
-            throw new Error("Update or reload Natsu on your desktop to see this worktree's changes.");
+            throw new Error(tNow("workspace.useProjectChanges.updateDesktop"));
           const key = keyFor(projectId, worktreePath);
           // Unchanged, the screen showing them needn't render again.
           const before = lastRead.get(key);

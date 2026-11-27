@@ -16,6 +16,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import type { SessionSummary } from "@/features/workspace/types";
 import { useWorkspace } from "@/features/workspace/WorkspaceProvider";
+import { useT } from "@/i18n/i18n";
 import { LiquidView } from "@/ui/LiquidView";
 import { ChoiceMenu } from "@/ui/ChoiceMenu";
 import { useContentWidth } from "@/ui/ContentPane";
@@ -51,6 +52,7 @@ export function SessionTitle({
   onClose?: () => void;
 }) {
   const styles = useStyles();
+  const t = useT();
   const width = useContentWidth();
   const insets = useSafeAreaInsets();
   const titleWidth = Math.max(
@@ -78,7 +80,7 @@ export function SessionTitle({
       {onClose ? (
         <Stack.Toolbar.Button
           icon="xmark"
-          accessibilityLabel="Close"
+          accessibilityLabel={t("sessions.sessionToolbar.close")}
           onPress={onClose}
         />
       ) : null}
@@ -125,8 +127,13 @@ export function SessionToolbar({
   const { rename } = useSessionActions(() => {});
   const styles = useStyles();
   const colors = useColors();
+  const t = useT();
   const [renaming, setRenaming] = useState(false);
   const [name, setName] = useState("");
+  const changesLabel =
+    changed === 1
+      ? t("sessions.sessionToolbar.changesOne", { count: changed })
+      : t("sessions.sessionToolbar.changesOther", { count: changed });
 
   const openChanges = () =>
     router.push({
@@ -154,28 +161,40 @@ export function SessionToolbar({
   };
   const archive = (target: SessionSummary) =>
     Alert.alert(
-      `Archive “${target.title}”?`,
-      "It moves to the archive on your desktop.",
+      t("sessions.sessionToolbar.archiveTitle", { title: target.title }),
+      t("sessions.sessionToolbar.archiveMessage"),
       [
-        { text: "Cancel", style: "cancel" },
+        { text: t("sessions.sessionToolbar.cancel"), style: "cancel" },
         {
-          text: "Archive",
+          text: t("sessions.sessionToolbar.archive"),
           isPreferred: true,
           onPress: () =>
-            leaveAnd(archiveSession, "Could not archive the session", target),
+            leaveAnd(
+              archiveSession,
+              t("sessions.sessionToolbar.archiveFailed"),
+              target,
+            ),
         },
       ],
     );
   const remove = (target: SessionSummary) =>
-    Alert.alert(`Delete “${target.title}”?`, "This can’t be undone.", [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Delete",
-        style: "destructive",
-        onPress: () =>
-          leaveAnd(deleteSession, "Could not delete the session", target),
-      },
-    ]);
+    Alert.alert(
+      t("sessions.sessionToolbar.deleteTitle", { title: target.title }),
+      t("sessions.sessionToolbar.deleteMessage"),
+      [
+        { text: t("sessions.sessionToolbar.cancel"), style: "cancel" },
+        {
+          text: t("sessions.sessionToolbar.delete"),
+          style: "destructive",
+          onPress: () =>
+            leaveAnd(
+              deleteSession,
+              t("sessions.sessionToolbar.deleteFailed"),
+              target,
+            ),
+        },
+      ],
+    );
 
   if (Platform.OS === "android")
     return (
@@ -183,7 +202,7 @@ export function SessionToolbar({
         <LiquidView borderRadius={24} innerStyle={styles.androidActions}>
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel={`Changes, ${changed} ${changed === 1 ? "file" : "files"}`}
+            accessibilityLabel={changesLabel}
             onPress={openChanges}
             style={styles.androidButton}
           >
@@ -197,12 +216,12 @@ export function SessionToolbar({
             </Svg>
           </Pressable>
           <ChoiceMenu
-            label="Session actions"
-            title="Session"
+            label={t("sessions.sessionToolbar.sessionActions")}
+            title={t("sessions.sessionToolbar.sessionTitle")}
             sections={[
               [
                 {
-                  label: "Rename",
+                  label: t("sessions.sessionToolbar.rename"),
                   icon: "edit",
                   disabled: !session,
                   onPress: () => {
@@ -212,18 +231,18 @@ export function SessionToolbar({
                     }
                   },
                 },
-                { label: "Copy Session ID", icon: "copy", onPress: () => void copyId() },
-                { label: "Settings", icon: "settings", onPress: onSettings },
+                { label: t("sessions.sessionToolbar.copySessionId"), icon: "copy", onPress: () => void copyId() },
+                { label: t("sessions.sessionToolbar.settings"), icon: "settings", onPress: onSettings },
               ],
               [
                 {
-                  label: "Archive",
+                  label: t("sessions.sessionToolbar.archive"),
                   icon: "archive",
                   disabled: !session,
                   onPress: () => session && archive(session),
                 },
                 {
-                  label: "Delete",
+                  label: t("sessions.sessionToolbar.delete"),
                   icon: "trash",
                   destructive: true,
                   disabled: !session,
@@ -263,10 +282,10 @@ export function SessionToolbar({
           <View style={styles.renameBackdrop}>
             <View style={styles.renameDialog}>
               <Text accessibilityRole="header" style={styles.name}>
-                Rename session
+                {t("sessions.sessionToolbar.renameDialogTitle")}
               </Text>
               <TextInput
-                accessibilityLabel="Session name"
+                accessibilityLabel={t("sessions.sessionToolbar.sessionName")}
                 value={name}
                 onChangeText={setName}
                 autoFocus
@@ -279,7 +298,7 @@ export function SessionToolbar({
                   onPress={() => setRenaming(false)}
                   style={styles.dialogButton}
                 >
-                  <Text style={styles.name}>Cancel</Text>
+                  <Text style={styles.name}>{t("sessions.sessionToolbar.cancel")}</Text>
                 </Pressable>
                 <Pressable
                   accessibilityRole="button"
@@ -289,11 +308,11 @@ export function SessionToolbar({
                     setRenaming(false);
                     if (session && name.trim() && name.trim() !== session.title)
                       void renameSession(session, name.trim()).catch(
-                        failed("Could not rename the session"),
+                        failed(t("sessions.sessionToolbar.renameFailed")),
                       );
                   }}
                 >
-                  <Text style={styles.name}>Rename</Text>
+                  <Text style={styles.name}>{t("sessions.sessionToolbar.rename")}</Text>
                 </Pressable>
               </View>
             </View>
@@ -306,29 +325,29 @@ export function SessionToolbar({
     <Stack.Toolbar placement="right">
       <Stack.Toolbar.Button
         icon="plus.forwardslash.minus"
-        accessibilityLabel={`Changes, ${changed} ${changed === 1 ? "file" : "files"}`}
+        accessibilityLabel={changesLabel}
         onPress={openChanges}
       >
         {changed > 0 ? (
           <Stack.Toolbar.Badge>{String(changed)}</Stack.Toolbar.Badge>
         ) : null}
       </Stack.Toolbar.Button>
-      <Stack.Toolbar.Menu icon="ellipsis" accessibilityLabel="Session actions">
+      <Stack.Toolbar.Menu icon="ellipsis" accessibilityLabel={t("sessions.sessionToolbar.sessionActions")}>
         <Stack.Toolbar.MenuAction
           icon="pencil"
           disabled={!session}
           onPress={() => session && rename(session)}
         >
-          Rename
+          {t("sessions.sessionToolbar.rename")}
         </Stack.Toolbar.MenuAction>
         <Stack.Toolbar.MenuAction
           icon="doc.on.doc"
           onPress={() => void copyId()}
         >
-          Copy Session ID
+          {t("sessions.sessionToolbar.copySessionId")}
         </Stack.Toolbar.MenuAction>
         <Stack.Toolbar.MenuAction icon="gearshape" onPress={onSettings}>
-          Settings
+          {t("sessions.sessionToolbar.settings")}
         </Stack.Toolbar.MenuAction>
         <Stack.Toolbar.Menu inline>
           <Stack.Toolbar.MenuAction
@@ -336,7 +355,7 @@ export function SessionToolbar({
             disabled={!session}
             onPress={() => session && archive(session)}
           >
-            Archive
+            {t("sessions.sessionToolbar.archive")}
           </Stack.Toolbar.MenuAction>
           <Stack.Toolbar.MenuAction
             icon="trash"
@@ -344,7 +363,7 @@ export function SessionToolbar({
             disabled={!session}
             onPress={() => session && remove(session)}
           >
-            Delete
+            {t("sessions.sessionToolbar.delete")}
           </Stack.Toolbar.MenuAction>
         </Stack.Toolbar.Menu>
       </Stack.Toolbar.Menu>

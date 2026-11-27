@@ -10,6 +10,8 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { useT } from "@/i18n/i18n";
+
 import { Icon, type IconName } from "./Icon";
 import { themedStyles, useColors } from "./theme";
 
@@ -49,6 +51,7 @@ export function ChoiceMenu({
   const [open, setOpen] = useState(false);
   const styles = useStyles();
   const insets = useSafeAreaInsets();
+  const t = useT();
   const groups = sections.filter((group) => group.length > 0);
   return (
     <>
@@ -71,7 +74,7 @@ export function ChoiceMenu({
         <View style={styles.overlay}>
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel="Close menu"
+            accessibilityLabel={t("app.choiceMenu.closeMenu")}
             onPress={() => setOpen(false)}
             style={styles.backdrop}
           />

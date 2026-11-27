@@ -17,6 +17,7 @@ export default defineConfig({
   esbuild: { jsx: "automatic" },
   test: {
     environment: "happy-dom",
+    setupFiles: ["tests/setup.ts"],
     // Protocol round trips need both the desktop and mobile dependency trees.
     include: [
       "tests/**/*.test.ts",

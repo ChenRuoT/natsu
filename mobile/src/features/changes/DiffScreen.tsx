@@ -11,6 +11,7 @@ import {
   useWrapPreference,
 } from "@/features/files/codeScreen";
 import type { ChangedFile } from "@/features/workspace/types";
+import { useT } from "@/i18n/i18n";
 import { themedStyles, useColors } from "@/ui/theme";
 
 import { formatCount, splitPath, STATUS_LETTER, useDiffTheme } from "./diffTheme";
@@ -24,6 +25,7 @@ import { formatCount, splitPath, STATUS_LETTER, useDiffTheme } from "./diffTheme
  */
 export function DiffScreen({ file }: { file: ChangedFile | undefined }) {
   const colors = useColors();
+  const t = useT();
   const styles = useStyles();
   const { name, dir } = splitPath(file?.relative ?? "");
   const diff = useDiffTheme();
@@ -68,12 +70,12 @@ export function DiffScreen({ file }: { file: ChangedFile | undefined }) {
             </CodeHeaderTitle>
           ),
           headerLeft: () => (
-            <HeaderButton icon="close" label="Close" onPress={() => router.back()} />
+            <HeaderButton icon="close" label={t("changes.diffScreen.close")} onPress={() => router.back()} />
           ),
           headerRight: () => (
             <HeaderButton
               icon="wrap"
-              label={wrap ? "Don't wrap lines" : "Wrap lines"}
+              label={wrap ? t("changes.diffScreen.unwrapLines") : t("changes.diffScreen.wrapLines")}
               on={wrap}
               onPress={toggleWrap}
             />
@@ -85,7 +87,7 @@ export function DiffScreen({ file }: { file: ChangedFile | undefined }) {
       ) : (
         // Opened again after the app restarted, say, with the diff gone.
         <ScrollView style={styles.root} contentInsetAdjustmentBehavior="automatic">
-          <Text style={styles.note}>This diff is no longer available. Open it again from Changes.</Text>
+          <Text style={styles.note}>{t("changes.diffScreen.unavailable")}</Text>
         </ScrollView>
       )}
       <HeaderBlur color={colors.sheet} />

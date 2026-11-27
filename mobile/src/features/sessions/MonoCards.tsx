@@ -4,6 +4,7 @@ import { createContext, use, useState } from "react";
 import { Alert, Pressable, Text, View } from "react-native";
 
 import type { TurnItem } from "@/features/workspace/types";
+import { t as tNow, useT } from "@/i18n/i18n";
 import { Icon } from "@/ui/Icon";
 import { themedStyles, useColors, withAlpha } from "@/ui/theme";
 
@@ -26,7 +27,7 @@ export function useMonoChoose() {
     void Haptics.selectionAsync();
     send(text).catch((reason: unknown) =>
       Alert.alert(
-        "Couldn’t send",
+        tNow("sessions.monoCards.couldntSendTitle"),
         reason instanceof Error ? reason.message : String(reason),
       ),
     );
@@ -97,11 +98,16 @@ export function DocumentCard({ document }: { document: DocumentItem }) {
   const styles = useStyles();
   const colors = useColors();
   const visual = document.kind === "html" || document.kind === "visual";
+  const t = useT();
   return (
     <View style={styles.list}>
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel={`Open ${visual ? "visual" : "document"} ${document.title}`}
+        accessibilityLabel={
+          visual
+            ? t("sessions.monoCards.openVisualLabel", { title: document.title })
+            : t("sessions.monoCards.openDocumentLabel", { title: document.title })
+        }
         onPress={() => openDocument(document.documentId, document.title)}
         style={({ pressed }) => [styles.document, pressed && styles.pressed]}
       >

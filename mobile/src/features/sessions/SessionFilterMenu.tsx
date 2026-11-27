@@ -11,6 +11,7 @@ import { Platform, StyleSheet, View } from "react-native";
 
 import { SEARCH_BAR } from "@/features/files/FileSearchBar";
 import type { Harness, SessionSummary } from "@/features/workspace/types";
+import { useT } from "@/i18n/i18n";
 import { ChoiceMenu } from "@/ui/ChoiceMenu";
 import { Icon } from "@/ui/Icon";
 import { LiquidView } from "@/ui/LiquidView";
@@ -64,16 +65,20 @@ export function SessionFilterMenu({
   harnesses: Harness[];
 }) {
   const colors = useColors();
+  const t = useT();
   const on = value.working || !!value.harness;
+  const filterLabel = on
+    ? t("sessions.sessionFilterMenu.filterOn")
+    : t("sessions.sessionFilterMenu.filter");
   // The SwiftUI menu has no Android view, so Android lists both groups in a sheet.
   if (Platform.OS === "android") return (
-    <ChoiceMenu label={on ? "Filter sessions, on" : "Filter sessions"} title="Filter" sections={[
+    <ChoiceMenu label={filterLabel} title={t("sessions.sessionFilterMenu.title")} sections={[
       [
-        { label: "All sessions", icon: "inbox", selected: !value.working, onPress: () => onChange({ ...value, working: false }) },
-        { label: "Working now", icon: "automation", selected: value.working, onPress: () => onChange({ ...value, working: true }) },
+        { label: t("sessions.sessionFilterMenu.allSessions"), icon: "inbox", selected: !value.working, onPress: () => onChange({ ...value, working: false }) },
+        { label: t("sessions.sessionFilterMenu.workingNow"), icon: "automation", selected: value.working, onPress: () => onChange({ ...value, working: true }) },
       ],
       harnesses.length > 1 || value.harness ? [
-        { label: "Any agent", selected: !value.harness, onPress: () => onChange({ ...value, harness: null }) },
+        { label: t("sessions.sessionFilterMenu.anyAgent"), selected: !value.harness, onPress: () => onChange({ ...value, harness: null }) },
         ...harnesses.map((harness) => ({
           label: HARNESS_NAMES[harness],
           selected: value.harness === harness,
@@ -95,7 +100,7 @@ export function SessionFilterMenu({
           the button's size, as in WorkspaceMenu. */}
       <Host style={StyleSheet.absoluteFill}>
         <Menu
-          modifiers={[accessibilityLabel(on ? "Filter sessions, on" : "Filter sessions")]}
+          modifiers={[accessibilityLabel(filterLabel)]}
           label={
             <HStack
               modifiers={[
@@ -112,8 +117,8 @@ export function SessionFilterMenu({
             onSelectionChange={(status) => onChange({ ...value, working: status === "working" })}
             modifiers={[pickerStyle("inline")]}
           >
-            <Label title="All sessions" systemImage="tray.full" modifiers={[tag("all")]} />
-            <Label title="Working now" systemImage="bolt" modifiers={[tag("working")]} />
+            <Label title={t("sessions.sessionFilterMenu.allSessions")} systemImage="tray.full" modifiers={[tag("all")]} />
+            <Label title={t("sessions.sessionFilterMenu.workingNow")} systemImage="bolt" modifiers={[tag("working")]} />
           </Picker>
           {harnesses.length > 1 || value.harness ? (
             <Picker
@@ -126,7 +131,7 @@ export function SessionFilterMenu({
               }
               modifiers={[pickerStyle("inline")]}
             >
-              <Label title="Any agent" modifiers={[tag("any")]} />
+              <Label title={t("sessions.sessionFilterMenu.anyAgent")} modifiers={[tag("any")]} />
               {harnesses.map((harness) => (
                 <Label key={harness} title={HARNESS_NAMES[harness]} modifiers={[tag(harness)]} />
               ))}

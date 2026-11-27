@@ -14,6 +14,7 @@ import { SheetLayout } from "@/features/sessions/SessionScreen";
 import type { Project } from "@/features/workspace/types";
 import { projectForRoute } from "@/features/workspace/routing";
 import { useWorkspace } from "@/features/workspace/WorkspaceProvider";
+import { useT } from "@/i18n/i18n";
 import { useColors } from "@/ui/theme";
 
 // A session's working copy, staged and committed from a native modal over it,
@@ -48,18 +49,19 @@ function ProjectChanges({
   const changes = useProjectChanges(project.id, true, worktreePath);
   const headerHeight = useHeaderHeight();
   const colors = useColors();
+  const t = useT();
   return (
     // A modal is its own native view hierarchy, so its gestures need their own root.
     <GestureHandlerRootView style={styles.root}>
       <Stack.Screen
         options={{
           headerTitle: () => (
-            <CodeHeaderTitle name="Changes">
+            <CodeHeaderTitle name={t("app.changes.title")}>
               {changes.result?.branch || project.branch || project.name}
             </CodeHeaderTitle>
           ),
           headerLeft: () => (
-            <HeaderButton icon="close" label="Close" onPress={() => router.back()} />
+            <HeaderButton icon="close" label={t("app.changes.close")} onPress={() => router.back()} />
           ),
         }}
       />

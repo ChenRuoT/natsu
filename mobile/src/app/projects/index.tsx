@@ -7,6 +7,7 @@ import { SettingsPage, SettingsRow } from "@/features/settings/SettingsUI";
 import { pickProject } from "@/features/workspace/projectPick";
 import { projectForRoute } from "@/features/workspace/routing";
 import { useWorkspace } from "@/features/workspace/WorkspaceProvider";
+import { useT } from "@/i18n/i18n";
 import { Icon } from "@/ui/Icon";
 import { themedStyles, useColors } from "@/ui/theme";
 
@@ -19,6 +20,7 @@ const SPINNER_FRAMES = 2;
 export default function ProjectsScreen() {
   const colors = useColors();
   const styles = useStyles();
+  const t = useT();
   const { current } = useLocalSearchParams<{ current?: string }>();
   const { projects } = useWorkspace();
   const selected = projectForRoute(projects, current);
@@ -53,7 +55,7 @@ export default function ProjectsScreen() {
       <Stack.Screen
         options={{
           headerSearchBarOptions: {
-            placeholder: "Search projects",
+            placeholder: t("app.projectsIndex.searchPlaceholder"),
             hideWhenScrolling: false,
             autoCapitalize: "none",
             onChangeText: (event) => setQuery(event.nativeEvent.text),
@@ -86,7 +88,7 @@ export default function ProjectsScreen() {
           </Fragment>
         ))}
         {needle && !shown.length ? (
-          <Text style={styles.empty}>No projects match.</Text>
+          <Text style={styles.empty}>{t("app.projectsIndex.noMatch")}</Text>
         ) : null}
       </SettingsPage>
     </>

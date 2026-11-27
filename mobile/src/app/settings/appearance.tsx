@@ -28,6 +28,8 @@ import {
   useAppearancePreference,
   type AppearancePreference,
 } from "@/features/settings/appearance";
+import { useLanguagePreference } from "@/features/settings/language";
+import { LOCALE_NAMES, useT, type LanguagePreference } from "@/i18n/i18n";
 import { SettingsPage, SettingsRow } from "@/features/settings/SettingsUI";
 import { useCollapsedToolCalls } from "@/features/settings/toolCalls";
 import { projectForRoute } from "@/features/workspace/routing";
@@ -55,20 +57,22 @@ import {
 // shows tool calls. An accent can be picked over any theme's own.
 export default function AppearanceScreen() {
   const styles = useStyles();
+  const t = useT();
   const { projectId } = useLocalSearchParams<{ projectId?: string }>();
   const project = projectForRoute(useWorkspace().projects, projectId);
   return (
     <SettingsPage>
+      <LanguageList />
       {project ? (
         <>
-          <Text style={[styles.heading, styles.firstHeading]}>
-            Background image
+          <Text style={styles.heading}>
+            {t("app.appearance.backgroundHeading")}
           </Text>
           <BackgroundSection projectId={project.id} />
         </>
       ) : null}
-      <Text style={[styles.heading, !project && styles.firstHeading]}>
-        Color scheme
+      <Text style={styles.heading}>
+        {t("app.appearance.colorSchemeHeading")}
       </Text>
       <SchemeControl />
       <ThemeList />
@@ -78,17 +82,59 @@ export default function AppearanceScreen() {
   );
 }
 
+/** The interface language, listed first: the phone's own, or one of ours. */
+function LanguageList() {
+  const t = useT();
+  const colors = useColors();
+  const styles = useStyles();
+  const [preference, setPreference] = useLanguagePreference();
+  const options: { value: LanguagePreference; label: string }[] = [
+    { value: "system", label: t("settings.language.system") },
+    { value: "en", label: LOCALE_NAMES.en },
+    { value: "zh-CN", label: LOCALE_NAMES["zh-CN"] },
+  ];
+  return (
+    <>
+      <Text style={[styles.heading, styles.firstHeading]}>
+        {t("settings.language.heading")}
+      </Text>
+      <View style={styles.card}>
+        {options.map((option, index) => (
+          <Fragment key={option.value}>
+            {index > 0 ? <View style={styles.divider} /> : null}
+            <SettingsRow
+              label={option.label}
+              showChevron={false}
+              accessory={
+                option.value === preference ? (
+                  <Icon name="check" size={18} color={colors.accent} />
+                ) : null
+              }
+              onPress={() => {
+                if (option.value === preference) return;
+                void Haptics.selectionAsync();
+                setPreference(option.value);
+              }}
+            />
+          </Fragment>
+        ))}
+      </View>
+    </>
+  );
+}
+
 const SCHEMES = [
-  { value: "system", label: "System" },
-  { value: "light", label: "Light" },
-  { value: "dark", label: "Dark" },
-] as const satisfies { value: AppearancePreference; label: string }[];
+  { value: "system", labelKey: "app.appearance.schemeSystem" },
+  { value: "light", labelKey: "app.appearance.schemeLight" },
+  { value: "dark", labelKey: "app.appearance.schemeDark" },
+] as const satisfies { value: AppearancePreference; labelKey: string }[];
 
 /** Light, dark or the phone's own, as iOS's own segmented control. */
 function SchemeControl() {
   const [preference, setPreference] = useAppearancePreference();
   const colors = useColors();
   const styles = useStyles();
+  const t = useT();
   // SwiftUI's segmented picker has no Android view; a row of buttons stands in.
   if (Platform.OS === "android") return (
     <View style={styles.segments}>
@@ -106,7 +152,7 @@ function SchemeControl() {
             style={[styles.segment, selected && { backgroundColor: colors.surfaceRaised }]}
           >
             <Text style={styles.segmentLabel}>
-              {option.label}
+              {t(option.labelKey)}
             </Text>
           </Pressable>
         );
@@ -125,7 +171,7 @@ function SchemeControl() {
       >
         {SCHEMES.map((option) => (
           <NativeText key={option.value} modifiers={[tag(option.value)]}>
-            {option.label}
+            {t(option.labelKey)}
           </NativeText>
         ))}
       </Picker>
@@ -139,6 +185,7 @@ function ThemeList() {
   const colors = useColors();
   const styles = useStyles();
   const theme = useTheme();
+  const t = useT();
   // The tapped row checks at once; the app redraws in its theme a frame
   // later, so the tap answers before that work starts.
   const [tapped, setTapped] = useState<ThemeName | null>(null);
@@ -156,7 +203,7 @@ function ThemeList() {
   };
   return (
     <>
-      <Text style={styles.heading}>Theme</Text>
+      <Text style={styles.heading}>{t("app.appearance.themeHeading")}</Text>
       <View style={styles.card}>
         {THEME_NAMES.map((name, index) => (
           <Fragment key={name}>
@@ -188,6 +235,7 @@ function AccentPicker() {
   const scheme = useScheme();
   const theme = useTheme();
   const accent = useAccent();
+  const t = useT();
   // As the theme list: the tap answers before the app redraws.
   const [tapped, setTapped] = useState<AccentName | null>(null);
   const shown = tapped ?? accent;
@@ -204,14 +252,14 @@ function AccentPicker() {
   };
   return (
     <>
-      <Text style={styles.heading}>Accent color</Text>
+      <Text style={styles.heading}>{t("app.appearance.accentHeading")}</Text>
       <View style={[styles.card, styles.accents]}>
         {ACCENT_NAMES.map((name) => {
           const fill =
             name === "theme"
               ? paletteFor(scheme, theme, "theme").accent
               : ACCENTS[name][scheme];
-          const label = name === "theme" ? `${THEMES[theme].label} (theme)` : ACCENTS[name].label;
+          const label = name === "theme" ? t("app.appearance.themeAccentLabel", { theme: THEMES[theme].label }) : ACCENTS[name].label;
           const selected = name === shown;
           return (
             <Pressable
@@ -236,9 +284,8 @@ function AccentPicker() {
       </View>
       <Text style={styles.note}>
         {shown === "theme"
-          ? `Using ${THEMES[theme].label}'s own accent.`
-          : `${ACCENTS[shown].label} over every theme.`}{" "}
-        Buttons, links and your messages in a Mono chat take it.
+          ? t("app.appearance.themeAccentNote", { theme: THEMES[theme].label })
+          : t("app.appearance.accentNote", { accent: ACCENTS[shown].label })}
       </Text>
     </>
   );
@@ -249,13 +296,14 @@ function TranscriptSection() {
   const colors = useColors();
   const styles = useStyles();
   const [collapsed, setCollapsed] = useCollapsedToolCalls();
+  const t = useT();
   return (
     <>
-      <Text style={styles.heading}>Transcript</Text>
+      <Text style={styles.heading}>{t("app.appearance.transcriptHeading")}</Text>
       <View style={styles.card}>
         <SettingsRow
           icon="wrench"
-          label="Collapse tool calls"
+          label={t("app.appearance.collapseToolCalls")}
           onPress={() => setCollapsed(!collapsed)}
           accessory={
             <Switch
@@ -267,8 +315,7 @@ function TranscriptSection() {
         />
       </View>
       <Text style={styles.note}>
-        Show only the label of the step the agent is on. Tap a step to see its
-        tool calls.
+        {t("app.appearance.collapseToolCallsNote")}
       </Text>
     </>
   );
@@ -297,11 +344,12 @@ function BackgroundSection({ projectId }: { projectId: string }) {
   const styles = useStyles();
   const controls = useEmptyBackground(projectId);
   const { settings, background, busy } = controls;
+  const t = useT();
   return (
     <View style={[styles.card, styles.backgroundCard]}>
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel={settings.image ? "Change photo" : "Choose photo"}
+        accessibilityLabel={t(settings.image ? "app.appearance.changePhoto" : "app.appearance.choosePhoto")}
         onPress={() => void controls.pickImage()}
         style={[styles.preview, { backgroundColor: colors.background }]}
       >
@@ -317,7 +365,7 @@ function BackgroundSection({ projectId }: { projectId: string }) {
         ) : settings.image ? null : (
           <View style={styles.previewEmpty}>
             <Icon name="image" size={26} color={colors.muted} />
-            <Text style={styles.previewHint}>Choose a photo</Text>
+            <Text style={styles.previewHint}>{t("app.appearance.choosePhotoHint")}</Text>
           </View>
         )}
       </Pressable>
@@ -344,7 +392,7 @@ function BackgroundSection({ projectId }: { projectId: string }) {
                   onValueChange={controls.setOpacity}
                   modifiers={[
                     tint(colors.accent),
-                    accessibilityLabel("Background visibility"),
+                    accessibilityLabel(t("app.appearance.backgroundVisibility")),
                   ]}
                 />
               </Host>}
@@ -354,7 +402,7 @@ function BackgroundSection({ projectId }: { projectId: string }) {
         ) : null}
         <SettingsRow
           icon="image"
-          label={settings.image ? "Change photo" : "Choose photo"}
+          label={t(settings.image ? "app.appearance.changePhoto" : "app.appearance.choosePhoto")}
           onPress={() => void controls.pickImage()}
         />
         {settings.image ? (
@@ -362,7 +410,7 @@ function BackgroundSection({ projectId }: { projectId: string }) {
             <View style={styles.divider} />
             <SettingsRow
               icon="trash"
-              label="Remove photo"
+              label={t("app.appearance.removePhoto")}
               showChevron={false}
               destructive
               onPress={controls.removeImage}

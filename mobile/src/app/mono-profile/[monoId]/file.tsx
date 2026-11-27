@@ -15,14 +15,18 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useConnection } from "@/features/connection/ConnectionProvider";
 import { useOffline } from "@/features/connection/ConnectionNotice";
 import { HeaderButton } from "@/features/files/codeScreen";
+import { t as tNow, useT, type MessageKey } from "@/i18n/i18n";
 import { themedStyles, useColors, useScheme } from "@/ui/theme";
 
 export type MonoFile = "soul" | "memory";
 
-const TITLES: Record<MonoFile, string> = { soul: "Soul", memory: "Memory" };
-const PLACEHOLDERS: Record<MonoFile, string> = {
-  soul: "Who it is, and what it should always keep in mind",
-  memory: "What it remembers between conversations",
+const TITLE_KEYS: Record<MonoFile, MessageKey> = {
+  soul: "app.monoProfileFile.soulTitle",
+  memory: "app.monoProfileFile.memoryTitle",
+};
+const PLACEHOLDER_KEYS: Record<MonoFile, MessageKey> = {
+  soul: "app.monoProfileFile.soulPlaceholder",
+  memory: "app.monoProfileFile.memoryPlaceholder",
 };
 
 // A Mono's soul or memory as Markdown, as the desktop's editor has them. It
@@ -39,6 +43,7 @@ export default function MonoFileScreen() {
   const colors = useColors();
   const scheme = useScheme();
   const headerHeight = useHeaderHeight();
+  const t = useT();
   const { bottom } = useSafeAreaInsets();
   const [text, setText] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -52,7 +57,7 @@ export default function MonoFileScreen() {
     opened.current = base;
     latest.current = text;
   }, [base, text]);
-  const title = TITLES[file] ?? "File";
+  const title = t(TITLE_KEYS[file] ?? "app.monoProfileFile.fileTitle");
 
   useEffect(() => {
     command<{ text: string; hash: string }>("mono.file", { monoId, file })
@@ -84,7 +89,7 @@ export default function MonoFileScreen() {
     () => () => {
       save().catch((reason: unknown) =>
         Alert.alert(
-          `Couldn’t save ${title.toLowerCase()}`,
+          tNow("app.monoProfileFile.saveFailedTitle", { title: title.toLowerCase() }),
           reason instanceof Error ? reason.message : String(reason),
         ),
       );
@@ -103,13 +108,13 @@ export default function MonoFileScreen() {
               ? () => (
                   <HeaderButton
                     icon="check"
-                    label="Save"
+                    label={t("app.monoProfileFile.save")}
                     onPress={() =>
                       save()
                         .then(() => router.back())
                         .catch((reason: unknown) =>
                           Alert.alert(
-                            "Couldn’t save",
+                            t("app.monoProfileFile.saveFailedGeneric"),
                             reason instanceof Error
                               ? reason.message
                               : String(reason),
@@ -148,7 +153,7 @@ export default function MonoFileScreen() {
             autoCorrect={false}
             autoCapitalize="sentences"
             textAlignVertical="top"
-            placeholder={PLACEHOLDERS[file]}
+            placeholder={t(PLACEHOLDER_KEYS[file])}
             placeholderTextColor={colors.muted}
             keyboardAppearance={scheme}
             editable={!offline}
