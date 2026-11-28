@@ -1,29 +1,35 @@
 import type { Block } from "./session";
+import {
+  t as tNow,
+  type MessageKey,
+  type TFunction,
+} from "../../../shared/i18n/i18n";
 
 export type NatsuToolCall = {
   action: string;
+  /** Translated when parsed, so it reads in the language active at that time. */
   label: string;
   command: string;
 };
 
-const ACTION_LABELS: Record<string, string> = {
-  "models.list": "List models",
-  "sessions.list": "List sessions",
-  "sessions.read": "Read a session",
-  "sessions.send": "Continue a session",
-  "sessions.draft": "Save a draft",
-  "sessions.start": "Start a session",
-  "sessions.stop": "Stop a session",
-  "sessions.archive": "Archive a session",
-  "sessions.delete": "Delete a session",
-  "folders.list": "List folders",
-  "folders.move": "Move a session",
-  "notes.list": "List notes",
-  "notes.read": "Read a note",
-  "notes.write": "Write a note",
-  "artifacts.list": "List artifacts",
-  "artifacts.read": "Read an artifact",
-  "artifacts.write": "Write an artifact",
+const ACTION_LABELS: Record<string, MessageKey> = {
+  "models.list": "sessions.natsuToolCall.modelsList",
+  "sessions.list": "sessions.natsuToolCall.sessionsList",
+  "sessions.read": "sessions.natsuToolCall.sessionsRead",
+  "sessions.send": "sessions.natsuToolCall.sessionsSend",
+  "sessions.draft": "sessions.natsuToolCall.sessionsDraft",
+  "sessions.start": "sessions.natsuToolCall.sessionsStart",
+  "sessions.stop": "sessions.natsuToolCall.sessionsStop",
+  "sessions.archive": "sessions.natsuToolCall.sessionsArchive",
+  "sessions.delete": "sessions.natsuToolCall.sessionsDelete",
+  "folders.list": "sessions.natsuToolCall.foldersList",
+  "folders.move": "sessions.natsuToolCall.foldersMove",
+  "notes.list": "sessions.natsuToolCall.notesList",
+  "notes.read": "sessions.natsuToolCall.notesRead",
+  "notes.write": "sessions.natsuToolCall.notesWrite",
+  "artifacts.list": "sessions.natsuToolCall.artifactsList",
+  "artifacts.read": "sessions.natsuToolCall.artifactsRead",
+  "artifacts.write": "sessions.natsuToolCall.artifactsWrite",
 };
 
 /** Conservatively parse one shell invocation; compound commands use the shell row. */
@@ -102,7 +108,11 @@ export function natsuToolCall(block: Block): NatsuToolCall | undefined {
   if (action === "--help" || action === "help" || action === "-h") {
     return words.length > 3
       ? undefined
-      : { action: "--help", label: "View CLI commands", command };
+      : {
+          action: "--help",
+          label: tNow("sessions.natsuToolCall.viewCli"),
+          command,
+        };
   }
   if (!Object.prototype.hasOwnProperty.call(ACTION_LABELS, action))
     return undefined;
@@ -113,13 +123,14 @@ export function natsuToolCall(block: Block): NatsuToolCall | undefined {
     )
       return undefined;
   }
-  return { action, label: ACTION_LABELS[action], command };
+  return { action, label: tNow(ACTION_LABELS[action]), command };
 }
 
 /** A group of only Natsu calls can be named for the app, not the shell. */
 export function natsuWorkSummary(
   steps: Block[],
   live: boolean,
+  t: TFunction = tNow,
 ): string | undefined {
   if (steps.some((block) => block.interjection || block.role === "system")) {
     return undefined;
@@ -130,5 +141,7 @@ export function natsuWorkSummary(
   if (calls.length === 0 || calls.some((block) => !natsuToolCall(block))) {
     return undefined;
   }
-  return live ? "Using Natsu" : "Used Natsu";
+  return live
+    ? t("sessions.natsuToolCall.using")
+    : t("sessions.natsuToolCall.used");
 }

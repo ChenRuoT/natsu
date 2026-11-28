@@ -96,6 +96,7 @@ import {
 import { remoteProjectFor } from "../../features/connections/model/remoteProjects";
 import { useProjectMenu } from "./useProjectMenu";
 import { MonoRailSection, type MonoRailProps } from "./MonoRailSection";
+import { useT, type TFunction } from "../../shared/i18n/i18n";
 
 type Props = {
   visible?: boolean;
@@ -187,6 +188,7 @@ export function ProjectRail({
   onDismissUpdate,
   monos,
 }: Props) {
+  const t = useT();
   const trafficLightsVisible = useTrafficLightsVisible();
   const resize = useDragResize({
     min: sharedWidth?.min ?? PROJECT_RAIL_WIDTH_MIN,
@@ -257,7 +259,10 @@ export function ProjectRail({
   const groupLogos = useTabGroupLogos();
   const muteStatuses = new Map<string, string | null>();
   for (const project of notificationProjects.projects) {
-    const status = notificationMuteStatus(notificationPreferences[project.id]);
+    const status = notificationMuteStatus(
+      notificationPreferences[project.id],
+      t,
+    );
     for (const path of project.paths) muteStatuses.set(pathKey(path), status);
   }
   const sections = useMemo(
@@ -379,7 +384,7 @@ export function ProjectRail({
   return (
     <nav
       ref={resize.setPaneRef}
-      aria-label="Projects"
+      aria-label={t("shell.projectRail.navLabel")}
       className={`sidebar-glass relative shrink-0 flex-col border-r border-stroke ${visible ? "flex" : "hidden"}`}
     >
       {headerless ? null : (
@@ -410,16 +415,18 @@ export function ProjectRail({
         <>
           <div className="flex shrink-0 flex-col gap-px px-2 pb-2 pt-0.5">
             <RailSearch
-              label="Search"
+              label={t("shell.projectRail.search")}
               icon={Search}
               onClick={onSearch}
               active={searchActive}
               shortcut={`${MOD}K`}
-              ariaLabel={`Search (${MOD}K)`}
+              ariaLabel={t("shell.projectRail.searchAria", {
+                shortcut: `${MOD}K`,
+              })}
             />
             <div className="mt-0.5" />
             <RailAction
-              label="Inbox"
+              label={t("shell.projectRail.inbox")}
               icon={Inbox}
               onClick={onOpenInbox}
               onOpenContextMenu={(x, y) => {
@@ -432,23 +439,27 @@ export function ProjectRail({
               }}
               active={inboxActive}
               dot={inboxUnseen}
-              ariaLabel={inboxUnseen ? "Inbox, new items" : "Inbox"}
+              ariaLabel={
+                inboxUnseen
+                  ? t("shell.projectRail.inboxNewItems")
+                  : t("shell.projectRail.inbox")
+              }
             />
             {notesEnabled ? (
               <RailAction
-                label="Notes"
+                label={t("shell.projectRail.notes")}
                 icon={File}
                 onClick={onOpenNotes}
                 active={notesActive}
-                ariaLabel="Notes"
+                ariaLabel={t("shell.projectRail.notes")}
               />
             ) : null}
             <RailAction
-              label="Automations"
+              label={t("shell.projectRail.automations")}
               icon={Zap}
               onClick={onOpenAutomations}
               active={automationsActive}
-              ariaLabel="Automations"
+              ariaLabel={t("shell.projectRail.automations")}
             />
           </div>
 
@@ -463,7 +474,7 @@ export function ProjectRail({
 
             {sections.pinned.length > 0 ? (
               <ProjectSection
-                label="Pinned"
+                label={t("shell.projectRail.pinned")}
                 items={sections.pinned}
                 muteStatuses={muteStatuses}
                 cwd={cwd}
@@ -487,7 +498,7 @@ export function ProjectRail({
             {projectGroups.length > 0 ? (
               <div className="mb-2 shrink-0">
                 <ProjectSectionHeader
-                  label="Groups"
+                  label={t("shell.projectRail.groups")}
                   onAddGroup={(x, y) => projectMenu.createGroup(x, y)}
                 />
                 <div className="flex flex-col gap-px px-2">
@@ -528,12 +539,12 @@ export function ProjectRail({
             ) : null}
 
             <ProjectSection
-              label="Projects"
+              label={t("shell.projectRail.projects")}
               items={groupedProjectSections.ungrouped}
               muteStatuses={muteStatuses}
               emptyLabel={
                 sections.projects.length === 0 && projectGroups.length === 0
-                  ? "No projects yet"
+                  ? t("shell.projectRail.noProjects")
                   : undefined
               }
               onAdd={onOpenProject}
@@ -571,11 +582,13 @@ export function ProjectRail({
           <div className="flex shrink-0 flex-col gap-px p-2">
             <GithubStarPrompt />
             <RailAction
-              label="Settings"
+              label={t("shell.projectRail.settings")}
               icon={Settings}
               onClick={onOpenSettings}
               shortcut={`${MOD},`}
-              ariaLabel={`Settings (${MOD},)`}
+              ariaLabel={t("shell.projectRail.settingsAria", {
+                shortcut: `${MOD},`,
+              })}
             />
           </div>
         </>
@@ -595,7 +608,7 @@ export function ProjectRail({
       <div
         role="separator"
         aria-orientation="vertical"
-        aria-label="Resize project sidebar"
+        aria-label={t("shell.projectRail.resizeLabel")}
         aria-valuenow={resize.width}
         aria-valuemin={PROJECT_RAIL_WIDTH_MIN}
         aria-valuemax={PROJECT_RAIL_WIDTH_MAX}
@@ -702,6 +715,7 @@ function ProjectSectionHeader({
   onAdd?: () => void;
   onAddGroup?: (x: number, y: number) => void;
 }) {
+  const t = useT();
   return (
     <div className="flex items-center gap-1 px-3 pb-1.5 pt-1">
       {/* As tall as the header buttons, so every section header matches. */}
@@ -711,8 +725,8 @@ function ProjectSectionHeader({
       {onAddGroup ? (
         <button
           type="button"
-          title="New project group"
-          aria-label="New project group"
+          title={t("shell.projectRail.newProjectGroup")}
+          aria-label={t("shell.projectRail.newProjectGroup")}
           onClick={(event) => {
             const rect = event.currentTarget.getBoundingClientRect();
             onAddGroup(rect.left, rect.bottom);
@@ -771,12 +785,13 @@ function ProjectGroupSection({
   groupLogos: ReturnType<typeof useTabGroupLogos>;
   groupMascots: Record<string, string>;
 }) {
+  const t = useT();
   const sortable = useAnimatedReorder(
     items.map((item) => item.path),
     onReorder,
     "y",
   );
-  const countLabel = `${items.length} ${items.length === 1 ? "project" : "projects"}`;
+  const countParams = { name: group.name, count: items.length };
   const expanded = !group.collapsed;
   const openMenu = (target: HTMLElement, x?: number, y?: number) => {
     const rect = target.getBoundingClientRect();
@@ -809,8 +824,16 @@ function ProjectGroupSection({
         <button
           type="button"
           aria-expanded={!group.collapsed}
-          aria-label={`${group.name}, ${countLabel}`}
-          title={`${group.name} · ${countLabel}`}
+          aria-label={
+            items.length === 1
+              ? t("shell.projectRail.groupCountAria.one", countParams)
+              : t("shell.projectRail.groupCountAria.other", countParams)
+          }
+          title={
+            items.length === 1
+              ? t("shell.projectRail.groupCountTitle.one", countParams)
+              : t("shell.projectRail.groupCountTitle.other", countParams)
+          }
           onClick={() => {
             if (groupSortable.consumeClick()) return;
             onToggleCollapsed();
@@ -850,8 +873,10 @@ function ProjectGroupSection({
         <button
           type="button"
           data-no-drag
-          title="Group options"
-          aria-label={`${group.name} group options`}
+          title={t("shell.projectRail.groupOptions")}
+          aria-label={t("shell.projectRail.groupOptionsAria", {
+            name: group.name,
+          })}
           aria-haspopup="menu"
           onPointerDown={(event) => event.stopPropagation()}
           onClick={(event) => {
@@ -930,6 +955,7 @@ function ProjectCard({
   groupLogos: ReturnType<typeof useTabGroupLogos>;
   groupMascots: Record<string, string>;
 }) {
+  const t = useT();
   const fallbackName = basename(item.path);
   const key = projectKey(item.path);
   const seed = projectName(item.path);
@@ -951,24 +977,35 @@ function ProjectCard({
   const connection = !remote
     ? ""
     : !machine
-      ? "Machine not connected on this computer"
+      ? t("shell.projectRail.machineNotConnected")
       : online === undefined
-        ? "Connecting"
+        ? t("shell.projectRail.connecting")
         : online
-          ? "Connected"
-          : "Reconnecting";
+          ? t("shell.projectRail.connected")
+          : t("shell.projectRail.reconnecting");
   const cardTitle = projectCardTitle(
     remote
-      ? `${remote.cwd} on ${machine?.name ?? "another machine"} (${connection})`
+      ? t("shell.projectRail.remoteCardPath", {
+          path: remote.cwd,
+          machine: machine?.name ?? t("shell.projectRail.anotherMachine"),
+          connection,
+        })
       : item.path,
     name,
     stats,
     busy,
+    t,
   );
   const cardAriaLabel = projectCardAriaLabel(
-    machine ? `${name} on ${machine.name}` : name,
+    machine
+      ? t("shell.projectRail.remoteCardAria", {
+          name,
+          machine: machine.name,
+        })
+      : name,
     stats,
     busy,
+    t,
   );
   const labelClassName = machine
     ? "min-w-0 max-w-[75%] shrink-0 truncate text-sm font-medium leading-tight"
@@ -1088,8 +1125,8 @@ function ProjectCard({
       <button
         type="button"
         data-no-drag
-        title="Project options"
-        aria-label="Project options"
+        title={t("shell.projectRail.projectOptions")}
+        aria-label={t("shell.projectRail.projectOptions")}
         aria-haspopup="menu"
         onPointerDown={(event) => event.stopPropagation()}
         onClick={(event) => {
@@ -1108,8 +1145,16 @@ function ProjectCard({
       <button
         type="button"
         data-no-drag
-        title={pinned ? "Unpin project" : "Pin project"}
-        aria-label={pinned ? "Unpin project" : "Pin project"}
+        title={
+          pinned
+            ? t("shell.projectRail.unpinProject")
+            : t("shell.projectRail.pinProject")
+        }
+        aria-label={
+          pinned
+            ? t("shell.projectRail.unpinProject")
+            : t("shell.projectRail.pinProject")
+        }
         onPointerDown={(event) => event.stopPropagation()}
         onClick={(event) => {
           event.stopPropagation();
@@ -1141,6 +1186,7 @@ function ProjectDiffStat({
   additions: number;
   deletions: number;
 }) {
+  const t = useT();
   if (additions <= 0 && deletions <= 0) return null;
 
   const label = [
@@ -1152,7 +1198,7 @@ function ProjectDiffStat({
 
   return (
     <span
-      title={`${label} uncommitted`}
+      title={t("shell.projectRail.uncommitted", { stats: label })}
       className="flex shrink-0 items-center gap-1 font-sans text-[11px] font-semibold tabular-nums"
     >
       {additions > 0 ? (
@@ -1170,16 +1216,21 @@ function projectCardTitle(
   name: string,
   stats: GitDiffStats | null,
   busy: boolean,
+  t: TFunction,
 ): string {
   const parts = [name, path];
-  if (busy) parts.push("Working");
+  if (busy) parts.push(t("shell.projectRail.working"));
   const files = stats?.files ?? 0;
   const additions = stats?.additions ?? 0;
   const deletions = stats?.deletions ?? 0;
   if (files > 0 || additions > 0 || deletions > 0) {
     parts.push(
       [
-        files > 0 ? `${files} ${files === 1 ? "file" : "files"} changed` : "",
+        files > 0
+          ? files === 1
+            ? t("shell.projectRail.filesChanged.one", { count: files })
+            : t("shell.projectRail.filesChanged.other", { count: files })
+          : "",
         additions > 0 ? `+${formatInteger(additions)}` : "",
         deletions > 0 ? `-${formatInteger(deletions)}` : "",
       ]
@@ -1194,14 +1245,19 @@ function projectCardAriaLabel(
   name: string,
   stats: GitDiffStats | null,
   busy: boolean,
+  t: TFunction,
 ): string {
   const parts = [name];
-  if (busy) parts.push("working");
+  if (busy) parts.push(t("shell.projectRail.workingLower"));
   const files = stats?.files ?? 0;
   const additions = stats?.additions ?? 0;
   const deletions = stats?.deletions ?? 0;
   if (files > 0) {
-    parts.push(`${files} ${files === 1 ? "file" : "files"} changed`);
+    parts.push(
+      files === 1
+        ? t("shell.projectRail.filesChanged.one", { count: files })
+        : t("shell.projectRail.filesChanged.other", { count: files }),
+    );
   }
   if (additions > 0) parts.push(`+${formatInteger(additions)}`);
   if (deletions > 0) parts.push(`-${formatInteger(deletions)}`);
@@ -1210,6 +1266,7 @@ function projectCardAriaLabel(
 
 /** Adds a folder on this computer, or one on a connected machine. */
 function AddProjectButton({ onOpenFolder }: { onOpenFolder: () => void }) {
+  const t = useT();
   const anchor = useRef<HTMLButtonElement>(null);
   const [open, setOpen] = useState(false);
   const item =
@@ -1219,8 +1276,8 @@ function AddProjectButton({ onOpenFolder }: { onOpenFolder: () => void }) {
       <button
         ref={anchor}
         type="button"
-        title="Open project"
-        aria-label="Open project"
+        title={t("shell.projectRail.openProject")}
+        aria-label={t("shell.projectRail.openProject")}
         aria-haspopup="menu"
         aria-expanded={open}
         onClick={() => setOpen((value) => !value)}
@@ -1235,7 +1292,7 @@ function AddProjectButton({ onOpenFolder }: { onOpenFolder: () => void }) {
           width={230}
           onDismiss={() => setOpen(false)}
           role="menu"
-          aria-label="Open project"
+          aria-label={t("shell.projectRail.openProject")}
           className="p-1"
         >
           <button
@@ -1248,7 +1305,7 @@ function AddProjectButton({ onOpenFolder }: { onOpenFolder: () => void }) {
             }}
           >
             <FolderPlus className="size-3.5 shrink-0" strokeWidth={1.75} />
-            Open folder…
+            {t("shell.projectRail.openFolder")}
           </button>
           <button
             type="button"
@@ -1260,7 +1317,7 @@ function AddProjectButton({ onOpenFolder }: { onOpenFolder: () => void }) {
             }}
           >
             <Internet className="size-3.5 shrink-0" strokeWidth={1.75} />
-            Open folder on a machine…
+            {t("shell.projectRail.openFolderOnMachine")}
           </button>
         </Popover>
       ) : null}

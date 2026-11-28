@@ -279,10 +279,12 @@ fn menu(
         .build(app)?;
     let mut builder = MenuBuilder::new(app).item(&header).separator();
     if monos.is_empty() {
-        let empty =
-            MenuItemBuilder::with_id("mono-chat-empty", "Create a Mono in Natsu to chat here")
-                .enabled(false)
-                .build(app)?;
+        let empty = MenuItemBuilder::with_id(
+            "mono-chat-empty",
+            crate::menu::tr("Create a Mono in Natsu to chat here"),
+        )
+        .enabled(false)
+        .build(app)?;
         builder = builder.item(&empty);
     } else {
         for mono in monos {
@@ -299,7 +301,7 @@ fn menu(
     for action in &menu_bar::ACTIONS {
         builder = builder
             .separator()
-            .item(&MenuItemBuilder::with_id(action.id, action.title).build(app)?);
+            .item(&MenuItemBuilder::with_id(action.id, crate::menu::tr(action.title)).build(app)?);
     }
     builder.build()
 }
@@ -607,7 +609,7 @@ fn build(app: &AppHandle, mono_id: &str) -> tauri::Result<WebviewWindow> {
         label(mono_id),
         WebviewUrl::App("mono-chat.html".into()),
     )
-    .title("Mono chat")
+    .title(crate::menu::tr("Mono chat"))
     .inner_size(WIDTH, height)
     .min_inner_size(370.0, 420.0)
     .resizable(true)

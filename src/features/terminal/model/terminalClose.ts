@@ -2,6 +2,7 @@ import { ask } from "@tauri-apps/plugin-dialog";
 import type { FilePaneTab } from "../../workspace/model/layout";
 import { getPtyStatus } from "../../../platform/tauri/pty";
 import { terminalTabLabel } from "./terminalTab";
+import { t as tNow } from "../../../shared/i18n/i18n";
 
 type RunningTerminal = {
   file: FilePaneTab;
@@ -30,7 +31,7 @@ export async function confirmCloseTerminal(file: FilePaneTab): Promise<boolean> 
   const { process } = running[0];
   const label = terminalTabLabel(file);
   return ask(
-    `"${process}" is still running in ${label}. Close this terminal anyway?`,
+    tNow("terminal.close.runningOne", { process, label }),
     { title: "Natsu", kind: "warning" },
   );
 }
@@ -42,15 +43,18 @@ export async function confirmCloseTerminals(files: FilePaneTab[]): Promise<boole
   if (running.length === 1) {
     const { file, process } = running[0];
     return ask(
-      `"${process}" is still running in ${terminalTabLabel(file)}. Close this terminal anyway?`,
+      tNow("terminal.close.runningOne", {
+        process,
+        label: terminalTabLabel(file),
+      }),
       { title: "Natsu", kind: "warning" },
     );
   }
   const lines = running
     .map(({ file, process }) => `• ${terminalTabLabel(file)} (${process})`)
     .join("\n");
-  return ask(
-    `These terminals are still running:\n${lines}\n\nClose them anyway?`,
-    { title: "Natsu", kind: "warning" },
-  );
+  return ask(tNow("terminal.close.runningMany", { lines }), {
+    title: "Natsu",
+    kind: "warning",
+  });
 }

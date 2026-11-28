@@ -8,6 +8,7 @@ import {
 import { isFilesystemTab, type FilePaneTab } from "../../workspace/model/layout";
 import { isEqualOrInside, parentPath, pathKey } from "../../../shared/lib/paths";
 import { isBlankSession } from "../../projects/model/projectReturn";
+import { t as tNow } from "../../../shared/i18n/i18n";
 import { newSession, sessionWorkCwd, type Session } from "../../sessions/model/session";
 
 export type Worktree = {
@@ -150,9 +151,7 @@ export function assertWorktreeFilesClosed(
         (isFilesystemTab(file) && isEqualOrInside(file.path, path)),
     )
   ) {
-    throw new Error(
-      "Close the files and terminals open in this worktree first.",
-    );
+    throw new Error(tNow("scm.worktrees.closeFilesFirst"));
   }
 }
 

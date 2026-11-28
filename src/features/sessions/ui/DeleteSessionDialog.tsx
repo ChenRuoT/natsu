@@ -1,3 +1,4 @@
+import { useT } from "../../../shared/i18n/i18n";
 import { useState } from "react";
 import { prettyCwd } from "../../../shared/lib/paths";
 import { Modal } from "../../../shared/ui/Modal";
@@ -16,10 +17,11 @@ export function DeleteSessionDialog({
   unusedWorktree: string;
   onClose: (choice: SessionDeleteChoice) => void;
 }) {
+  const t = useT();
   const [deleteWorktree, setDeleteWorktree] = useState(false);
   return (
     <Modal
-      title="Delete session?"
+      title={t("sessions.deleteSessionDialog.title")}
       size="sm"
       onClose={() => onClose({ confirmed: false, deleteWorktree: false })}
     >
@@ -33,13 +35,12 @@ export function DeleteSessionDialog({
             className="mt-0.5 accent-accent"
           />
           <span>
-            Also delete the unused worktree
+            {t("sessions.deleteSessionDialog.alsoDeleteWorktree")}
             <span className="mt-1 block break-all text-[11px] text-content/45">
               {prettyCwd(unusedWorktree)}
             </span>
             <span className="mt-1 block text-[11px] text-content/45">
-              The branch is kept. If files have uncommitted changes, the
-              worktree stays.
+              {t("sessions.deleteSessionDialog.worktreeKeptHint")}
             </span>
           </span>
         </label>
@@ -49,14 +50,14 @@ export function DeleteSessionDialog({
             onClick={() => onClose({ confirmed: false, deleteWorktree: false })}
             className="rounded-md px-3 py-1.5 hover:bg-content/8 active:scale-[0.97]"
           >
-            Cancel
+            {t("sessions.deleteSessionDialog.cancel")}
           </button>
           <button
             type="button"
             onClick={() => onClose({ confirmed: true, deleteWorktree })}
             className="rounded-md bg-red-500/20 px-3 py-1.5 font-medium text-red-400 hover:bg-red-500/30 active:scale-[0.97]"
           >
-            Delete session
+            {t("sessions.deleteSessionDialog.confirm")}
           </button>
         </div>
       </div>

@@ -1,6 +1,11 @@
 import { isReadTool } from "../../../integrations/harness/core/preview";
 import type { Block } from "./session";
 import {
+  t as tNow,
+  type MessageKey,
+  type TFunction,
+} from "../../../shared/i18n/i18n";
+import {
   isProseBlock,
   isThinkingBlock,
   isToolBlock,
@@ -12,11 +17,11 @@ import {
   type ActivityPhaseKind,
 } from "./transcriptActivity";
 
-const THINKING_LABELS = [
-  "Thinking…",
-  "Pondering…",
-  "Considering…",
-  "Working it through…",
+const THINKING_LABELS: MessageKey[] = [
+  "sessions.monoWorkStatus.thinking",
+  "sessions.monoWorkStatus.pondering",
+  "sessions.monoWorkStatus.considering",
+  "sessions.monoWorkStatus.workingThrough",
 ];
 
 export type MonoWorkStatus = {
@@ -30,6 +35,7 @@ export type MonoWorkStatus = {
 export function monoWorkStatus(
   blocks: Block[],
   active: boolean,
+  t: TFunction = tNow,
 ): MonoWorkStatus {
   if (!active) {
     return {
@@ -43,7 +49,7 @@ export function monoWorkStatus(
   if (waiting) {
     return {
       key: `approval:${waiting.id}`,
-      label: "Waiting for approval…",
+      label: t("sessions.monoWorkStatus.waitingApproval"),
       kind: toolCategory(waiting),
       active: true,
     };
@@ -61,24 +67,26 @@ export function monoWorkStatus(
   if (!latest || !isToolBlock(latest)) {
     return {
       key: latest?.id ?? "thinking",
-      label: THINKING_LABELS[Math.max(0, thought) % THINKING_LABELS.length],
+      label: t(THINKING_LABELS[Math.max(0, thought) % THINKING_LABELS.length]),
       kind: "think",
       active: true,
     };
   }
   const kind = toolCategory(latest);
-  const label = {
-    run: "Running command…",
-    edit: "Editing file…",
-    research: isReadTool(
-      latest.tool?.kind,
-      latest.text || latest.tool?.title,
-      latest.tool?.preview,
-    )
-      ? "Reading file…"
-      : "Exploring project…",
-    agent: "Running agent…",
-    other: "Using tool…",
-  }[kind];
+  const label = t(
+    {
+      run: "sessions.monoWorkStatus.runningCommand",
+      edit: "sessions.monoWorkStatus.editingFile",
+      research: isReadTool(
+        latest.tool?.kind,
+        latest.text || latest.tool?.title,
+        latest.tool?.preview,
+      )
+        ? "sessions.monoWorkStatus.readingFile"
+        : "sessions.monoWorkStatus.exploringProject",
+      agent: "sessions.monoWorkStatus.runningAgent",
+      other: "sessions.monoWorkStatus.usingTool",
+    }[kind] as MessageKey,
+  );
   return { key: latest.id, label, kind, active: true };
 }

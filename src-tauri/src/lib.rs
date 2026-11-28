@@ -580,8 +580,12 @@ pub fn run() {
             set_window_background_blur,
             set_dock_badge,
             set_trackpad_zoom_enabled,
+            #[cfg(target_os = "windows")]
+            tray::tray_set_language,
             #[cfg(target_os = "macos")]
             menu::keybindings_set_overrides,
+            #[cfg(target_os = "macos")]
+            menu::menu_set_language,
             #[cfg(target_os = "macos")]
             menu::autosave_set_enabled,
             open_new_window,

@@ -40,6 +40,12 @@ import { FileActionError } from "../../files/ui/FileActionError";
 import { FileTypeIcon } from "../../files/ui/FileTypeIcon";
 import { HarnessIcon } from "../../sessions/ui/HarnessIcon";
 import { TabLabel } from "../../../shared/ui/TabLabel";
+import {
+  t as tNow,
+  useT,
+  type MessageKey,
+  type TFunction,
+} from "../../../shared/i18n/i18n";
 
 type Props = {
   files: FilePaneTab[];
@@ -70,25 +76,26 @@ type SurfaceTabMenu = {
   fileId: string;
 };
 
-const REVEAL_LABEL = IS_MAC
-  ? "Reveal in Finder"
+const REVEAL_LABEL_KEY: MessageKey = IS_MAC
+  ? "workspace.surfaceTabs.revealFinder"
   : IS_WIN
-    ? "Reveal in File Explorer"
-    : "Open Containing Folder";
+    ? "workspace.surfaceTabs.revealExplorer"
+    : "workspace.surfaceTabs.openContainingFolder";
 
 export function surfaceTabMenuItems(
   file: FilePaneTab,
   canCloseOthers = true,
+  t: TFunction = tNow,
 ): ExplorerMenuItem[] {
   const close: ExplorerMenuItem = {
     kind: "item",
     id: "close",
-    label: "Close",
+    label: t("workspace.surfaceTabs.close"),
   };
   const closeOthers: ExplorerMenuItem = {
     kind: "item",
     id: "close-others",
-    label: "Close Others",
+    label: t("workspace.surfaceTabs.closeOthers"),
     disabled: !canCloseOthers,
   };
   if (!isFilesystemTab(file) || isChangesTab(file)) {
@@ -96,16 +103,28 @@ export function surfaceTabMenuItems(
   }
 
   return [
-    { kind: "item", id: "open-default", label: "Open in Default App" },
-    { kind: "item", id: "reveal", label: REVEAL_LABEL },
+    {
+      kind: "item",
+      id: "open-default",
+      label: t("workspace.surfaceTabs.openDefaultApp"),
+    },
+    { kind: "item", id: "reveal", label: t(REVEAL_LABEL_KEY) },
     { kind: "sep" },
-    { kind: "item", id: "copy-path", label: "Copy Path" },
+    {
+      kind: "item",
+      id: "copy-path",
+      label: t("workspace.surfaceTabs.copyPath"),
+    },
     {
       kind: "item",
       id: "copy-relative-path",
-      label: "Copy Relative Path",
+      label: t("workspace.surfaceTabs.copyRelativePath"),
     },
-    { kind: "item", id: "copy-name", label: "Copy File Name" },
+    {
+      kind: "item",
+      id: "copy-name",
+      label: t("workspace.surfaceTabs.copyFileName"),
+    },
     { kind: "sep" },
     close,
     closeOthers,
@@ -114,6 +133,7 @@ export function surfaceTabMenuItems(
 
 export function surfaceTabPresentation(
   file: FilePaneTab,
+  t: TFunction = tNow,
 ): SurfaceTabPresentation {
   if (isReleaseNotesTab(file)) {
     const title = releaseNotesTitle(file.releaseNotes.version);
@@ -127,30 +147,35 @@ export function surfaceTabPresentation(
 
   if (isChangesTab(file)) {
     const staged = file.changeKind === "staged";
+    const changesLabel = staged
+      ? t("workspace.surfaceTabs.stagedChanges")
+      : t("workspace.surfaceTabs.changes");
     return {
-      name: staged ? "Staged Changes" : "Changes",
-      label: staged ? "Staged Changes" : "Changes",
+      name: changesLabel,
+      label: changesLabel,
       iconName: "CHANGES",
-      tooltip: staged ? "Staged changes" : "Working tree changes",
+      tooltip: staged
+        ? t("workspace.surfaceTabs.stagedTooltip")
+        : t("workspace.surfaceTabs.workingTreeTooltip"),
     };
   }
 
   if (isSessionChangesTab(file)) {
     return {
-      name: "Session Changes",
-      label: "Session Changes",
+      name: t("workspace.surfaceTabs.sessionChanges"),
+      label: t("workspace.surfaceTabs.sessionChanges"),
       iconName: "CHANGES",
-      tooltip: "Changes captured for this session only",
+      tooltip: t("workspace.surfaceTabs.sessionChangesTooltip"),
     };
   }
 
   if (isAgentTab(file)) {
-    const name = file.path.trim() || "Agent";
+    const name = file.path.trim() || t("workspace.surfaceTabs.agentFallback");
     return {
       name,
       label: name,
       iconName: "AGENT",
-      tooltip: `${name} — orchestration agent`,
+      tooltip: t("workspace.surfaceTabs.agentTooltip", { name }),
     };
   }
 
@@ -160,35 +185,44 @@ export function surfaceTabPresentation(
       name,
       label: name,
       iconName: "CHANGES",
-      tooltip: `${file.commit.shortSha} — ${file.commit.subject}`,
+      tooltip: t("workspace.surfaceTabs.commitTooltip", {
+        sha: file.commit.shortSha,
+        subject: file.commit.subject,
+      }),
     };
   }
 
   const review = isReviewTab(file);
   const terminal = isTerminalTab(file);
   const name = isPlanTab(file)
-    ? file.plan.title.trim() || "Plan"
+    ? file.plan.title.trim() || t("workspace.surfaceTabs.planFallback")
     : terminal
       ? terminalTabLabel(file)
       : basename(file.path);
   return {
     name,
-    label: review ? `${name} (Working Tree)` : name,
+    label: review ? t("workspace.surfaceTabs.reviewLabel", { name }) : name,
     iconName: isPlanTab(file) ? "plan.md" : name,
     tooltip: isPlanTab(file)
       ? name
       : terminal
-        ? `${name} — ${file.cwd}`
+        ? t("workspace.surfaceTabs.terminalTooltip", { name, cwd: file.cwd })
         : review
-          ? `${file.path} (Working Tree)`
+          ? t("workspace.surfaceTabs.reviewTooltip", { path: file.path })
           : file.path,
   };
 }
 
 /** Tab tooltip: the path, then what is wrong with it. */
-export function appendProblems(title: string, errors: number): string {
+export function appendProblems(
+  title: string,
+  errors: number,
+  t: TFunction = tNow,
+): string {
   if (!errors) return title;
-  return `${title} — ${errors} ${errors === 1 ? "problem" : "problems"}`;
+  return errors === 1
+    ? t("workspace.surfaceTabs.problems.one", { title, count: errors })
+    : t("workspace.surfaceTabs.problems.other", { title, count: errors });
 }
 
 export function SurfaceTabs({
@@ -202,9 +236,11 @@ export function SurfaceTabs({
   onPinFile,
   onReorder,
   onPaneDragStart,
-  label = "Open files",
+  label: labelProp,
   trailing,
 }: Props) {
+  const t = useT();
+  const tablistLabel = labelProp ?? t("workspace.surfaceTabs.openFiles");
   const lockOverscroll = useLockOverscroll<HTMLDivElement>();
   const activeTabRef = useRef<HTMLDivElement | null>(null);
   const [menu, setMenu] = useState<SurfaceTabMenu | null>(null);
@@ -253,7 +289,13 @@ export function SurfaceTabs({
     void action.catch((error) => {
       console.error(`Failed to run file-tab action ${id}:`, error);
       setFileActionError(
-        `Could not ${id === "open-default" ? "open the file in its default app" : "complete the file action"}: ${String(error)}`,
+        id === "open-default"
+          ? tNow("workspace.surfaceTabs.openDefaultFailed", {
+              error: String(error),
+            })
+          : tNow("workspace.surfaceTabs.fileActionFailed", {
+              error: String(error),
+            }),
       );
     });
   };
@@ -271,14 +313,14 @@ export function SurfaceTabs({
       <div
         ref={lockOverscroll}
         role="tablist"
-        aria-label={label}
+        aria-label={tablistLabel}
         className="scrollbar-none flex min-w-0 flex-1 items-center gap-0.5 overflow-x-auto overscroll-none pl-1.5 pr-2.5"
       >
         {onPaneDragStart ? (
           <div
             role="button"
-            title="Drag to reorder pane"
-            aria-label="Drag to reorder pane"
+            title={t("workspace.surfaceTabs.dragReorder")}
+            aria-label={t("workspace.surfaceTabs.dragReorder")}
             tabIndex={-1}
             className="grid h-7.5 w-5 shrink-0 cursor-grab place-items-center rounded-md text-content/35 hover:bg-content/5 hover:text-content/70 active:cursor-grabbing touch-none"
             onPointerDown={(event) => {
@@ -357,7 +399,7 @@ export function SurfaceTabs({
                 type="button"
                 role="tab"
                 aria-selected={active}
-                title={appendProblems(tooltip, errors)}
+                title={appendProblems(tooltip, errors, t)}
                 onClick={() => {
                   if (sortable.consumeClick()) return;
                   onSelectFile(file.id);
@@ -398,15 +440,15 @@ export function SurfaceTabs({
                 {dirty ? (
                   <span
                     className="size-1.5 shrink-0 rounded-full bg-content/70"
-                    title="Unsaved changes"
-                    aria-label="Unsaved changes"
+                    title={t("workspace.surfaceTabs.unsavedChanges")}
+                    aria-label={t("workspace.surfaceTabs.unsavedChanges")}
                   />
                 ) : null}
               </button>
               <button
                 type="button"
-                title={`Close ${label}`}
-                aria-label={`Close ${label}`}
+                title={t("workspace.surfaceTabs.closeTab", { label })}
+                aria-label={t("workspace.surfaceTabs.closeTab", { label })}
                 data-no-drag
                 onPointerDown={(event) => event.stopPropagation()}
                 onClick={(event) => {
@@ -452,8 +494,8 @@ export function SurfaceTabs({
         <ExplorerMenu
           x={menu.x}
           y={menu.y}
-          items={surfaceTabMenuItems(menuFile, files.length > 1)}
-          ariaLabel="File tab actions"
+          items={surfaceTabMenuItems(menuFile, files.length > 1, t)}
+          ariaLabel={t("workspace.surfaceTabs.fileTabActions")}
           onPick={onMenuPick}
           onClose={() => setMenu(null)}
         />

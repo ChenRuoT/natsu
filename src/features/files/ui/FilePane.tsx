@@ -35,6 +35,7 @@ import { BinaryFileView } from "./BinaryFileView";
 import { ReleaseNotesSurface } from "../../../app/ui/ReleaseNotesSurface";
 import { WorkingTreeDiffSurface as WorkingTreeDiff } from "../../source-control/ui/workingTreeDiffSurface";
 import { isRemoteProjectPath } from "../../projects/model/recents";
+import { useT } from "../../../shared/i18n/i18n";
 
 const CommitDiff = lazySurface(async () => {
   const module = await import("../../source-control/ui/CommitDiff");
@@ -297,6 +298,7 @@ function PlanSurface({
   const session = plan
     ? sessions.find((entry) => entry.id === plan.sessionId)
     : undefined;
+  const t = useT();
   const block = plan
     ? session?.blocks.find((entry) => entry.id === plan.blockId)
     : undefined;
@@ -306,7 +308,7 @@ function PlanSurface({
     return (
       <div className="grid h-full place-items-center p-6 text-center">
         <p className="text-[13px] text-content/70">
-          This plan is no longer in the session.
+          {t("files.filePane.planGone")}
         </p>
       </div>
     );
@@ -366,7 +368,7 @@ function PlanSurface({
         }
         source={
           <textarea
-            aria-label="Plan markdown"
+            aria-label={t("files.filePane.planMarkdownLabel")}
             spellCheck={false}
             value={block.text}
             disabled={

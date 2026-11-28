@@ -2,6 +2,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { useEffect, useRef, useState } from "react";
 import QRCode from "qrcode";
 import { Plus, SmartPhone, Trash2 } from "../../../shared/ui/icons";
+import { t as tNow, useT } from "../../../shared/i18n/i18n";
 import { PairPhoneDialog } from "./PairPhoneDialog";
 
 type Device = { id: string; name: string; fingerprint: string };
@@ -26,6 +27,7 @@ const quiet =
   "px-3 py-2 text-[13px] text-content/50 hover:text-content disabled:opacity-40";
 
 export function MobileSettings() {
+  const t = useT();
   const [status, setStatus] = useState<Status | null>(null);
   const [remote, setRemote] = useState("");
   const [invite, setInvite] = useState<Invite | null>(null);
@@ -44,7 +46,8 @@ export function MobileSettings() {
     const load = async () => {
       try {
         const next = await invoke<Status>("mobile_status");
-        if (!next) throw new Error("Desktop mobile service is unavailable");
+        if (!next)
+          throw new Error(tNow("settings.mobile.serviceUnavailable"));
         if (!disposed) {
           if (initial) setRemote(next.remoteAddress);
           initial = false;
@@ -72,7 +75,7 @@ export function MobileSettings() {
     if (!paired) return;
     known.current = null;
     setInvite(null);
-    setNotice(`${paired.name} is paired.`);
+    setNotice(tNow("settings.mobile.pairedNotice", { name: paired.name }));
     void invoke("mobile_cancel_invite");
   }, [invite, status]);
 
@@ -147,18 +150,17 @@ export function MobileSettings() {
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
             <h2 className="text-[13px] font-semibold text-content">
-              Your phones
+              {t("settings.mobile.title")}
             </h2>
             <span className="rounded-md border border-content/10 bg-content/5 px-1.5 py-0.5 text-[10px] font-medium text-content/60">
-              Invite-only beta
+              {t("settings.mobile.betaBadge")}
             </span>
           </div>
           <p className="mt-1 text-[12px] leading-relaxed text-content/45">
-            Check on projects and conversations from the Natsu mobile
-            app. Your phone connects straight to this desktop.
+            {t("settings.mobile.intro")}
           </p>
           <p className="mt-1 text-[12px] leading-relaxed text-content/45">
-            The iPhone app currently requires a TestFlight invitation.
+            {t("settings.mobile.testFlight")}
           </p>
         </div>
         <button
@@ -166,7 +168,7 @@ export function MobileSettings() {
           disabled={!status || busy || invite !== null}
           onClick={() => void pair()}
         >
-          <Plus className="size-4" /> Pair phone
+          <Plus className="size-4" /> {t("settings.mobile.pairButton")}
         </button>
       </div>
 
@@ -184,14 +186,13 @@ export function MobileSettings() {
 
       {status && devices.length > 0 && !status.listening ? (
         <div className="flex items-center justify-between gap-4 rounded-lg bg-amber-500/5 px-4 py-3 text-[12px] text-amber-500">
-          Your phones can’t connect because this desktop isn’t accepting
-          connections right now.
+          {t("settings.mobile.reconnectNotice")}
           <button
             className={`${button} shrink-0 text-content`}
             disabled={busy}
             onClick={() => void act(() => configure(true, status.openRouter))}
           >
-            Reconnect
+            {t("settings.mobile.reconnect")}
           </button>
         </div>
       ) : null}
@@ -206,13 +207,17 @@ export function MobileSettings() {
                   <div className="truncate text-[13px] font-medium">
                     {device.name}
                   </div>
-                  <div className="mt-1 text-[12px] text-content/50">Paired</div>
+                  <div className="mt-1 text-[12px] text-content/50">
+                    {t("settings.mobile.paired")}
+                  </div>
                 </div>
                 <button
                   disabled={busy}
                   className="rounded p-2 text-content/40 hover:bg-selection hover:text-content disabled:opacity-40"
-                  aria-label={`Remove ${device.name}`}
-                  title="Remove phone…"
+                  aria-label={t("settings.mobile.removeLabel", {
+                    name: device.name,
+                  })}
+                  title={t("settings.mobile.removeTitle")}
                   onClick={() => {
                     setError("");
                     setRemoving(device.id);
@@ -224,16 +229,17 @@ export function MobileSettings() {
               {removing === device.id && (
                 <div
                   role="group"
-                  aria-label={`Confirm removing ${device.name}`}
+                  aria-label={t("settings.mobile.confirmRemoveLabel", {
+                    name: device.name,
+                  })}
                   className="flex flex-col gap-3 border-t border-stroke bg-content/3 px-4 py-4 text-[12px] leading-relaxed text-content/60"
                 >
                   <p className="text-[13px] font-medium text-content">
-                    Remove {device.name}?
+                    {t("settings.mobile.confirmRemoveTitle", {
+                      name: device.name,
+                    })}
                   </p>
-                  <p>
-                    It disconnects right away and can’t reach this desktop again
-                    until you pair it with a new code.
-                  </p>
+                  <p>{t("settings.mobile.confirmRemoveBody")}</p>
                   <div className="flex gap-2">
                     <button
                       className={button}
@@ -246,18 +252,22 @@ export function MobileSettings() {
                           if (devices.length === 1 && !invite)
                             await stopListening();
                           setRemoving(undefined);
-                          setNotice(`${device.name} was removed.`);
+                          setNotice(
+                            t("settings.mobile.removedNotice", {
+                              name: device.name,
+                            }),
+                          );
                         })
                       }
                     >
-                      Remove phone
+                      {t("settings.mobile.confirmRemoveButton")}
                     </button>
                     <button
                       className={quiet}
                       disabled={busy}
                       onClick={() => setRemoving(undefined)}
                     >
-                      Cancel
+                      {t("settings.mobile.cancel")}
                     </button>
                   </div>
                 </div>
@@ -267,7 +277,7 @@ export function MobileSettings() {
         </div>
       ) : status ? (
         <div className="rounded-xl border border-dashed border-content/15 px-5 py-8 text-center text-[13px] text-content/45">
-          Pair your iPhone or Android phone to get started.
+          {t("settings.mobile.empty")}
         </div>
       ) : null}
 
@@ -287,13 +297,11 @@ export function MobileSettings() {
 
       {status ? (
         <details className="text-[12px] text-content/45">
-          <summary className="cursor-pointer">Connect away from home</summary>
+          <summary className="cursor-pointer">
+            {t("settings.mobile.remoteSummary")}
+          </summary>
           <div className="mt-4 flex flex-col gap-3 leading-relaxed">
-            <p>
-              On the same Wi-Fi, phones connect without any setup. To reach this
-              desktop from anywhere else, it needs a public address. Keep the
-              desktop awake.
-            </p>
+            <p>{t("settings.mobile.remoteIntro")}</p>
             <label className="flex items-center gap-2 text-[13px] text-content/70">
               <input
                 type="checkbox"
@@ -305,19 +313,19 @@ export function MobileSettings() {
                   )
                 }
               />
-              Open the router port automatically
+              {t("settings.mobile.openRouter")}
             </label>
             <p>{status.routerStatus}</p>
             <div className="flex flex-col gap-1.5 text-content/65">
-              Remote address
+              {t("settings.mobile.remoteAddressLabel")}
               <div className="flex gap-2">
                 <input
                   type="text"
-                  aria-label="Remote address"
+                  aria-label={t("settings.mobile.remoteAddressLabel")}
                   className={input}
                   value={remote}
                   onChange={(event) => setRemote(event.target.value)}
-                  placeholder="Public hostname or VPN IP, optionally :port"
+                  placeholder={t("settings.mobile.remotePlaceholder")}
                   autoCapitalize="none"
                   spellCheck={false}
                 />
@@ -328,15 +336,11 @@ export function MobileSettings() {
                     void act(() => configure(status.enabled, status.openRouter))
                   }
                 >
-                  Save
+                  {t("settings.mobile.save")}
                 </button>
               </div>
             </div>
-            <p>
-              Automatic mapping needs a public IP. Otherwise, forward UDP port
-              38416 to this desktop or use a VPN address. Set the address before
-              making a pairing code.
-            </p>
+            <p>{t("settings.mobile.remoteHelp")}</p>
           </div>
         </details>
       ) : null}

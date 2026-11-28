@@ -5,6 +5,7 @@ import {
   type RowLayout,
 } from "./unifiedDiffWindow";
 import type { UnifiedBlock, UnifiedLine } from "./unifiedDiff";
+import { t as tNow, type TFunction } from "../../../shared/i18n/i18n";
 
 export type UnifiedDiffFileModel = {
   id: string;
@@ -13,6 +14,8 @@ export type UnifiedDiffFileModel = {
   binary?: boolean;
   tooLarge?: boolean;
   emptyMessage?: string;
+  /** True while the file's diff is still loading; `emptyMessage` then shows progress. */
+  loading?: boolean;
   additions: number;
   deletions: number;
   blocks: UnifiedBlock[];
@@ -65,6 +68,7 @@ export class ReviewDocumentBuilder {
     open: ReadonlySet<string>,
     canStage: boolean,
     cards = false,
+    t: TFunction = tNow,
   ): ReviewDocument {
     const rows: ReviewRow[] = [];
     const hunks: ReviewHunk[] = [];
@@ -75,11 +79,13 @@ export class ReviewDocumentBuilder {
     for (const file of files) {
       keep.add(file.id);
       const message = file.binary
-        ? "Binary file changed"
+        ? t("scm.unifiedDiffDocument.binaryChanged")
         : file.tooLarge
-          ? "Diff is too large to display"
+          ? t("scm.unifiedDiffDocument.tooLarge")
           : (file.emptyMessage ??
-            (file.blocks.length ? undefined : "No textual diff"));
+            (file.blocks.length
+              ? undefined
+              : t("scm.unifiedDiffDocument.noTextualDiff")));
       const expanded = open.has(file.id);
       const stageable = Boolean(canStage && file.canStageHunk);
       let body = this.bodies.get(file.id);

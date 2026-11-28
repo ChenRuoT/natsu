@@ -1,4 +1,9 @@
 import type { BuiltinSkill } from "../../skills/model/skills";
+import type { MessageKey } from "../../../shared/i18n/i18n";
+
+/** Translate with `t` when showing this command in a picker. */
+export const DRAFT_DESCRIPTION_KEY: MessageKey =
+  "sessions.draftCommand.description";
 
 export const DRAFT_COMMAND: BuiltinSkill = {
   kind: "builtin",

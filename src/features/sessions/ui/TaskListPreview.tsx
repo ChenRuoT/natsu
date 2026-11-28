@@ -1,4 +1,5 @@
 import { Check, ListEnd, Loader, Minus } from "../../../shared/ui/icons";
+import { useT } from "../../../shared/i18n/i18n";
 import type { TaskListItem, TaskListItemStatus } from "../model/session";
 import { taskListProgressLabel } from "../model/taskList";
 
@@ -8,9 +9,10 @@ type Props = {
 };
 
 export function TaskListPreview({ items, explanation }: Props) {
+  const t = useT();
   return (
     <section
-      aria-label="Task progress"
+      aria-label={t("sessions.taskListPreview.label")}
       className="mb-2 overflow-hidden rounded-[10px] border border-content/10 bg-content/[0.035]"
     >
       <div className="flex items-start gap-2 border-b border-stroke px-2.5 py-2">
@@ -21,10 +23,10 @@ export function TaskListPreview({ items, explanation }: Props) {
         <div className="min-w-0 flex-1">
           <div className="flex items-center justify-between gap-3">
             <h3 className="font-mono text-[12px] font-medium text-content/85">
-              Tasks
+              {t("sessions.taskListPreview.tasks")}
             </h3>
             <span className="shrink-0 rounded-full bg-content/7 px-2 py-0.5 font-mono text-[10px] text-content/50">
-              {taskListProgressLabel(items)}
+              {taskListProgressLabel(items, t)}
             </span>
           </div>
           {explanation ? (
@@ -62,10 +64,11 @@ export function TaskListPreview({ items, explanation }: Props) {
 }
 
 function TaskState({ status }: { status: TaskListItemStatus }) {
+  const t = useT();
   if (status === "completed") {
     return (
       <span
-        aria-label="Completed"
+        aria-label={t("sessions.taskListPreview.completed")}
         className="mt-px grid size-4 shrink-0 place-items-center rounded-full bg-emerald-400/20 text-emerald-300"
       >
         <Check className="size-2.5" strokeWidth={2.5} />
@@ -75,7 +78,7 @@ function TaskState({ status }: { status: TaskListItemStatus }) {
   if (status === "in_progress") {
     return (
       <span
-        aria-label="In progress"
+        aria-label={t("sessions.taskListPreview.inProgress")}
         className="mt-px grid size-4 shrink-0 place-items-center text-sky-300"
       >
         <Loader
@@ -88,7 +91,7 @@ function TaskState({ status }: { status: TaskListItemStatus }) {
   if (status === "cancelled") {
     return (
       <span
-        aria-label="Cancelled"
+        aria-label={t("sessions.taskListPreview.cancelled")}
         className="mt-px grid size-4 shrink-0 place-items-center rounded-full bg-content/8 text-content/35"
       >
         <Minus className="size-2.5" strokeWidth={2} />
@@ -97,7 +100,7 @@ function TaskState({ status }: { status: TaskListItemStatus }) {
   }
   return (
     <span
-      aria-label="Pending"
+      aria-label={t("sessions.taskListPreview.pending")}
       className="mt-px size-4 shrink-0 rounded-full border border-content/25 bg-content/[0.02]"
     />
   );

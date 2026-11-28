@@ -15,6 +15,7 @@ import { ProjectLogoIcon } from "../../projects/ui/ProjectLogoIcon";
 import { OverlayNav } from "../../../app/shell/TitleBar";
 import { WindowControls } from "../../../app/shell/WindowControls";
 import { useLockOverscroll } from "../../../shared/hooks/useLockOverscroll";
+import { useT, type MessageKey } from "../../../shared/i18n/i18n";
 import {
   conversationRowsFrom,
   flattenGrouped,
@@ -50,11 +51,11 @@ import {
   type SessionSummary,
 } from "../../sessions/data/sessionStore";
 
-const SCOPES: { id: SearchScope; label: string }[] = [
-  { id: "all", label: "All" },
-  { id: "conversations", label: "Conversations" },
-  { id: "files", label: "Files" },
-  { id: "projects", label: "Projects" },
+const SCOPES: { id: SearchScope; labelKey: MessageKey }[] = [
+  { id: "all", labelKey: "search.searchView.scopeAll" },
+  { id: "conversations", labelKey: "search.searchView.scopeConversations" },
+  { id: "files", labelKey: "search.searchView.scopeFiles" },
+  { id: "projects", labelKey: "search.searchView.scopeProjects" },
 ];
 
 type Props = {
@@ -90,6 +91,7 @@ export function SearchView({
   onOpenSession,
   onOpenProject,
 }: Props) {
+  const t = useT();
   const inputRef = useRef<HTMLInputElement>(null);
   const activeProjectSearchId = useRef<string | null>(null);
   const activeSessionOwner = useRef<string | null>(null);
@@ -375,14 +377,14 @@ export function SearchView({
   const noResults = !empty && hits.length === 0 && !loading;
   const limitNotice = truncated ? (
     <p className="px-2.5 py-1 text-[11px] text-content/45">
-      Results limited to the first matches
+      {t("search.searchView.limitNotice")}
     </p>
   ) : null;
 
   return (
     <div
       role="search"
-      aria-label="Search"
+      aria-label={t("search.searchView.label")}
       data-app-search
       className="flex min-h-0 min-w-0 flex-1 flex-col text-content"
     >
@@ -402,8 +404,8 @@ export function SearchView({
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             onKeyDown={onQueryKeyDown}
-            placeholder="Search everything..."
-            aria-label="Search"
+            placeholder={t("search.searchView.placeholder")}
+            aria-label={t("search.searchView.label")}
             spellCheck={false}
             autoComplete="off"
             autoCorrect="off"
@@ -436,7 +438,7 @@ export function SearchView({
                   : "text-content/50 hover:bg-content/5 hover:text-content"
               }`}
             >
-              {item.label}
+              {t(item.labelKey)}
             </button>
           );
         })}
@@ -456,7 +458,9 @@ export function SearchView({
           <p className="px-2 py-1.5 text-[12px] text-red-400">{error}</p>
         ) : noResults ? (
           <>
-            <p className="px-2 py-1.5 text-[12px] text-content/50">No results</p>
+            <p className="px-2 py-1.5 text-[12px] text-content/50">
+              {t("search.searchView.noResults")}
+            </p>
             {limitNotice}
           </>
         ) : (
@@ -480,6 +484,7 @@ const EMPTY_DOT_COLS = 27;
 const EMPTY_DOT_ROWS = 19;
 
 function EmptyState() {
+  const t = useT();
   return (
     <div className="flex flex-col items-center justify-center px-6 pb-24">
       <div className="relative mb-2 grid h-48 w-72 place-items-center">
@@ -505,7 +510,7 @@ function EmptyState() {
       </div>
 
       <p className="max-w-xs text-center text-[13px] text-content/45">
-        Find files, conversations, messages, and projects.
+        {t("search.searchView.emptyHint")}
       </p>
     </div>
   );
@@ -557,10 +562,11 @@ function ResultList({
     onActive(index);
   };
 
+  const t = useT();
   return (
     <div
       role="listbox"
-      aria-label="Search results"
+      aria-label={t("search.searchView.resultsLabel")}
       onMouseMove={onListMouseMove}
     >
       {hits.map((hit, index) => {

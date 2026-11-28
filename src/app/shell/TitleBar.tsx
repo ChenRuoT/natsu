@@ -46,7 +46,7 @@ import { WindowControls } from "./WindowControls";
 import { PixelMascot } from "../../features/projects/ui/PixelMascot";
 import { MonoRailMascot } from "../../features/monos/ui/MonoRailMascot";
 import {
-  MONO_STATUS_LABEL,
+  MONO_STATUS_LABEL_KEY,
   type MonoLook,
   type MonoState,
 } from "../../features/monos/model/mono";
@@ -64,9 +64,14 @@ import {
 } from "../../features/workspace/model/paneDrop";
 import type { PaneEdge } from "../../features/workspace/model/layout";
 import {
-  APP_VIEW_LABELS,
+  appViewLabel,
   type AppView,
 } from "../../features/workspace/model/appViewTabs";
+import {
+  t as translateNow,
+  useT,
+  type TFunction,
+} from "../../shared/i18n/i18n";
 
 const APP_VIEW_ICONS = {
   search: Search,
@@ -173,27 +178,31 @@ type Props = {
   onSelectProject?: (path: string) => void;
 };
 
-function sessionMeta(tab: Tab): string {
+function sessionMeta(tab: Tab, t: TFunction = translateNow): string {
   if (tab.more.length === 1) return tab.more[0];
-  if (tab.sessionCount > 1) return `${tab.sessionCount} sessions`;
+  if (tab.sessionCount > 1)
+    return t("shell.titleBar.sessionCount", { count: tab.sessionCount });
   return "";
 }
 
-export function tabCopy(tab: Tab): {
+export function tabCopy(
+  tab: Tab,
+  t: TFunction = translateNow,
+): {
   headline: string;
   meta: string;
   tooltip: string;
 } {
   if (tab.appView) {
-    const headline = APP_VIEW_LABELS[tab.appView];
+    const headline = appViewLabel(tab.appView, t);
     return { headline, meta: "", tooltip: headline };
   }
   if (tab.mono) return { headline: tab.title, meta: "", tooltip: tab.title };
   const project = tab.project.trim() || "~";
   const conversation = tab.title.trim();
   const file = tab.files[0] ?? "";
-  const sessions = sessionMeta(tab);
-  const untitled = "New session";
+  const sessions = sessionMeta(tab, t);
+  const untitled = t("shell.titleBar.untitledSession");
 
   let headline: string;
   const metaParts: string[] = [];
@@ -225,7 +234,7 @@ export function tabCopy(tab: Tab): {
   if (conversation) tooltipParts.push(conversation);
   tooltipParts.push(...tab.more);
   if (tab.files.length > 0) tooltipParts.push(tab.files.join(", "));
-  if (tab.dirty) tooltipParts.push("Unsaved changes");
+  if (tab.dirty) tooltipParts.push(t("shell.titleBar.unsavedChanges"));
 
   return { headline, meta, tooltip: tooltipParts.join(" · ") };
 }
@@ -354,12 +363,13 @@ function TitleTabItem({
   onContextMenu: (id: string, event: ReactMouseEvent<HTMLDivElement>) => void;
   itemRef?: (el: HTMLDivElement | null) => void;
 }) {
-  const { headline, meta, tooltip } = tabCopy(tab);
+  const t = useT();
+  const { headline, meta, tooltip } = tabCopy(tab, t);
   const fileIcon = tab.files[0];
   const AppViewIcon = tab.appView ? APP_VIEW_ICONS[tab.appView] : null;
   const accessibleTooltip =
     (tab.doneHarnesses?.length ?? 0) > 0
-      ? `${tooltip} · Response complete`
+      ? t("shell.titleBar.responseComplete", { tooltip })
       : tooltip;
 
   return (
@@ -457,8 +467,8 @@ function TitleTabItem({
             {tab.dirty ? (
               <span
                 className="size-1.5 shrink-0 rounded-full bg-content/70"
-                title="Unsaved changes"
-                aria-label="Unsaved changes"
+                title={t("shell.titleBar.unsavedChanges")}
+                aria-label={t("shell.titleBar.unsavedChanges")}
               />
             ) : null}
           </span>
@@ -472,8 +482,8 @@ function TitleTabItem({
       {closable ? (
         <button
           type="button"
-          title="Close Tab"
-          aria-label={`Close ${headline}`}
+          title={t("shell.titleBar.closeTab")}
+          aria-label={t("shell.titleBar.closeTabLabel", { headline })}
           data-no-drag
           data-tauri-drag-region="false"
           onPointerDown={(event) => event.stopPropagation()}
@@ -497,7 +507,11 @@ function TabStripChevron({
   side: "left" | "right";
   onClick: () => void;
 }) {
-  const label = side === "left" ? "Scroll tabs left" : "Scroll tabs right";
+  const t = useT();
+  const label =
+    side === "left"
+      ? t("shell.titleBar.scrollLeft")
+      : t("shell.titleBar.scrollRight");
   const Icon = side === "left" ? ChevronLeft : ChevronRight;
   return (
     <button
@@ -589,24 +603,26 @@ export function IconButton({
 }
 
 export function DevModeLabel() {
+  const t = useT();
   if (!import.meta.env.DEV) return null;
   return (
     <span
-      title="Development build"
+      title={t("shell.titleBar.devBuild")}
       className="mr-1 min-w-0 truncate rounded-md bg-skill/15 px-1.5 py-0.5 text-[10px] font-medium tracking-wide text-skill"
     >
-      Development
+      {t("shell.titleBar.devBadge")}
     </span>
   );
 }
 
 /** The Development badge as an icon, for the inset title bar. */
 export function DevModeIcon() {
+  const t = useT();
   if (!import.meta.env.DEV) return null;
   return (
     <span
-      title="Development build"
-      aria-label="Development build"
+      title={t("shell.titleBar.devBuild")}
+      aria-label={t("shell.titleBar.devBuild")}
       role="img"
       className="grid size-6 shrink-0 place-items-center text-skill"
     >
@@ -631,7 +647,7 @@ export function TabVisitNav({
   onGoForward,
   onTogglePanel,
   panelActive = false,
-  panelLabel = "Toggle Projects",
+  panelLabel,
 }: {
   canGoBack?: boolean;
   canGoForward?: boolean;
@@ -641,17 +657,18 @@ export function TabVisitNav({
   panelActive?: boolean;
   panelLabel?: string;
 }) {
+  const t = useT();
   return (
     <div className="flex shrink-0 items-center">
       <IconButton
-        label={`Back (${MOD}[)`}
+        label={t("shell.titleBar.back", { shortcut: `${MOD}[` })}
         disabled={!canGoBack}
         onClick={onGoBack}
       >
         <ChevronLeft className="size-3.5" strokeWidth={1.75} />
       </IconButton>
       <IconButton
-        label={`Forward (${MOD}])`}
+        label={t("shell.titleBar.forward", { shortcut: `${MOD}]` })}
         disabled={!canGoForward}
         onClick={onGoForward}
       >
@@ -659,7 +676,7 @@ export function TabVisitNav({
       </IconButton>
       {onTogglePanel ? (
         <IconButton
-          label={panelLabel}
+          label={panelLabel ?? t("shell.titleBar.toggleProjects")}
           active={panelActive}
           onClick={onTogglePanel}
         >
@@ -684,13 +701,18 @@ export function MonoViewActions({
   onOpenSettings?: () => void;
   className?: string;
 }) {
+  const t = useT();
   return (
     <div className={`flex items-center gap-1 ${className}`}>
       {onToggleOverview ? (
         <button
           type="button"
           aria-pressed={overviewOpen}
-          title={overviewOpen ? "Hide overview" : "Show overview"}
+          title={
+            overviewOpen
+              ? t("shell.titleBar.hideOverview")
+              : t("shell.titleBar.showOverview")
+          }
           data-tauri-drag-region="false"
           onClick={onToggleOverview}
           className={`flex h-6 items-center gap-1.5 rounded-md px-2 text-[12px] ${
@@ -700,11 +722,14 @@ export function MonoViewActions({
           }`}
         >
           <DashboardSquare className="size-3.5" strokeWidth={1.75} />
-          Overview
+          {t("shell.titleBar.overview")}
         </button>
       ) : null}
       {onOpenSettings ? (
-        <IconButton label={`${name} settings`} onClick={onOpenSettings}>
+        <IconButton
+          label={t("shell.titleBar.monoSettings", { name })}
+          onClick={onOpenSettings}
+        >
           <Settings className="size-3.5" strokeWidth={1.75} />
         </IconButton>
       ) : null}
@@ -720,17 +745,21 @@ export function OverlayNav({
   onBack?: () => void;
   onToggleSidebar?: () => void;
 }) {
+  const t = useT();
   if (!onBack && !onToggleSidebar) return null;
   return (
     <div className="flex shrink-0 items-center px-1.5">
       {onBack ? (
-        <IconButton label={`Back (${MOD}[)`} onClick={onBack}>
+        <IconButton
+          label={t("shell.titleBar.back", { shortcut: `${MOD}[` })}
+          onClick={onBack}
+        >
           <ChevronLeft className="size-3.5" strokeWidth={1.75} />
         </IconButton>
       ) : null}
       {onToggleSidebar ? (
         <IconButton
-          label={`Toggle Sidebar (${MOD}B)`}
+          label={t("shell.titleBar.toggleSidebar", { shortcut: `${MOD}B` })}
           onClick={onToggleSidebar}
         >
           <PanelLeft className="size-3.5" strokeWidth={1.75} />
@@ -782,6 +811,7 @@ function TitleBarComponent({
   onSelectProject,
 }: Props) {
   const trafficLightsVisible = useTrafficLightsVisible();
+  const t = useT();
   const tabIds = tabs.map((tab) => tab.id);
   const { displayed, tabNodeRef, finishMotion } = useTabCloseMotion(tabs);
   const tabStripRef = useRef<HTMLDivElement | null>(null);
@@ -900,7 +930,7 @@ function TitleBarComponent({
   const systemTitle = useMemo(() => {
     const activeName = activeTab
       ? activeTab.appView
-        ? APP_VIEW_LABELS[activeTab.appView]
+        ? appViewLabel(activeTab.appView, t)
         : activeTab.mono
           ? activeTab.title
           : activeTab.files[0]
@@ -909,13 +939,13 @@ function TitleBarComponent({
       : "";
     const project = cwd ? basename(cwd) : "";
     if (activeName && project && activeName !== project) {
-      return `${activeName} — ${project} — Natsu`;
+      return t("shell.titleBar.windowTitle", { activeName, project });
     }
     if (project) {
-      return `${project} — Natsu`;
+      return t("shell.titleBar.windowTitleProject", { project });
     }
     return "Natsu";
-  }, [activeTab, cwd]);
+  }, [activeTab, cwd, t]);
 
   useEffect(() => {
     document.title = systemTitle;
@@ -939,7 +969,7 @@ function TitleBarComponent({
         {
           kind: "item",
           id: "close",
-          label: "Close Tab",
+          label: t("shell.titleBar.closeTab"),
           shortcut: `${MOD}W`,
           disabled: !titleTabClosable(contextTab, tabs.length),
         },
@@ -947,19 +977,19 @@ function TitleBarComponent({
         {
           kind: "item",
           id: "others",
-          label: "Close Other Tabs",
+          label: t("shell.titleBar.closeOtherTabs"),
           disabled: contextCloseIds?.others.length === 0,
         },
         {
           kind: "item",
           id: "right",
-          label: "Close Tabs to the Right",
+          label: t("shell.titleBar.closeTabsRight"),
           disabled: contextCloseIds?.right.length === 0,
         },
         {
           kind: "item",
           id: "left",
-          label: "Close Tabs to the Left",
+          label: t("shell.titleBar.closeTabsLeft"),
           disabled: contextCloseIds?.left.length === 0,
         },
         ...(onCloseAll
@@ -967,7 +997,7 @@ function TitleBarComponent({
               {
                 kind: "item" as const,
                 id: "all",
-                label: "Close All Tabs",
+                label: t("shell.titleBar.closeAllTabs"),
                 shortcut: `${MOD}${SHIFT}W`,
                 disabled: !titleTabsCanCloseAll(tabs),
               },
@@ -981,10 +1011,12 @@ function TitleBarComponent({
                     {
                       kind: "item" as const,
                       id: "archive",
-                      label: "Archive",
+                      label: t("shell.titleBar.archive"),
                       description:
                         contextTab.sessionCount > 1
-                          ? `All ${contextTab.sessionCount} conversations in this tab`
+                          ? t("shell.titleBar.archiveDescription", {
+                              count: contextTab.sessionCount,
+                            })
                           : undefined,
                     },
                   ]
@@ -994,10 +1026,12 @@ function TitleBarComponent({
                     {
                       kind: "item" as const,
                       id: "delete",
-                      label: "Delete",
+                      label: t("shell.titleBar.delete"),
                       description:
                         contextTab.sessionCount > 1
-                          ? `Permanently delete all ${contextTab.sessionCount} conversations in this tab`
+                          ? t("shell.titleBar.deleteDescription", {
+                              count: contextTab.sessionCount,
+                            })
                           : undefined,
                       danger: true,
                     },
@@ -1065,8 +1099,12 @@ function TitleBarComponent({
             <IconButton
               label={
                 changesDot
-                  ? `Toggle right sidebar (${MOD}${SHIFT}B, uncommitted changes)`
-                  : `Toggle right sidebar (${MOD}${SHIFT}B)`
+                  ? t("shell.titleBar.toggleRightSidebarChanges", {
+                      shortcut: `${MOD}${SHIFT}B`,
+                    })
+                  : t("shell.titleBar.toggleRightSidebar", {
+                      shortcut: `${MOD}${SHIFT}B`,
+                    })
               }
               active={rightPanelOpen && !rightPanelOff}
               disabled={rightPanelOff}
@@ -1099,17 +1137,26 @@ function TitleBarComponent({
         {showTrailingActions ? (
           <div className="flex items-center gap-0.5 px-2">
             {projectless && railClosed && onOpenInbox ? (
-              <IconButton label="Inbox" onClick={onOpenInbox}>
+              <IconButton
+                label={t("shell.titleBar.inbox")}
+                onClick={onOpenInbox}
+              >
                 <Inbox className="size-3.5" strokeWidth={1.75} />
               </IconButton>
             ) : null}
             {projectless && railClosed && onOpenNotes ? (
-              <IconButton label="Notes" onClick={onOpenNotes}>
+              <IconButton
+                label={t("shell.titleBar.notes")}
+                onClick={onOpenNotes}
+              >
                 <StickyNote className="size-3.5" strokeWidth={1.75} />
               </IconButton>
             ) : null}
             {!projectRailOpen && !showCurrentProject && onOpenSettings ? (
-              <IconButton label={`Settings (${MOD},)`} onClick={onOpenSettings}>
+              <IconButton
+                label={t("shell.titleBar.settings", { shortcut: `${MOD},` })}
+                onClick={onOpenSettings}
+              >
                 <Settings className="size-3.5" strokeWidth={1.75} />
               </IconButton>
             ) : null}
@@ -1146,7 +1193,9 @@ function TitleBarComponent({
             // Hovering the toggle peeks a collapsed sidebar out.
             <span data-sidebar-peek-trigger className="flex">
               <IconButton
-                label={`Toggle Sidebar (${MOD}B)`}
+                label={t("shell.titleBar.toggleSidebar", {
+                  shortcut: `${MOD}B`,
+                })}
                 onClick={onToggleSessionSidebar}
               >
                 <PanelLeft className="size-3.5" strokeWidth={1.75} />
@@ -1187,7 +1236,9 @@ function TitleBarComponent({
           {trafficLightsVisible ? <div className="w-[78px] shrink-0" /> : null}
           <div className="flex shrink-0 items-center px-1.5">
             <IconButton
-              label={`Toggle Sidebar (${MOD}B)`}
+              label={t("shell.titleBar.toggleSidebar", {
+                shortcut: `${MOD}B`,
+              })}
               onClick={onToggleSidebar}
             >
               <PanelLeft className="size-3.5" strokeWidth={1.75} />
@@ -1204,7 +1255,9 @@ function TitleBarComponent({
             <div className="w-[70px] shrink-0" />
           ) : null}
           <IconButton
-            label={`Toggle Session Sidebar (${MOD}${SHIFT}B)`}
+            label={t("shell.titleBar.toggleSessionSidebar", {
+              shortcut: `${MOD}${SHIFT}B`,
+            })}
             onClick={onToggleSessionSidebar}
           >
             <DashboardSquare className="size-3.5" strokeWidth={1.75} />
@@ -1220,7 +1273,9 @@ function TitleBarComponent({
           onNewTerminal={onNewTerminal}
           buttonClassName="flex h-full min-w-0 max-w-64 shrink items-center gap-2 px-6 text-left text-sm font-medium leading-tight"
         >
-          <span className="min-w-0 truncate text-content/50">No project</span>
+          <span className="min-w-0 truncate text-content/50">
+            {t("shell.titleBar.noProject")}
+          </span>
         </CwdPicker>
       ) : null}
 
@@ -1329,8 +1384,12 @@ function TitleBarComponent({
                 // Sized and plated like an inactive tab beside it.
                 <button
                   type="button"
-                  title={`New session (${MOD}T)`}
-                  aria-label={`New session (${MOD}T)`}
+                  title={t("shell.titleBar.newSession", {
+                    shortcut: `${MOD}T`,
+                  })}
+                  aria-label={t("shell.titleBar.newSession", {
+                    shortcut: `${MOD}T`,
+                  })}
                   data-tauri-drag-region="false"
                   onClick={onNewSession}
                   className="ml-0.5 grid size-7.5 shrink-0 cursor-default place-items-center rounded-md bg-content/4 text-content/50 opacity-65 hover:bg-content/7 hover:text-content hover:opacity-100 focus-visible:opacity-100"
@@ -1357,7 +1416,9 @@ function TitleBarComponent({
           y={tabMenu.y}
           width={244}
           items={contextMenuItems}
-          ariaLabel={`Tab actions for ${tabCopy(contextTab).headline}`}
+          ariaLabel={t("shell.titleBar.tabActionsLabel", {
+            headline: tabCopy(contextTab, t).headline,
+          })}
           onPick={onPickTabMenu}
           onClose={() => setTabMenu(null)}
         />
@@ -1370,6 +1431,7 @@ export const TitleBar = memo(TitleBarComponent);
 
 /** In a Mono's view the title bar names it and shows its status. */
 function MonoTitle({ look, state }: { look: MonoLook; state: MonoState }) {
+  const t = useT();
   return (
     <div
       data-mono-title
@@ -1391,7 +1453,7 @@ function MonoTitle({ look, state }: { look: MonoLook; state: MonoState }) {
           state.status === "needs-you" ? "text-accent" : "text-content/45"
         }`}
       >
-        {MONO_STATUS_LABEL[state.status]}
+        {t(MONO_STATUS_LABEL_KEY[state.status])}
       </span>
     </div>
   );

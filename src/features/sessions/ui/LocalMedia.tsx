@@ -1,3 +1,4 @@
+import { useT } from "../../../shared/i18n/i18n";
 import { convertFileSrc, invoke } from "@tauri-apps/api/core";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { readBinaryFile, REMOTE_PATH_PREFIX } from "../../../platform/tauri/fs";
@@ -35,6 +36,7 @@ export function LocalMedia({
   onOpen?: () => void;
   fallback: ReactNode;
 }) {
+  const t = useT();
   const boxRef = useRef<HTMLSpanElement>(null);
   const [near, setNear] = useState(false);
   const [media, setMedia] = useState<Media | null>(null);
@@ -115,7 +117,7 @@ export function LocalMedia({
         <img
           src={media.url}
           alt={label}
-          title={onOpen ? "Open image" : undefined}
+          title={onOpen ? t("sessions.localMedia.openImage") : undefined}
           draggable={false}
           onClick={onOpen}
           onError={() => setFailed(true)}

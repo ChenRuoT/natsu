@@ -1,3 +1,4 @@
+import { t as tNow } from "../../../shared/i18n/i18n";
 import { accountStatus } from "../../providers/model/accountUsage";
 import { providerAccounts } from "../../providers/model/providerAccounts";
 import {
@@ -22,9 +23,9 @@ export function mobileUsageSnapshot(
   showRemaining: boolean,
 ) {
   const windows = [
-    { title: "5h", window: limits.session },
-    { title: "Weekly", window: limits.weekly },
-    { title: "Monthly", window: limits.monthly },
+    { title: tNow("mobile.accountUsage.window5h"), window: limits.session },
+    { title: tNow("mobile.accountUsage.weekly"), window: limits.weekly },
+    { title: tNow("mobile.accountUsage.monthly"), window: limits.monthly },
   ];
   return {
     status: accountStatus(limits, now),
@@ -39,13 +40,21 @@ export function mobileUsageSnapshot(
           title,
           usedPercent: used,
           percent,
-          label: `${formatUsagePercent(percent)} ${showRemaining ? "left" : "used"}`,
+          label: showRemaining
+            ? tNow("mobile.accountUsage.percentLeft", {
+                percent: formatUsagePercent(percent),
+              })
+            : tNow("mobile.accountUsage.percentUsed", {
+                percent: formatUsagePercent(percent),
+              }),
           reset:
             window.resetsAt == null
               ? formatWindowLabel(window.windowMinutes)
               : window.resetsAt <= now
-                ? "reset due"
-                : `Resets in ${formatResetDuration(window.resetsAt - now)}`,
+                ? tNow("mobile.accountUsage.resetDue")
+                : tNow("mobile.accountUsage.resetsIn", {
+                    duration: formatResetDuration(window.resetsAt - now),
+                  }),
         },
       ];
     }),
@@ -55,9 +64,7 @@ export function mobileUsageSnapshot(
 /** Uses the same cache as the desktop footer; only an explicit refresh probes again. */
 export async function mobileAccountUsage(provider: unknown, refresh = false) {
   if (provider !== "claude" && provider !== "codex")
-    throw new Error(
-      "Usage is only available for Claude Code and Codex accounts",
-    );
+    throw new Error(tNow("mobile.accountUsage.onlyClaudeCodex"));
   const accounts = providerAccounts(provider);
   const snapshots = await Promise.all(
     accounts.map(async (account) => {
@@ -70,7 +77,7 @@ export async function mobileAccountUsage(provider: unknown, refresh = false) {
         !limits.monthly
           ? errorRateLimits(
               provider,
-              limits.error ?? "Usage unavailable",
+              limits.error ?? tNow("mobile.accountUsage.unavailable"),
               previous,
             )
           : limits;

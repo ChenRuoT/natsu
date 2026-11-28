@@ -1,3 +1,4 @@
+import { t as tNow } from "../../../shared/i18n/i18n";
 import type { MobileUsageLimit } from "../../sessions/model/usageLimit";
 import type { UserQuestionPrompt } from "../../sessions/model/userQuestion";
 import type { MobileTurn } from "./mobileTranscript";
@@ -163,7 +164,7 @@ export function turnsBefore(
 ): { start: number; end: number; older: boolean } {
   const end = turnIds.indexOf(before);
   if (end < 0)
-    throw new Error("This part of the conversation is no longer available");
+    throw new Error(tNow("mobile.watch.unavailable"));
   const start = Math.max(0, end - limit);
   return { start, end, older: start > 0 };
 }

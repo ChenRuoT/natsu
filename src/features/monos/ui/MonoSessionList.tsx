@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { LIST_PAGE_SIZE, listWindowSize } from "../../../shared/lib/listWindow";
 import { projectName } from "../../../shared/lib/paths";
 import { IconButton } from "../../../app/shell/TitleBar";
+import { t as tNow, useT } from "../../../shared/i18n/i18n";
 import {
   ExternalLink,
   PanelRightToggle,
@@ -138,6 +139,7 @@ export function MonoSessionList({
     };
   }, [launchesKey, liveSessionsKey]);
 
+  const t = useT();
   const open = async (id: string) => {
     setOpening(id);
     setError(undefined);
@@ -145,7 +147,9 @@ export function MonoSessionList({
       await onOpenSession(id);
     } catch (cause) {
       setError(
-        cause instanceof Error ? cause.message : "Could not open this session.",
+        cause instanceof Error
+          ? cause.message
+          : tNow("mono.sessions.openFailed"),
       );
     } finally {
       setOpening(undefined);
@@ -270,11 +274,11 @@ export function MonoSessionList({
     return (
       <EmptyState icon={Search}>
         {needle
-          ? "No sessions match this search."
+          ? t("mono.sessions.noMatchSearch")
           : hasActiveSessionFilters(filters)
-            ? "No sessions match these filters."
+            ? t("mono.sessions.noMatchFilters")
             : // Every one it started is gone; the filter still lists them.
-              `The sessions ${agent.name} started have since been deleted.`}
+              t("mono.sessions.deleted", { name: agent.name })}
       </EmptyState>
     );
 
@@ -356,11 +360,11 @@ export function MonoSessionList({
                 modelInFooter
                 statusLabel={
                   unavailable
-                    ? "Unavailable"
+                    ? t("mono.sessions.unavailable")
                     : opening === launch.sessionId
-                      ? "Opening…"
+                      ? t("mono.sessions.opening")
                       : failed
-                        ? "Status unavailable"
+                        ? t("mono.sessions.statusUnavailable")
                         : ""
                 }
                 isActive={false}
@@ -412,26 +416,31 @@ export function LaunchedSessionPage({
   onClose: () => void;
   children: ReactNode;
 }) {
+  const t = useT();
   const [error, setError] = useState<string>();
   return (
     <>
       <PageHeader title={title} onBack={onBack}>
         <IconButton
-          label="Open in workspace"
+          label={t("mono.sessions.openInWorkspace")}
           onClick={() => {
             setError(undefined);
             void Promise.resolve(onOpenInWorkspace()).catch((cause) =>
               setError(
                 cause instanceof Error
                   ? cause.message
-                  : "Could not open this session.",
+                  : tNow("mono.sessions.openFailed"),
               ),
             );
           }}
         >
           <ExternalLink className="size-3.5" strokeWidth={1.75} />
         </IconButton>
-        <IconButton label="Hide overview" active onClick={onClose}>
+        <IconButton
+          label={t("mono.sessions.hideOverview")}
+          active
+          onClick={onClose}
+        >
           <PanelRightToggle className="size-3.5" strokeWidth={1.75} />
         </IconButton>
       </PageHeader>

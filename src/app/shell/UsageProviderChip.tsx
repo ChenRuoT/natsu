@@ -55,6 +55,11 @@ import {
 } from "../../features/providers/model/providerAccountIdentity";
 import { ProviderAccountSubtitle } from "../../features/providers/ui/ProviderAccountSubtitle";
 import { useShowRemainingUsage } from "../../features/settings/model/displayPrefs";
+import {
+  t as tNow,
+  useT,
+  type TFunction,
+} from "../../shared/i18n/i18n";
 
 type UsageWindowEntry = {
   key: "session" | "weekly" | "monthly";
@@ -115,6 +120,7 @@ export function UsageProviderChip({
   /** `composer` matches the quiet tool buttons under a Mono's composer. */
   variant?: UsageChipVariant;
 }) {
+  const t = useT();
   const showRemaining = useShowRemainingUsage();
   const trigger = useRef<HTMLButtonElement>(null);
   const [open, setOpen] = useState(false);
@@ -147,13 +153,16 @@ export function UsageProviderChip({
     return best;
   }, null);
   const tooltip = windows
-    .map((entry) => rateLimitWindowTooltip(entry.window, now, showRemaining))
+    .map((entry) =>
+      rateLimitWindowTooltip(entry.window, now, showRemaining, t),
+    )
     .join(" · ");
   const providerLabel = presentation?.label ?? HARNESS_TITLE[limits.provider];
   const iconHarness = presentation?.harness ?? limits.provider;
   const activeAccount = accounts.find((account) => account.id === accountId);
   const canManageAccounts = Boolean(onSelectAccount && onAddAccount);
-  const activeAccountLabel = activeAccount?.label ?? "Removed account";
+  const activeAccountLabel =
+    activeAccount?.label ?? t("shell.usageChip.removedAccount");
   const identities = useProviderAccountIdentities(
     accounts,
     `${open}:${limits.updatedAt}:${reconnectState}`,
@@ -177,7 +186,7 @@ export function UsageProviderChip({
     account.id === accountId
       ? limits
       : accountUsage.usage[accountUsageKey(account)];
-  const activeStatus = accountStatus(limits, now);
+  const activeStatus = accountStatus(limits, now, t);
   const suggestion =
     activeStatus.tone === "exhausted" || activeStatus.tone === "low"
       ? bestAlternativeAccount(otherAccounts, usageFor, now)
@@ -224,7 +233,9 @@ export function UsageProviderChip({
       setResetAction(await onConsumeReset(credit?.id));
     } catch (error) {
       setResetError(
-        error instanceof Error ? error.message : "Could not use this reset",
+        error instanceof Error
+          ? error.message
+          : tNow("shell.usageChip.resetFailed"),
       );
       setResetAction("error");
     }
@@ -239,7 +250,9 @@ export function UsageProviderChip({
       setReconnectState("complete");
     } catch (error) {
       setReconnectError(
-        error instanceof Error ? error.message : "Could not complete sign-in",
+        error instanceof Error
+          ? error.message
+          : tNow("shell.usageChip.signInFailed"),
       );
       setReconnectState("error");
     }
@@ -251,17 +264,19 @@ export function UsageProviderChip({
         ref={trigger}
         type="button"
         className={USAGE_CHIP_CLASSES[variant]}
-        aria-label={`${providerLabel} usage details`}
+        aria-label={t("shell.usageChip.usageDetailsAria", {
+          provider: providerLabel,
+        })}
         aria-expanded={open}
         aria-haspopup="dialog"
         title={
           tooltip ||
           limits.error ||
           (disconnected
-            ? "Not connected"
+            ? t("shell.usageChip.notConnected")
             : loading
-              ? "Loading usage…"
-              : "Usage details")
+              ? t("shell.usageChip.loadingUsage")
+              : t("shell.usageChip.usageDetails"))
         }
         onClick={() => setOpen((value) => !value)}
       >
@@ -269,9 +284,13 @@ export function UsageProviderChip({
         {loading ? (
           <span className="animate-pulse text-content/35">···</span>
         ) : disconnected ? (
-          <span className="text-content/35">not connected</span>
+          <span className="text-content/35">
+            {t("shell.usageChip.notConnectedShort")}
+          </span>
         ) : windows.length === 0 ? (
-          <span className="text-content/35">{emptyUsageLabel(limits)}</span>
+          <span className="text-content/35">
+            {emptyUsageLabel(limits, t)}
+          </span>
         ) : (
           <>
             {accounts.length > 1 && activeAccount ? (
@@ -314,7 +333,9 @@ export function UsageProviderChip({
           autoFocus
           onDismiss={dismiss}
           role="dialog"
-          aria-label={`${providerLabel} usage details`}
+          aria-label={t("shell.usageChip.usageDetailsAria", {
+            provider: providerLabel,
+          })}
           tabIndex={-1}
           className={`overflow-y-auto text-content ${accountView === "usage" && loginView ? "" : "p-2.5"}`}
         >
@@ -371,10 +392,12 @@ export function UsageProviderChip({
                 </span>
                 <div className="min-w-0 flex-1">
                   <h2 className="text-[13px] font-medium leading-4">
-                    {providerLabel} usage
+                    {t("shell.usageChip.usageTitle", {
+                      provider: providerLabel,
+                    })}
                   </h2>
                   <p className="mt-0.5 text-[10px] leading-4 text-content/40">
-                    {updatedLabel(limits, now)}
+                    {updatedLabel(limits, now, t)}
                   </p>
                   {presentation?.sourceLabel ? (
                     <p className="mt-0.5 text-[10px] leading-4 text-content/55">
@@ -389,7 +412,9 @@ export function UsageProviderChip({
                       <button
                         type="button"
                         className="pointer-events-auto absolute inset-0 rounded hover:bg-content/10 focus-visible:outline-2 focus-visible:outline-accent"
-                        aria-label={`Switch ${providerLabel} account`}
+                        aria-label={t("shell.usageChip.switchAccountAria", {
+                          provider: providerLabel,
+                        })}
                         onClick={() => setAccountView("accounts")}
                       />
                       <span className="max-w-[60%] shrink-0 truncate">
@@ -415,14 +440,14 @@ export function UsageProviderChip({
                       strokeWidth={1.75}
                       aria-hidden
                     />
-                    Updating
+                    {t("shell.usageChip.updating")}
                   </span>
                 ) : null}
               </div>
 
               {limits.status === "error" && windows.length > 0 ? (
                 <p className="mb-2 rounded-lg bg-amber-400/10 px-2.5 py-2 text-[10px] leading-4 text-amber-700 dark:text-amber-300">
-                  Couldn’t refresh. Showing the last available snapshot.
+                  {t("shell.usageChip.staleRefresh")}
                 </p>
               ) : null}
 
@@ -444,7 +469,7 @@ export function UsageProviderChip({
               {limits.extraUsageBalance != null ? (
                 <section className="mt-1.5 flex items-baseline justify-between gap-3 rounded-lg bg-content/[0.045] px-3 py-2.5 ring-1 ring-inset ring-content/[0.06]">
                   <h3 className="text-[11px] font-medium text-content/65">
-                    Extra usage balance
+                    {t("shell.usageChip.extraUsageBalance")}
                   </h3>
                   <span className="shrink-0 text-[11px] font-medium tabular-nums">
                     {formatExtraUsageBalance(limits.extraUsageBalance)}
@@ -502,16 +527,21 @@ function AccountSwitchRow({
   accountLabel: string;
   onClick: () => void;
 }) {
+  const t = useT();
   return (
     <div className="px-2.5 pt-2.5">
       <button
         type="button"
         className="flex h-8 w-full items-center gap-2 rounded-lg bg-content/[0.045] px-2.5 text-left text-[11px] ring-1 ring-inset ring-content/[0.06] hover:bg-content/[0.08]"
-        aria-label={`Switch account from ${accountLabel}`}
+        aria-label={t("shell.usageChip.switchAccountFrom", {
+          account: accountLabel,
+        })}
         onClick={onClick}
       >
         <span className="min-w-0 flex-1 truncate">{accountLabel}</span>
-        <span className="text-[10px] text-content/40">Switch</span>
+        <span className="text-[10px] text-content/40">
+          {t("shell.usageChip.switch")}
+        </span>
         <ChevronRight
           className="size-3 shrink-0 text-content/35"
           strokeWidth={1.75}
@@ -545,6 +575,7 @@ function ProviderAccountPicker({
   onManage?: () => void;
   onSelect: (accountId: string) => void;
 }) {
+  const t = useT();
   const statusId = useId();
   return (
     <div>
@@ -552,20 +583,24 @@ function ProviderAccountPicker({
         <button
           type="button"
           className="grid size-6 place-items-center rounded-md text-content/45 hover:bg-content/10 hover:text-content"
-          aria-label="Back to usage"
+          aria-label={t("shell.usageChip.backToUsageAria")}
           onClick={onBack}
         >
           <ArrowLeft className="size-3.5" strokeWidth={1.75} aria-hidden />
         </button>
-        <h2 className="text-[13px] font-medium">{providerLabel} accounts</h2>
+        <h2 className="text-[13px] font-medium">
+          {t("shell.usageChip.accountsTitle", { provider: providerLabel })}
+        </h2>
       </div>
       <p className="mt-1 px-1 text-[10px] leading-4 text-content/40">
-        Each conversation stays pinned to the account that started it.
+        {t("shell.usageChip.accountsIntro")}
       </p>
       <div
         className="mt-2 flex flex-col gap-1"
         role="group"
-        aria-label={`${providerLabel} accounts`}
+        aria-label={t("shell.usageChip.accountsTitle", {
+          provider: providerLabel,
+        })}
       >
         {accounts.map((account) => {
           const selected = account.id === accountId;
@@ -611,7 +646,7 @@ function ProviderAccountPicker({
                     className={meters.length > 0 ? "shrink-0" : "min-w-0"}
                   >
                     <AccountStatusLabel
-                      status={accountStatus(usage, now)}
+                      status={accountStatus(usage, now, t)}
                       className="min-w-0"
                     />
                   </span>
@@ -648,7 +683,7 @@ function ProviderAccountPicker({
         onClick={onAdd}
       >
         <Plus className="size-3.5" strokeWidth={1.75} aria-hidden />
-        Add account
+        {t("shell.usageChip.addAccount")}
       </button>
       {onManage ? (
         <button
@@ -658,7 +693,7 @@ function ProviderAccountPicker({
             onManage();
           }}
         >
-          Manage accounts…
+          {t("shell.usageChip.manageAccounts")}
         </button>
       ) : null}
     </div>
@@ -678,16 +713,19 @@ function SwitchSuggestion({
   now: number;
   onSwitch: () => void;
 }) {
+  const t = useT();
   return (
     <section className="mt-2 flex items-center gap-2.5 rounded-lg bg-content/[0.045] px-3 py-2.5 ring-1 ring-inset ring-content/[0.06]">
       <div className="min-w-0 flex-1">
         <p className="text-[10px] leading-4 text-content/45">
-          {exhausted ? "Out of usage" : "Running low"} · switch to
+          {exhausted
+            ? t("shell.usageChip.outOfUsageSwitch")
+            : t("shell.usageChip.runningLowSwitch")}
         </p>
         <p className="mt-0.5 flex min-w-0 items-center gap-2 text-[11px]">
           <span className="min-w-0 truncate font-medium">{account.label}</span>
           <AccountStatusLabel
-            status={accountStatus(limits, now)}
+            status={accountStatus(limits, now, t)}
             className="text-[10px]"
           />
         </p>
@@ -697,7 +735,7 @@ function SwitchSuggestion({
         className="h-7 shrink-0 rounded-md bg-content px-2.5 text-[11px] font-medium text-background-base transition-transform duration-150 hover:bg-content/85 active:scale-[0.97]"
         onClick={onSwitch}
       >
-        Switch
+        {t("shell.usageChip.switch")}
       </button>
     </section>
   );
@@ -714,6 +752,7 @@ function AddProviderAccount({
   onAdd?: (label: string) => Promise<ProviderAccount>;
   onComplete: () => void;
 }) {
+  const t = useT();
   const [label, setLabel] = useState("");
   const [running, setRunning] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -728,7 +767,9 @@ function AddProviderAccount({
       onComplete();
     } catch (caught) {
       setError(
-        caught instanceof Error ? caught.message : "Could not add this account",
+        caught instanceof Error
+          ? caught.message
+          : tNow("shell.usageChip.addAccountFailed"),
       );
       setRunning(false);
     }
@@ -740,26 +781,28 @@ function AddProviderAccount({
         <button
           type="button"
           className="grid size-6 place-items-center rounded-md text-content/45 hover:bg-content/10 hover:text-content disabled:opacity-40"
-          aria-label="Back to accounts"
+          aria-label={t("shell.usageChip.backToAccountsAria")}
           disabled={running}
           onClick={onBack}
         >
           <ArrowLeft className="size-3.5" strokeWidth={1.75} aria-hidden />
         </button>
-        <h2 className="text-[13px] font-medium">Add {providerLabel} account</h2>
+        <h2 className="text-[13px] font-medium">
+          {t("shell.usageChip.addAccountTitle", { provider: providerLabel })}
+        </h2>
       </div>
       <p className="mt-1 px-1 text-[10px] leading-4 text-content/40">
-        Give this account a local name, then finish sign-in in your browser.
+        {t("shell.usageChip.addAccountHint")}
       </p>
       <label className="mt-3 block text-[10px] font-medium text-content/55">
-        Account name
+        {t("shell.usageChip.accountName")}
         <input
           autoFocus
           type="text"
           maxLength={48}
           value={label}
           disabled={running}
-          placeholder="Work or Personal"
+          placeholder={t("shell.usageChip.accountNamePlaceholder")}
           className="mt-1.5 h-8 w-full rounded-lg border border-content/10 bg-content/[0.04] px-2.5 text-[11px] text-content outline-none placeholder:text-content/25 focus:border-accent/45 disabled:opacity-55"
           onChange={(event) => setLabel(event.target.value)}
         />
@@ -772,7 +815,9 @@ function AddProviderAccount({
         {running ? (
           <RefreshCw className="size-3.5 animate-spin" aria-hidden />
         ) : null}
-        {running ? "Waiting for browser…" : "Sign in and add account"}
+        {running
+          ? t("shell.usageChip.waitingBrowser")
+          : t("shell.usageChip.signInAndAdd")}
       </button>
       {error ? (
         <p className="mt-2 text-[10px] leading-4 text-red-500" role="status">
@@ -804,32 +849,45 @@ function UsageWindowCard({
   window: RateLimitWindow;
   now: number;
 }) {
+  const t = useT();
   const showRemaining = useShowRemainingUsage();
   const pct = clampUsedPercent(window.usedPercent);
   const remaining = 100 - pct;
   const shown = showRemaining ? remaining : pct;
   const title =
     kind === "session" && window.windowMinutes === DAILY_WINDOW_MINUTES
-      ? "Daily limit"
+      ? t("shell.usageChip.limitDaily")
       : kind === "session"
-      ? "5-hour limit"
+      ? t("shell.usageChip.limitFiveHour")
       : kind === "weekly"
-        ? "Weekly limit"
+        ? t("shell.usageChip.limitWeekly")
         : kind === "monthly"
-          ? "Monthly limit"
-          : `${formatWindowLabel(window.windowMinutes)} limit`;
+          ? t("shell.usageChip.limitMonthly")
+          : t("shell.usageChip.limitWindow", {
+              window: formatWindowLabel(window.windowMinutes),
+            });
   return (
     <section className="rounded-lg bg-content/[0.045] px-3 py-2.5 ring-1 ring-inset ring-content/[0.06]">
       <div className="flex items-baseline justify-between gap-3">
         <h3 className="text-[11px] font-medium text-content/65">{title}</h3>
         <span className="shrink-0 text-[11px] font-medium tabular-nums">
-          {formatUsagePercent(shown)} {showRemaining ? "remaining" : "used"}
+          {t(
+            showRemaining
+              ? "shell.usageChip.percentRemaining"
+              : "shell.usageChip.percentUsed",
+            { percent: formatUsagePercent(shown) },
+          )}
         </span>
       </div>
       <div
         className="mt-2 h-1.5 overflow-hidden rounded-full bg-content/10"
         role="progressbar"
-        aria-label={`${title} ${showRemaining ? "remaining" : "used"}`}
+        aria-label={t(
+          showRemaining
+            ? "shell.usageChip.meterAriaRemaining"
+            : "shell.usageChip.meterAriaUsed",
+          { title },
+        )}
         aria-valuemin={0}
         aria-valuemax={100}
         aria-valuenow={Math.round(shown)}
@@ -841,8 +899,12 @@ function UsageWindowCard({
       </div>
       <div className="mt-1.5 flex items-center justify-between gap-3 text-[10px] leading-4 text-content/40">
         <span className="tabular-nums">
-          {formatUsagePercent(showRemaining ? pct : remaining)}{" "}
-          {showRemaining ? "used" : "remaining"}
+          {t(
+            showRemaining
+              ? "shell.usageChip.percentUsed"
+              : "shell.usageChip.percentRemaining",
+            { percent: formatUsagePercent(showRemaining ? pct : remaining) },
+          )}
         </span>
         <span
           className="truncate text-right tabular-nums"
@@ -853,8 +915,10 @@ function UsageWindowCard({
           }
         >
           {window.resetsAt == null
-            ? `${formatWindowLabel(window.windowMinutes)} window`
-            : formatResetCountdown(window.resetsAt - now)}
+            ? t("shell.usageChip.windowReset", {
+                window: formatWindowLabel(window.windowMinutes),
+              })
+            : formatResetCountdown(window.resetsAt - now, t)}
         </span>
       </div>
     </section>
@@ -888,6 +952,7 @@ function BankedResets({
   onUse: (credit: RateLimitResetCredit | undefined, rowKey: string) => void;
   canUse: boolean;
 }) {
+  const t = useT();
   const count = limits.resetCredits?.availableCount ?? 0;
   if (count <= 0) return null;
 
@@ -904,13 +969,17 @@ function BankedResets({
       <div className="relative min-h-[78px] overflow-hidden rounded-lg bg-content/[0.04] px-3 py-3 pr-[84px] ring-1 ring-inset ring-content/[0.06]">
         <div className="relative z-10 min-w-0">
           <div className="flex items-center gap-1.5">
-            <h3 className="text-[11px] font-medium">Banked resets</h3>
+            <h3 className="text-[11px] font-medium">
+              {t("shell.usageChip.bankedResets")}
+            </h3>
             <span className="rounded-full bg-content/[0.07] px-1.5 py-px text-[9px] font-medium tabular-nums text-content/65 ring-1 ring-inset ring-content/[0.07]">
               {count}
             </span>
           </div>
           <p className="mt-0.5 text-[10px] leading-4 text-content/40">
-            {count} {count === 1 ? "reset" : "resets"} available
+            {count === 1
+              ? t("shell.usageChip.resetsAvailable.one", { count })
+              : t("shell.usageChip.resetsAvailable.other", { count })}
           </p>
         </div>
         <BankedResetMascot
@@ -922,7 +991,7 @@ function BankedResets({
 
       <div
         className="mt-2 max-h-56 overflow-y-auto overscroll-contain"
-        aria-label="Available banked resets"
+        aria-label={t("shell.usageChip.availableBankedAria")}
       >
         <div className="flex flex-col gap-1.5">
           {rows.map((credit, index) => {
@@ -1040,10 +1109,12 @@ function BankedResetRow({
   onCancel: () => void;
   onUse: () => void;
 }) {
+  const t = useT();
   return (
     <article className="rounded-lg bg-content/[0.04] px-2.5 py-2 ring-1 ring-inset ring-content/[0.06]">
       <h4 className="text-[10px] font-medium leading-4 text-content/70">
-        {credit?.title ?? `Banked reset ${index + 1}`}
+        {credit?.title ??
+          t("shell.usageChip.bankedResetFallback", { number: index + 1 })}
       </h4>
       {credit?.description ? (
         <p className="mt-0.5 text-[10px] leading-4 text-content/45">
@@ -1060,10 +1131,12 @@ function BankedResetRow({
           }
         >
           {credit?.expiresAt == null
-            ? "Expiry not provided"
+            ? t("shell.usageChip.expiryNotProvided")
             : credit.expiresAt <= now
-              ? "Expires now"
-              : `Expires in ${formatResetDuration(credit.expiresAt - now)}`}
+              ? t("shell.usageChip.expiresNow")
+              : t("shell.usageChip.expiresIn", {
+                  duration: formatResetDuration(credit.expiresAt - now, t),
+                })}
         </p>
         {action === "using" ? (
           <span className="inline-flex shrink-0 items-center gap-1.5 text-[10px] text-content/45">
@@ -1072,7 +1145,7 @@ function BankedResetRow({
               strokeWidth={1.75}
               aria-hidden
             />
-            Applying…
+            {t("shell.usageChip.applying")}
           </span>
         ) : isResetOutcome(action) || action === "error" ? (
           <span
@@ -1083,7 +1156,7 @@ function BankedResetRow({
             }`}
             role="status"
           >
-            {action === "error" ? error : resetOutcomeLabel(action)}
+            {action === "error" ? error : resetOutcomeLabel(action, t)}
           </span>
         ) : canUse && action !== "confirming" ? (
           <button
@@ -1092,14 +1165,14 @@ function BankedResetRow({
             disabled={disabled}
             onClick={onConfirm}
           >
-            Use reset
+            {t("shell.usageChip.useReset")}
           </button>
         ) : null}
       </div>
       {action === "confirming" ? (
         <div className="mt-2 flex items-center justify-between gap-2 border-t border-content/[0.07] pt-2">
           <p className="text-[10px] leading-4 text-content/50">
-            Spend this reset now?
+            {t("shell.usageChip.spendConfirm")}
           </p>
           <div className="flex shrink-0 gap-1">
             <button
@@ -1107,14 +1180,14 @@ function BankedResetRow({
               className="h-6 rounded-md px-2 text-[10px] text-content/50 hover:bg-content/10 hover:text-content"
               onClick={onCancel}
             >
-              Cancel
+              {t("shell.usageChip.cancel")}
             </button>
             <button
               type="button"
               className="h-6 rounded-md bg-content px-2.5 text-[10px] font-medium text-background-base transition-transform duration-150 ease-out active:scale-[0.97]"
               onClick={onUse}
             >
-              Confirm
+              {t("shell.usageChip.confirm")}
             </button>
           </div>
         </div>
@@ -1130,14 +1203,15 @@ function EmptyUsageState({
   limits: ProviderRateLimits;
   loading: boolean;
 }) {
+  const t = useT();
   return (
     <div className="rounded-lg bg-content/[0.04] px-3 py-4 text-center ring-1 ring-inset ring-content/[0.06]">
       <p className="text-[11px] font-medium text-content/65">
         {loading
-          ? "Loading usage…"
+          ? t("shell.usageChip.loadingUsage")
           : limits.status === "unavailable"
-            ? "Not connected"
-            : "Usage unavailable"}
+            ? t("shell.usageChip.notConnected")
+            : t("shell.usageChip.usageUnavailable")}
       </p>
       {limits.error ? (
         <p className="mx-auto mt-1 max-w-[15rem] text-[10px] leading-4 text-content/40">
@@ -1161,22 +1235,32 @@ export function needsProviderLogin(limits: ProviderRateLimits): boolean {
   );
 }
 
-function updatedLabel(limits: ProviderRateLimits, now: number): string {
-  if (limits.updatedAt <= 0) return "Rate-limit details";
+function updatedLabel(
+  limits: ProviderRateLimits,
+  now: number,
+  t: TFunction,
+): string {
+  if (limits.updatedAt <= 0) return t("shell.usageChip.rateLimitDetails");
   const elapsedMinutes = Math.max(
     0,
     Math.floor((now - limits.updatedAt) / 60_000),
   );
-  if (elapsedMinutes === 0) return "Updated just now";
-  if (elapsedMinutes < 60) return `Updated ${elapsedMinutes}m ago`;
-  return `Updated ${Math.floor(elapsedMinutes / 60)}h ago`;
+  if (elapsedMinutes === 0) return t("shell.usageChip.updatedJustNow");
+  if (elapsedMinutes < 60)
+    return t("shell.usageChip.updatedMinutes", { minutes: elapsedMinutes });
+  return t("shell.usageChip.updatedHours", {
+    hours: Math.floor(elapsedMinutes / 60),
+  });
 }
 
-function resetOutcomeLabel(outcome: CodexRateLimitResetOutcome): string {
-  if (outcome === "reset") return "Codex usage was reset.";
-  if (outcome === "nothingToReset") return "There’s no active usage to reset.";
-  if (outcome === "noCredit") return "No banked resets are available.";
-  return "That reset was already used.";
+function resetOutcomeLabel(
+  outcome: CodexRateLimitResetOutcome,
+  t: TFunction,
+): string {
+  if (outcome === "reset") return t("shell.usageChip.resetUsed");
+  if (outcome === "nothingToReset") return t("shell.usageChip.resetNothing");
+  if (outcome === "noCredit") return t("shell.usageChip.resetNoCredit");
+  return t("shell.usageChip.resetAlreadyUsed");
 }
 
 function isResetOutcome(
@@ -1190,10 +1274,11 @@ function isResetOutcome(
   );
 }
 
-function emptyUsageLabel(limits: ProviderRateLimits): string {
+function emptyUsageLabel(limits: ProviderRateLimits, t: TFunction): string {
   if (limits.status !== "error") return "—";
   const text = limits.error?.toLowerCase() ?? "";
-  if (text.includes("expired") || text.includes("sign-in")) return "expired";
+  if (text.includes("expired") || text.includes("sign-in"))
+    return t("shell.usageChip.expired");
   return "—";
 }
 

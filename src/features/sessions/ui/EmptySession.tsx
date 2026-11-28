@@ -1,3 +1,4 @@
+import { useT } from "../../../shared/i18n/i18n";
 import { type ReactNode, useSyncExternalStore } from "react";
 import { basename } from "../../../platform/tauri/fs";
 import { projectKey } from "../../../shared/lib/paths";
@@ -21,6 +22,7 @@ type Props = {
 };
 
 export function EmptySession({ cwd, composer, hasChatBackground }: Props) {
+  const t = useT();
   const lockOverscroll = useLockOverscroll<HTMLDivElement>();
   const arcadeEnabled = useSyncExternalStore(
     subscribeGridArcadeEnabled,
@@ -41,8 +43,8 @@ export function EmptySession({ cwd, composer, hasChatBackground }: Props) {
     getProjectLabel,
   );
   const title = project
-    ? `What should we work on in ${project}?`
-    : "What should we work on?";
+    ? t("sessions.emptySession.titleInProject", { project })
+    : t("sessions.emptySession.title");
 
   return (
     <div

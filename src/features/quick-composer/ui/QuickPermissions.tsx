@@ -6,12 +6,30 @@ import {
   Shield,
   Sparkles,
 } from "../../../shared/ui/icons";
-import {
-  RUNTIME_MODES,
-  RUNTIME_MODE_HINT,
-  RUNTIME_MODE_LABEL,
-  type RuntimeMode,
-} from "../../sessions/model/session";
+import { RUNTIME_MODES, type RuntimeMode } from "../../sessions/model/session";
+import { useT, type MessageKey } from "../../../shared/i18n/i18n";
+
+export const QUICK_PERMISSION_KEYS: Record<
+  RuntimeMode,
+  { label: MessageKey; hint: MessageKey }
+> = {
+  supervised: {
+    label: "quickComposer.permissions.supervisedLabel",
+    hint: "quickComposer.permissions.supervisedHint",
+  },
+  "auto-accept-edits": {
+    label: "quickComposer.permissions.autoAcceptEditsLabel",
+    hint: "quickComposer.permissions.autoAcceptEditsHint",
+  },
+  auto: {
+    label: "quickComposer.permissions.autoLabel",
+    hint: "quickComposer.permissions.autoHint",
+  },
+  "full-access": {
+    label: "quickComposer.permissions.fullAccessLabel",
+    hint: "quickComposer.permissions.fullAccessHint",
+  },
+};
 
 const ICONS = {
   supervised: Lock,
@@ -45,6 +63,7 @@ export function QuickPermissions({
   onChange: (mode: RuntimeMode) => void;
   onClose: () => void;
 }) {
+  const t = useT();
   const root = useRef<HTMLDivElement>(null);
   const id = useId();
   const [active, setActive] = useState(RUNTIME_MODES.indexOf(value));
@@ -60,7 +79,7 @@ export function QuickPermissions({
     <div
       ref={root}
       role="listbox"
-      aria-label="Permissions"
+      aria-label={t("quickComposer.permissions.listLabel")}
       aria-activedescendant={`${id}-${active}`}
       tabIndex={-1}
       className="min-h-0 overflow-y-auto overscroll-none border-t border-stroke p-2 outline-none"
@@ -101,10 +120,10 @@ export function QuickPermissions({
           <QuickPermissionIcon mode={mode} className="size-4 shrink-0" />
           <span className="min-w-0 flex-1">
             <span className="block text-[13px] font-medium">
-              {RUNTIME_MODE_LABEL[mode]}
+              {t(QUICK_PERMISSION_KEYS[mode].label)}
             </span>
             <span className="mt-0.5 block text-[11px] text-content/45">
-              {RUNTIME_MODE_HINT[mode]}
+              {t(QUICK_PERMISSION_KEYS[mode].hint)}
             </span>
           </span>
           {value === mode ? (

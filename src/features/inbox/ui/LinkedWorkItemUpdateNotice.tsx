@@ -10,6 +10,7 @@ import {
 import { formatRelativeTime } from "../model/githubTasks";
 import { announceLinkedActivity } from "../../settings/model/sounds";
 import { GlassBackdrop } from "../../../app/shell/GlassBackdrop";
+import { useLocale, useT, type TFunction } from "../../../shared/i18n/i18n";
 import {
   Archive,
   Check,
@@ -35,16 +36,21 @@ type Props = {
   onDeleteSession?: () => Promise<boolean>;
 };
 
-function entryKindLabel(entry: LinkedWorkItemActivityEntry): string {
+function entryKindLabel(
+  entry: LinkedWorkItemActivityEntry,
+  t: TFunction,
+): string {
   switch (entry.kind) {
     case "commit":
-      return `Commit ${entry.id.slice(0, 7)}`;
+      return t("inbox.linkedUpdate.entry.commit", {
+        sha: entry.id.slice(0, 7),
+      });
     case "review":
-      return "Review";
+      return t("inbox.linkedUpdate.entry.review");
     case "review_comment":
-      return "Review comment";
+      return t("inbox.linkedUpdate.entry.reviewComment");
     default:
-      return "Comment";
+      return t("inbox.linkedUpdate.entry.comment");
   }
 }
 
@@ -68,6 +74,8 @@ export function LinkedWorkItemUpdateNotice({
   onArchiveSession,
   onDeleteSession,
 }: Props) {
+  const t = useT();
+  const locale = useLocale();
   const [cleanupAction, setCleanupAction] = useState<
     "archive" | "delete" | undefined
   >();
@@ -77,7 +85,10 @@ export function LinkedWorkItemUpdateNotice({
   if (!card || card.status === "loading") return null;
 
   const KindIcon = card.kind === "pr" ? GitPullRequest : CircleDot;
-  const kindLabel = card.kind === "pr" ? "Pull request" : "Issue";
+  const kindLabel =
+    card.kind === "pr"
+      ? t("inbox.linkedUpdate.kind.pullRequest")
+      : t("inbox.linkedUpdate.kind.issue");
   const latest = card.entries[0];
   const discussion =
     latest?.kind === "comment" ||
@@ -85,21 +96,23 @@ export function LinkedWorkItemUpdateNotice({
     latest?.kind === "review_comment";
   const openLabel =
     latest?.kind === "commit"
-      ? "Open commit"
-      : `Open ${card.kind === "pr" ? "PR" : "issue"}`;
+      ? t("inbox.linkedUpdate.openCommit")
+      : card.kind === "pr"
+        ? t("inbox.linkedUpdate.openPr")
+        : t("inbox.linkedUpdate.openIssue");
   const agentLabel = discussion
-    ? "Address with agent"
+    ? t("inbox.linkedUpdate.agent.address")
     : latest?.kind === "commit"
-      ? "Review with agent"
-      : "Continue with agent";
+      ? t("inbox.linkedUpdate.agent.review")
+      : t("inbox.linkedUpdate.agent.continue");
   const terminalState = linkedWorkItemTerminalState(card);
   const terminalLabel =
     terminalState === "pr_merged"
-      ? "Pull request merged"
+      ? t("inbox.linkedUpdate.terminal.prMerged")
       : terminalState === "pr_closed"
-        ? "Pull request closed"
+        ? t("inbox.linkedUpdate.terminal.prClosed")
         : terminalState === "issue_closed"
-          ? "Issue closed"
+          ? t("inbox.linkedUpdate.terminal.issueClosed")
           : "";
   const TerminalIcon =
     terminalState === "pr_merged"
@@ -135,7 +148,10 @@ export function LinkedWorkItemUpdateNotice({
 
   return (
     <section
-      aria-label={`New activity on ${kindLabel} ${card.number}`}
+      aria-label={t("inbox.linkedUpdate.newActivityLabel", {
+        kind: kindLabel,
+        number: card.number,
+      })}
       aria-live="polite"
       className="pointer-events-auto absolute top-3 right-3 z-40 isolate w-[min(320px,calc(100%_-_24px))] overflow-hidden rounded-xl border border-content/10 text-content shadow-xl"
     >
@@ -146,13 +162,16 @@ export function LinkedWorkItemUpdateNotice({
             <span className="size-2 shrink-0 rounded-full bg-accent" />
             <KindIcon className="size-3.5 text-content/55" strokeWidth={1.75} />
             <span className="min-w-0 flex-1 truncate text-[12px] font-semibold">
-              GitHub activity
+              {t("inbox.linkedUpdate.title")}
             </span>
           </div>
           <button
             type="button"
-            title="Dismiss"
-            aria-label={`Dismiss updates for ${kindLabel} ${card.number}`}
+            title={t("inbox.linkedUpdate.dismiss")}
+            aria-label={t("inbox.linkedUpdate.dismissLabel", {
+              kind: kindLabel,
+              number: card.number,
+            })}
             onClick={dismiss}
             className="grid size-6 shrink-0 place-items-center rounded-md text-content/40 hover:bg-content/10 hover:text-content"
           >
@@ -170,14 +189,18 @@ export function LinkedWorkItemUpdateNotice({
             className="block w-full text-left"
           >
             <span className="block text-[11px] text-content/50">
-              {kindLabel} #{card.number} · {card.repo}
+              {t("inbox.linkedUpdate.itemRef", {
+                kind: kindLabel,
+                number: card.number,
+                repo: card.repo,
+              })}
             </span>
             <span className="mt-0.5 block truncate text-[13px] font-medium hover:underline">
               {card.title}
             </span>
           </button>
           <div className="mt-1.5 flex items-center gap-1.5 text-[11px] text-content/55">
-            <span>{linkedWorkItemUpdateSummary(card)}</span>
+            <span>{linkedWorkItemUpdateSummary(card, t)}</span>
           </div>
         </div>
 
@@ -202,7 +225,7 @@ export function LinkedWorkItemUpdateNotice({
                 <span className="min-w-0 flex-1">
                   <span className="flex min-w-0 items-center gap-1.5 text-[11px]">
                     <span className="font-medium text-content/70">
-                      {entryKindLabel(entry)}
+                      {entryKindLabel(entry, t)}
                     </span>
                     {entry.author ? (
                       <span className="min-w-0 truncate text-content/45">
@@ -210,11 +233,11 @@ export function LinkedWorkItemUpdateNotice({
                       </span>
                     ) : null}
                     <span className="ml-auto shrink-0 text-content/35">
-                      {formatRelativeTime(entry.createdAt)}
+                      {formatRelativeTime(entry.createdAt, Date.now(), locale)}
                     </span>
                   </span>
                   <span className="mt-0.5 line-clamp-2 block text-[12px] leading-relaxed text-content/65">
-                    {entry.text || "No message"}
+                    {entry.text || t("inbox.linkedUpdate.noMessage")}
                   </span>
                 </span>
               </button>
@@ -236,12 +259,14 @@ export function LinkedWorkItemUpdateNotice({
               <span className="font-medium text-content/75">
                 {terminalLabel}
               </span>
-              <span className="text-content/45">Clean up this session</span>
+              <span className="text-content/45">
+                {t("inbox.linkedUpdate.cleanup")}
+              </span>
             </div>
             <div className="mt-2 flex items-center gap-1.5">
               <button
                 type="button"
-                title="Archive session"
+                title={t("inbox.linkedUpdate.archive")}
                 disabled={Boolean(cleanupAction) || !onArchiveSession}
                 onClick={() => void runCleanup("archive", onArchiveSession)}
                 className="inline-flex min-w-0 items-center gap-1.5 overflow-hidden rounded-md bg-content/10 px-2 py-1 text-[11px] font-medium hover:bg-content/15 disabled:opacity-40"
@@ -252,12 +277,12 @@ export function LinkedWorkItemUpdateNotice({
                   <Archive className="size-3 shrink-0" strokeWidth={1.75} />
                 )}
                 <span className="min-w-0 truncate whitespace-nowrap">
-                  Archive session
+                  {t("inbox.linkedUpdate.archive")}
                 </span>
               </button>
               <button
                 type="button"
-                title="Delete session"
+                title={t("inbox.linkedUpdate.delete")}
                 disabled={Boolean(cleanupAction) || !onDeleteSession}
                 onClick={() => void runCleanup("delete", onDeleteSession)}
                 className="inline-flex min-w-0 items-center gap-1.5 overflow-hidden rounded-md px-2 py-1 text-[11px] text-red-300/90 hover:bg-red-500/15 disabled:opacity-40"
@@ -268,7 +293,7 @@ export function LinkedWorkItemUpdateNotice({
                   <Trash2 className="size-3 shrink-0" strokeWidth={1.75} />
                 )}
                 <span className="min-w-0 truncate whitespace-nowrap">
-                  Delete…
+                  {t("inbox.linkedUpdate.deleteEllipsis")}
                 </span>
               </button>
             </div>

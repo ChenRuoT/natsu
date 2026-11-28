@@ -1,4 +1,5 @@
-import { MONO_STATUS_LABEL, type MonoState } from "../model/mono";
+import { MONO_STATUS_LABEL_KEY, type MonoState } from "../model/mono";
+import { useT } from "../../../shared/i18n/i18n";
 
 type Props = {
   state: MonoState;
@@ -12,6 +13,7 @@ type Props = {
  * pulsing while it works, grey at rest), the state, and what it is on.
  */
 export function MonoStatus({ state, color, className = "" }: Props) {
+  const t = useT();
   const { status, activity } = state;
   const dot =
     status === "needs-you"
@@ -32,7 +34,7 @@ export function MonoStatus({ state, color, className = "" }: Props) {
         }`}
         style={dot ? { background: dot } : undefined}
       />
-      <span className="shrink-0">{MONO_STATUS_LABEL[status]}</span>
+      <span className="shrink-0">{t(MONO_STATUS_LABEL_KEY[status])}</span>
       {activity ? (
         <>
           <span aria-hidden className="shrink-0 opacity-60">

@@ -7,6 +7,7 @@ import {
 } from "./notificationPreferences";
 import { monoReplyText } from "../../monos/model/monoReaction";
 import { knownNotificationProject } from "./notificationProjects";
+import { t as tNow } from "../../../shared/i18n/i18n";
 
 const KEY = "natsu.notifications";
 
@@ -183,7 +184,7 @@ export function notificationText(
       return {
         title,
         subtitle,
-        body: clip(prompt || `${harness} has a question for you`),
+        body: clip(prompt || tNow("notifications.notifications.questionBody", { harness })),
       };
     }
     const pending = session.blocks.find(
@@ -195,7 +196,11 @@ export function notificationText(
     return {
       title,
       subtitle,
-      body: clip(what ? `Approve: ${what}` : `${harness} needs your approval`),
+      body: clip(
+        what
+          ? tNow("notifications.notifications.approveBody", { what })
+          : tNow("notifications.notifications.approvalBody", { harness }),
+      ),
     };
   }
   const reply = [...session.blocks]

@@ -5,6 +5,7 @@ import {
   type AutomationScheduleKind,
 } from "../../automations/model/automations";
 import type { Block, MonoSpawnedSession } from "../../sessions/model/session";
+import type { MessageKey, TFunction } from "../../../shared/i18n/i18n";
 import type { MonoLook } from "./mono";
 import {
   MonoFileConflict,
@@ -79,6 +80,43 @@ export const HABITS_MAX = 20;
 
 export function habitScheduleLabel(schedule: HabitSchedule): string {
   return automationScheduleLabel(schedule);
+}
+
+export const HABIT_WEEKDAY_KEYS = [
+  "mono.schedule.sunday",
+  "mono.schedule.monday",
+  "mono.schedule.tuesday",
+  "mono.schedule.wednesday",
+  "mono.schedule.thursday",
+  "mono.schedule.friday",
+  "mono.schedule.saturday",
+] as const satisfies readonly MessageKey[];
+
+/**
+ * The schedule as UI text. It mirrors `habitScheduleLabel`, which stays
+ * English because agents read it; only the screens use this one.
+ */
+export function habitScheduleText(
+  schedule: HabitSchedule,
+  t: TFunction,
+): string {
+  const [hour, minute] = schedule.time.split(":").map(Number);
+  const time = new Date(2000, 0, 1, hour, minute).toLocaleTimeString(
+    undefined,
+    { hour: "numeric", minute: "2-digit" },
+  );
+  if (schedule.scheduleKind === "hourly")
+    return t("mono.schedule.hourly", {
+      minute: String(schedule.minute).padStart(2, "0"),
+    });
+  if (schedule.scheduleKind === "daily")
+    return t("mono.schedule.daily", { time });
+  if (schedule.scheduleKind === "weekdays")
+    return t("mono.schedule.weekdays", { time });
+  const day = HABIT_WEEKDAY_KEYS[schedule.dayOfWeek];
+  return day
+    ? t("mono.schedule.onDay", { day: t(day), time })
+    : t("mono.schedule.weeklyAt", { time });
 }
 
 export function nextHabitRunAt(schedule: HabitSchedule, after: number): number {

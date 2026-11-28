@@ -1,13 +1,14 @@
+import type { MessageKey } from "../../../shared/i18n/i18n";
 import type { AutomationScheduleKind, AutomationTriggerKind } from "./automations";
 
 export const AUTOMATION_TEMPLATE_CATEGORIES = [
-  { id: "popular", label: "Popular" },
-  { id: "review", label: "Code Review" },
-  { id: "security", label: "Security" },
-  { id: "incidents", label: "Incidents & Triage" },
-  { id: "research", label: "Data & Research" },
-  { id: "environment", label: "Environment" },
-] as const;
+  { id: "popular", labelKey: "automations.templates.category.popular" },
+  { id: "review", labelKey: "automations.templates.category.review" },
+  { id: "security", labelKey: "automations.templates.category.security" },
+  { id: "incidents", labelKey: "automations.templates.category.incidents" },
+  { id: "research", labelKey: "automations.templates.category.research" },
+  { id: "environment", labelKey: "automations.templates.category.environment" },
+] as const satisfies readonly { id: string; labelKey: MessageKey }[];
 
 export type AutomationTemplateCategoryId =
   (typeof AUTOMATION_TEMPLATE_CATEGORIES)[number]["id"];
@@ -352,6 +353,87 @@ Follow the README / documented install steps as closely as possible. Note any mi
 End with a pass/fail and the exact commands you ran.`,
   },
 ];
+
+/**
+ * Picker copy for each template. `name`, `description` and `triggerLabel` above
+ * stay English: `name` becomes the saved automation title, and the prompt is
+ * sent to the agent unchanged.
+ */
+export const AUTOMATION_TEMPLATE_MESSAGES: Record<
+  string,
+  { name: MessageKey; description: MessageKey; triggerLabel: MessageKey }
+> = {
+  "find-critical-bugs": {
+    name: "automations.templates.findCriticalBugs.name",
+    description: "automations.templates.findCriticalBugs.description",
+    triggerLabel: "automations.templates.findCriticalBugs.trigger",
+  },
+  "scan-vulnerabilities": {
+    name: "automations.templates.scanVulnerabilities.name",
+    description: "automations.templates.scanVulnerabilities.description",
+    triggerLabel: "automations.templates.scanVulnerabilities.trigger",
+  },
+  "generate-docs": {
+    name: "automations.templates.generateDocs.name",
+    description: "automations.templates.generateDocs.description",
+    triggerLabel: "automations.templates.generateDocs.trigger",
+  },
+  "add-test-coverage": {
+    name: "automations.templates.addTestCoverage.name",
+    description: "automations.templates.addTestCoverage.description",
+    triggerLabel: "automations.templates.addTestCoverage.trigger",
+  },
+  "review-pull-requests": {
+    name: "automations.templates.reviewPullRequests.name",
+    description: "automations.templates.reviewPullRequests.description",
+    triggerLabel: "automations.templates.reviewPullRequests.trigger",
+  },
+  "review-draft-prs": {
+    name: "automations.templates.reviewDraftPrs.name",
+    description: "automations.templates.reviewDraftPrs.description",
+    triggerLabel: "automations.templates.reviewDraftPrs.trigger",
+  },
+  "dependency-audit": {
+    name: "automations.templates.dependencyAudit.name",
+    description: "automations.templates.dependencyAudit.description",
+    triggerLabel: "automations.templates.dependencyAudit.trigger",
+  },
+  "secret-scan": {
+    name: "automations.templates.secretScan.name",
+    description: "automations.templates.secretScan.description",
+    triggerLabel: "automations.templates.secretScan.trigger",
+  },
+  "triage-github-issues": {
+    name: "automations.templates.triageGithubIssues.name",
+    description: "automations.templates.triageGithubIssues.description",
+    triggerLabel: "automations.templates.triageGithubIssues.trigger",
+  },
+  "triage-new-issues": {
+    name: "automations.templates.triageNewIssues.name",
+    description: "automations.templates.triageNewIssues.description",
+    triggerLabel: "automations.templates.triageNewIssues.trigger",
+  },
+  "failing-ci-watch": {
+    name: "automations.templates.failingCiWatch.name",
+    description: "automations.templates.failingCiWatch.description",
+    triggerLabel: "automations.templates.failingCiWatch.trigger",
+  },
+  "weekly-changelog": {
+    name: "automations.templates.weeklyChangelog.name",
+    description: "automations.templates.weeklyChangelog.description",
+    triggerLabel: "automations.templates.weeklyChangelog.trigger",
+  },
+  "repo-health": {
+    name: "automations.templates.repoHealth.name",
+    description: "automations.templates.repoHealth.description",
+    triggerLabel: "automations.templates.repoHealth.trigger",
+  },
+  "install-doctor": {
+    name: "automations.templates.installDoctor.name",
+    description: "automations.templates.installDoctor.description",
+    triggerLabel: "automations.templates.installDoctor.trigger",
+  },
+};
 
 export function templatesForCategory(
   category: AutomationTemplateCategoryId,

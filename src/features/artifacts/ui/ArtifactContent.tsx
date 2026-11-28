@@ -6,6 +6,7 @@ import {
   getArtifact,
   type Artifact,
 } from "../artifacts";
+import { t as tNow } from "../../../shared/i18n/i18n";
 
 /** Load an artifact and follow later saves, for every reader frame. */
 export function useArtifact(id: string) {
@@ -29,7 +30,7 @@ export function useArtifact(id: string) {
         },
         () => {
           if (!live || token !== request) return;
-          setError("Could not load this document.");
+          setError(tNow("artifacts.content.loadFailed"));
           setLoaded(true);
         },
       );

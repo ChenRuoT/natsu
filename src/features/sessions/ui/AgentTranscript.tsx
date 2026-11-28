@@ -32,6 +32,11 @@ import {
   type RefObject,
 } from "react";
 import { flushSync } from "react-dom";
+import {
+  useT,
+  type MessageKey,
+  type TFunction,
+} from "../../../shared/i18n/i18n";
 import { AttachmentChip } from "./AttachmentChip";
 import { GeneratedImage } from "./GeneratedImage";
 import { NatsuSparkles } from "./NatsuSparkles";
@@ -204,7 +209,7 @@ const INITIAL_TURNS = 20;
  */
 const FIRST_PAINT_TURNS = 3;
 const TURN_PAGE_SIZE = 20;
-const LOADING_OUTPUT = "Loading output…";
+const LOADING_OUTPUT_KEY: MessageKey = "wiring.AgentTranscript.loadingOutput";
 /**
  * How long the reader stays back at the end before the history they paged in
  * above unmounts. Each turn retains its DOM, fibers and markdown output.
@@ -345,6 +350,7 @@ function AgentTranscriptComponent({
   onScrollerChange,
   managed = false,
 }: Props) {
+  const t = useT();
   const isMonoChat = !!agentMascot;
   const blocks = useMemo(() => {
     // A Mono's reaction sits on the message it answers, not in a bubble.
@@ -1145,7 +1151,7 @@ function AgentTranscriptComponent({
                 onReturnToLatest();
               }}
             >
-              Back to latest messages
+              {t("sessions.agentTranscript.backToLatest")}
             </button>
           </div>
         ) : null}
@@ -1156,8 +1162,8 @@ function AgentTranscriptComponent({
           >
             <span className="inline-block rounded-md bg-background-base px-2.5 py-1.5">
               {loadingEarlier
-                ? "Loading earlier messages…"
-                : "Couldn't load earlier messages. Scroll up to retry."}
+                ? t("sessions.agentTranscript.loadingEarlier")
+                : t("sessions.agentTranscript.loadEarlierFailed")}
             </span>
           </div>
         ) : null}
@@ -1170,10 +1176,10 @@ function AgentTranscriptComponent({
               disabled={loadingEarlier}
             >
               {loadingEarlier
-                ? "Loading earlier messages…"
+                ? t("sessions.agentTranscript.loadingEarlier")
                 : loadEarlierError
-                  ? "Couldn't load messages. Try again"
-                  : "Load earlier messages"}
+                  ? t("sessions.agentTranscript.loadEarlierRetry")
+                  : t("sessions.agentTranscript.loadEarlier")}
             </button>
           </div>
         ) : null}
@@ -1316,9 +1322,9 @@ function AgentTranscriptComponent({
                 paused={waitingForApproval}
                 waitingLabel={
                   managed && waitingForApproval
-                    ? "Waiting for orchestrator"
+                    ? t("sessions.agentTranscript.waitingForOrchestrator")
                     : pendingQuestion
-                      ? "Waiting for answers"
+                      ? t("sessions.agentTranscript.waitingForAnswers")
                       : undefined
                 }
                 background={backgroundTasks}
@@ -1328,11 +1334,11 @@ function AgentTranscriptComponent({
               // A Mono signs its settled turns with just its mascot and name.
               <span className="font-medium text-content/80">{agentName}</span>
             ) : durationMs != null ? (
-              formatWorkingDuration(durationMs, turnModelName, true)
+              formatWorkingDuration(durationMs, turnModelName, true, t)
             ) : inlineWork && turnModelName ? (
               turnModelName
             ) : (
-              workSummaryLine(summarizedWork)
+              workSummaryLine(summarizedWork, false, t)
             );
           // A Mono that only reacted answered on the message itself.
           const reactedOnly =
@@ -1882,11 +1888,16 @@ function InitialThinking({
   live: boolean;
   embedded?: boolean;
 }) {
+  const t = useT();
   return (
     <div
       className={`min-w-0 pt-3 pb-1 font-sans text-sm text-content/50 ${embedded ? "" : "px-4"}`}
     >
-      {live ? <Shimmer duration={1.6}>Thinking…</Shimmer> : "Thinking…"}
+      {live ? (
+        <Shimmer duration={1.6}>{t("sessions.agentTranscript.thinking")}</Shimmer>
+      ) : (
+        t("sessions.agentTranscript.thinking")
+      )}
     </div>
   );
 }
@@ -1910,14 +1921,15 @@ function LiveFoldTitle({
   background?: string[];
   modelName?: string;
 }) {
+  const t = useT();
   const elapsedMs = useElapsedFrom(startedAt, paused);
   // Yielding with a command still going is not the end of the turn. The clock
   // keeps running and the line says what it is waiting on.
   const text = paused
-    ? (waitingLabel ?? "Waiting for approval")
+    ? (waitingLabel ?? t("sessions.agentTranscript.waitingForApproval"))
     : background?.length
-      ? `${formatWorkingDuration(elapsedMs, modelName)} · ${backgroundLabel(background)}`
-      : formatWorkingDuration(elapsedMs, modelName);
+      ? `${formatWorkingDuration(elapsedMs, modelName, false, t)} · ${backgroundLabel(background, t)}`
+      : formatWorkingDuration(elapsedMs, modelName, false, t);
   const shimmer = (
     <Shimmer className="min-w-0 truncate font-sans text-sm" duration={1}>
       {text}
@@ -1932,10 +1944,12 @@ function LiveFoldTitle({
   );
 }
 
-function backgroundLabel(tasks: string[]): string {
+function backgroundLabel(tasks: string[], t: TFunction): string {
   return tasks.length === 1
-    ? "running in background"
-    : `${tasks.length} tasks running in background`;
+    ? t("sessions.agentTranscript.runningInBackground")
+    : t("sessions.agentTranscript.tasksRunningInBackground", {
+        count: tasks.length,
+      });
 }
 
 /**
@@ -1981,8 +1995,9 @@ function TurnDuration({
   /** Sit in the gap under the turn and show on hover, as a sent message's do. */
   revealOnHover?: boolean;
 }) {
+  const t = useT();
   const label =
-    completionLabel ?? formatWorkingDuration(elapsedMs, modelName, true);
+    completionLabel ?? formatWorkingDuration(elapsedMs, modelName, true, t);
   const dot = (
     <span
       aria-hidden
@@ -2009,8 +2024,16 @@ function TurnDuration({
         {onShowWork ? (
           <button
             type="button"
-            title={workExpanded ? "Hide activity" : "Show activity"}
-            aria-label={workExpanded ? "Hide activity" : "Show activity"}
+            title={
+              workExpanded
+                ? t("sessions.agentTranscript.hideActivity")
+                : t("sessions.agentTranscript.showActivity")
+            }
+            aria-label={
+              workExpanded
+                ? t("sessions.agentTranscript.hideActivity")
+                : t("sessions.agentTranscript.showActivity")
+            }
             aria-expanded={!!workExpanded}
             onClick={onShowWork}
             className={`rounded-md p-1 outline-none hover:bg-content/8 hover:text-content/70 focus-visible:ring-1 focus-visible:ring-accent ${workExpanded ? "bg-content/8 text-content/70" : "text-content/40"}`}
@@ -2064,6 +2087,7 @@ function TurnMetricsBadge({
   metrics?: TurnMetrics;
   elapsedMs: number | null;
 }) {
+  const t = useT();
   const root = useRef<HTMLDivElement>(null);
   const [hovered, setHovered] = useState(false);
   if (!metrics || !hasTurnMetrics(metrics)) return null;
@@ -2075,23 +2099,33 @@ function TurnMetricsBadge({
   const headline =
     [
       metrics.cacheHitPercent != null
-        ? `Cache hit ${Math.round(metrics.cacheHitPercent)}%`
+        ? t("sessions.agentTranscript.cacheHit", {
+            percent: Math.round(metrics.cacheHitPercent),
+          })
         : null,
       outputRate != null
-        ? `Output ${formatMetricCount(outputRate)} tok/s`
+        ? t("sessions.agentTranscript.outputRate", {
+            rate: formatMetricCount(outputRate),
+          })
         : null,
     ]
       .filter(Boolean)
-      .join(" · ") || "Turn tokens";
+      .join(" · ") || t("sessions.agentTranscript.turnTokens");
   const detail = [
     metrics.inputTokens != null
-      ? `${formatMetricCount(metrics.inputTokens)} input`
+      ? t("sessions.agentTranscript.inputCount", {
+          count: formatMetricCount(metrics.inputTokens),
+        })
       : null,
     metrics.outputTokens != null
-      ? `${formatMetricCount(metrics.outputTokens)} output`
+      ? t("sessions.agentTranscript.outputCount", {
+          count: formatMetricCount(metrics.outputTokens),
+        })
       : null,
     metrics.cacheReadTokens != null
-      ? `${formatMetricCount(metrics.cacheReadTokens)} cached`
+      ? t("sessions.agentTranscript.cachedCount", {
+          count: formatMetricCount(metrics.cacheReadTokens),
+        })
       : null,
   ]
     .filter(Boolean)
@@ -2110,8 +2144,8 @@ function TurnMetricsBadge({
       <span
         role="img"
         tabIndex={0}
-        aria-label={`Turn metrics: ${label}`}
-        title="Turn metrics"
+        aria-label={t("sessions.agentTranscript.turnMetricsLabel", { label })}
+        title={t("sessions.agentTranscript.turnMetrics")}
         className="grid rounded-md p-1 text-content/40 outline-none hover:bg-content/8 hover:text-content/70 focus-visible:ring-1 focus-visible:ring-accent"
       >
         <ChartBreakoutSquare className="size-3.5" strokeWidth={1.75} />
@@ -2163,12 +2197,14 @@ function formatClockTime(epochMs: number): string {
 function CopyTurnButton({
   text,
   attachments,
-  label = "Copy response",
+  label,
 }: {
   text: string;
   attachments?: Attachment[];
   label?: string;
 }) {
+  const t = useT();
+  const copyLabel = label ?? t("sessions.agentTranscript.copyResponse");
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -2187,8 +2223,16 @@ function CopyTurnButton({
       <button
         type="button"
         disabled={pending}
-        title={copied ? "Copied" : label}
-        aria-label={copied ? "Copied" : label}
+        title={
+          copied
+            ? t("sessions.agentTranscript.copied")
+            : copyLabel
+        }
+        aria-label={
+          copied
+            ? t("sessions.agentTranscript.copied")
+            : copyLabel
+        }
         className="-ml-1 rounded-md p-1 text-content/40 hover:bg-content/8 hover:text-content/70"
         onClick={(event) => {
           event.stopPropagation();
@@ -2218,7 +2262,7 @@ function CopyTurnButton({
       </button>
       {error && (
         <span role="alert" className="max-w-xs text-xs text-content/70">
-          Copy failed. {error}
+          {t("sessions.agentTranscript.copyFailed", { error })}
         </span>
       )}
     </>
@@ -2232,6 +2276,7 @@ function SaveNoteButton({
   text: string;
   onSave: (text: string) => void | Promise<void>;
 }) {
+  const t = useT();
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -2250,8 +2295,16 @@ function SaveNoteButton({
       <button
         type="button"
         disabled={pending}
-        title={saved ? "Saved to Notes" : "Save as note"}
-        aria-label={saved ? "Saved to Notes" : "Save as note"}
+        title={
+          saved
+            ? t("sessions.agentTranscript.savedToNotes")
+            : t("sessions.agentTranscript.saveAsNote")
+        }
+        aria-label={
+          saved
+            ? t("sessions.agentTranscript.savedToNotes")
+            : t("sessions.agentTranscript.saveAsNote")
+        }
         className="rounded-md p-1 text-content/40 hover:bg-content/8 hover:text-content/70"
         onClick={async () => {
           setError(null);
@@ -2278,7 +2331,7 @@ function SaveNoteButton({
       </button>
       {error && (
         <span role="alert" className="max-w-xs text-xs text-content/70">
-          Could not save note. {error}
+          {t("sessions.agentTranscript.couldNotSaveNote", { error })}
         </span>
       )}
     </>
@@ -2292,7 +2345,10 @@ function EditLastTurnButton({
   onEdit: () => void;
   editing?: boolean;
 }) {
-  const label = editing ? "Cancel edit" : "Edit and resend";
+  const t = useT();
+  const label = editing
+    ? t("sessions.agentTranscript.cancelEdit")
+    : t("sessions.agentTranscript.editAndResend");
   return (
     <button
       type="button"
@@ -2518,10 +2574,11 @@ const TranscriptBlock = memo(function TranscriptBlock({
  * left keeps it clear of the hover actions below.
  */
 function MonoReactionBadge({ emoji, live }: { emoji: string; live: boolean }) {
+  const t = useT();
   return (
     <span
       role="img"
-      aria-label={`Reacted ${emoji}`}
+      aria-label={t("wiring.agentTranscript.reacted", { emoji })}
       data-mono-reaction={emoji}
       className={`${live ? "mono-reaction-in " : ""}mono-reaction-badge absolute -top-2.5 -left-2.5 z-[1] grid h-[22px] place-items-center rounded-[8px] px-[7px] font-sans text-[11px] leading-none`}
     >
@@ -2563,6 +2620,7 @@ function UserMessageBlock({
   onSendDraft?: (block: Block) => boolean | void;
   onRemoveDraft?: (block: Block) => boolean | void;
 }) {
+  const t = useT();
   const [expanded, setExpanded] = useState(false);
   const [overflows, setOverflows] = useState(false);
   const [singleLine, setSingleLine] = useState(false);
@@ -2684,7 +2742,11 @@ function UserMessageBlock({
     delivery && delivery.status !== "pending" ? (
       <div className="flex max-w-full items-center gap-2 px-3 pt-1 font-sans text-xs text-content/50">
         <span role={delivery.error ? "alert" : "status"}>
-          {delivery.error ? `Not sent · ${delivery.error}` : "Not sent"}
+          {delivery.error
+            ? t("sessions.agentTranscript.notSentWithError", {
+                error: delivery.error,
+              })
+            : t("sessions.agentTranscript.notSent")}
         </span>
         {onRetryMessage ? (
           <button
@@ -2692,7 +2754,9 @@ function UserMessageBlock({
             onClick={() => onRetryMessage(block.id)}
             className="shrink-0 rounded px-1 py-0.5 text-content/70 hover:bg-content/8"
           >
-            {delivery.status === "failed" ? "Retry" : "Resume"}
+            {delivery.status === "failed"
+              ? t("sessions.agentTranscript.retry")
+              : t("sessions.agentTranscript.resume")}
           </button>
         ) : null}
       </div>
@@ -2830,7 +2894,9 @@ function UserMessageBlock({
                   className="mt-1 rounded px-1 py-0.5 text-xs text-content/60 hover:bg-content/8 hover:text-content"
                   onClick={toggle}
                 >
-                  {expanded ? "Show less" : "Show more"}
+                  {expanded
+                    ? t("sessions.agentTranscript.showLess")
+                    : t("sessions.agentTranscript.showMore")}
                 </button>
               ) : null}
               {block.ciContext ? (
@@ -2840,11 +2906,10 @@ function UserMessageBlock({
                 >
                   <summary className="flex w-fit cursor-pointer list-none items-center gap-1.5 rounded text-xs text-content/50 transition-colors hover:text-content/80 focus-visible:outline focus-visible:outline-1 focus-visible:outline-content/40 [&::-webkit-details-marker]:hidden">
                     <ChevronRight className="size-3 shrink-0 transition-transform group-open/ci:rotate-90" />
-                    <span>CI context</span>
+                    <span>{t("sessions.agentTranscript.ciContext")}</span>
                   </summary>
                   <p className="mt-2 text-xs text-content/50">
-                    CI instructions and failure details included with this
-                    request.
+                    {t("sessions.agentTranscript.ciContextHint")}
                   </p>
                   <pre className="mt-2 max-h-72 min-w-0 overflow-auto overscroll-contain rounded-md bg-content/5 p-2.5 font-mono text-[11px] leading-relaxed whitespace-pre-wrap break-words text-content/70">
                     {block.ciContext}
@@ -2855,27 +2920,27 @@ function UserMessageBlock({
                 <div className="mt-2 flex items-center justify-between gap-4 border-t border-dashed border-content/20 pt-2">
                   <span className="flex items-center gap-1.5 text-xs text-content/50">
                     <CircleDashed className="size-3.5" strokeWidth={1.75} />
-                    Draft
+                    {t("sessions.agentTranscript.draft")}
                   </span>
                   <span className="flex items-center gap-1">
                     <button
                       type="button"
-                      title="Remove draft"
-                      aria-label="Remove draft"
+                      title={t("sessions.agentTranscript.removeDraft")}
+                      aria-label={t("sessions.agentTranscript.removeDraft")}
                       onClick={() => onRemoveDraft?.(block)}
                       className="flex h-7 items-center gap-1.5 rounded-md px-2 text-xs text-content/55 hover:bg-content/10 hover:text-content"
                     >
                       <Trash2 className="size-3.5" strokeWidth={1.75} />
-                      Remove
+                      {t("sessions.agentTranscript.remove")}
                     </button>
                     <button
                       type="button"
-                      title="Send draft"
-                      aria-label="Send draft"
+                      title={t("sessions.agentTranscript.sendDraft")}
+                      aria-label={t("sessions.agentTranscript.sendDraft")}
                       onClick={() => onSendDraft?.(block)}
                       className="primary-action flex h-7 items-center gap-1.5 rounded-md px-2.5 text-xs font-medium transition-transform duration-150 active:scale-[0.97]"
                     >
-                      Send
+                      {t("sessions.agentTranscript.send")}
                       <ArrowUp className="size-3.5" strokeWidth={2.25} />
                     </button>
                   </span>
@@ -2914,7 +2979,7 @@ function UserMessageBlock({
               <CopyTurnButton
                 text={text}
                 attachments={block.attachments}
-                label="Copy message"
+                label={t("sessions.agentTranscript.copyMessage")}
               />
             ) : null}
             {onEdit ? (
@@ -3036,6 +3101,7 @@ function WorkFoldLine({
   open: boolean;
   onToggle: () => void;
 }) {
+  const t = useT();
   const icon = (
     <span className="relative flex size-3.5 shrink-0 items-center justify-center">
       {open ? (
@@ -3116,7 +3182,11 @@ function WorkFoldLine({
     <button
       type="button"
       aria-expanded={open}
-      aria-label={open ? "Hide the work" : "Show the work"}
+      aria-label={
+        open
+          ? t("sessions.agentTranscript.hideTheWork")
+          : t("sessions.agentTranscript.showTheWork")
+      }
       aria-live={live ? "polite" : undefined}
       onClick={onToggle}
       className={`group ${row}`}
@@ -3374,24 +3444,31 @@ function MonoTurnHeader({
   workExpanded?: boolean;
   searchCurrent: boolean;
 }) {
+  const t = useT();
   const activity = useMemo(
     () => blocks.filter((block) => !block.internal && !block.draft),
     [blocks],
   );
   let status = useMemo(
-    () => monoWorkStatus(activity, active),
-    [activity, active],
+    () => monoWorkStatus(activity, active, t),
+    [activity, active, t],
   );
   if (active && waitingForAnswers && !activity.some(needsApproval)) {
-    status = { ...status, key: "question", label: "Waiting for answers…" };
+    status = {
+      ...status,
+      key: "question",
+      label: t("sessions.agentTranscript.waitingForAnswersEllipsis"),
+    };
   } else if (active && backgroundTasks?.length && status.kind === "think") {
     status = {
       ...status,
       key: "background",
       label:
         backgroundTasks.length === 1
-          ? "Waiting for background task…"
-          : `Waiting for ${backgroundTasks.length} background tasks…`,
+          ? t("sessions.agentTranscript.waitingForBackgroundTask")
+          : t("sessions.agentTranscript.waitingForBackgroundTasks", {
+              count: backgroundTasks.length,
+            }),
     };
   }
   const mark = agentMascot ? (
@@ -3452,8 +3529,16 @@ function MonoTurnHeader({
           {onShowWork ? (
             <button
               type="button"
-              title={workExpanded ? "Hide activity" : "Show activity"}
-              aria-label={workExpanded ? "Hide activity" : "Show activity"}
+              title={
+                workExpanded
+                  ? t("sessions.agentTranscript.hideActivity")
+                  : t("sessions.agentTranscript.showActivity")
+              }
+              aria-label={
+                workExpanded
+                  ? t("sessions.agentTranscript.hideActivity")
+                  : t("sessions.agentTranscript.showActivity")
+              }
               aria-expanded={!!workExpanded}
               onClick={onShowWork}
               className="min-w-0 flex-1 cursor-pointer text-left outline-none transition-opacity duration-150 hover:opacity-70 focus-visible:opacity-70"
@@ -3518,6 +3603,7 @@ export function MonoActivityTrail({
   onOpenFile,
   onOpenDiff,
 }: Omit<ActivityPhasesProps, "done" | "padded"> & { live?: boolean }) {
+  const t = useT();
   const steps = blocks.filter(
     (block) =>
       !block.internal &&
@@ -3540,7 +3626,7 @@ export function MonoActivityTrail({
   }
   return (
     <ol
-      aria-label="Activity in chronological order"
+      aria-label={t("sessions.agentTranscript.activityChronological")}
       className="flex min-w-0 flex-col gap-3"
     >
       {segments.map((segment) => {
@@ -3636,6 +3722,7 @@ function ActivityPhaseGroup({
   onOpenFile?: (path: string) => void;
   onOpenDiff?: (path: string) => void;
 }) {
+  const t = useT();
   const [override, setOverride] = useState<boolean | null>(null);
   const waiting = phase.steps.some(needsApproval);
   const open = waiting || (override ?? active);
@@ -3666,8 +3753,8 @@ function ActivityPhaseGroup({
     for (const step of phase.steps) settled.current?.add(step.id);
   }, [phase.steps]);
   const turnFor = useStepQueue();
-  const title = activityPhaseTitle(phase, active);
-  const natsuPhase = !!natsuWorkSummary(phase.steps, active);
+  const title = activityPhaseTitle(phase, active, t);
+  const natsuPhase = !!natsuWorkSummary(phase.steps, active, t);
   // Opening a group on purpose is also how you read the line that titled it,
   // whole. The auto-open while it runs is a live view, not a reading one, and
   // a one-line note the header already shows in full has nothing to add.
@@ -3727,7 +3814,9 @@ function ActivityPhaseGroup({
         type="button"
         aria-expanded={open}
         aria-label={
-          open ? `Hide the steps for ${title}` : `Show the steps for ${title}`
+          open
+            ? t("sessions.agentTranscript.hideSteps", { title })
+            : t("sessions.agentTranscript.showSteps", { title })
         }
         onClick={() => setOverride(!open)}
         className="group flex w-full min-w-0 items-center gap-1.5 py-1 text-left"
@@ -3994,8 +4083,9 @@ function SubagentPanel({
   onOpenFile?: (path: string) => void;
   onOpenDiff?: (path: string) => void;
 }) {
+  const t = useT();
   const name = subagentName(block);
-  const brief = subagentBrief(block);
+  const brief = subagentBrief(block, t);
   const model = subagentModelName(block);
   const state = toolCallState(block);
   const active = live && state === "pending";
@@ -4037,7 +4127,10 @@ function SubagentPanel({
       {model || status ? (
         <span className="flex min-w-0 max-w-[55%] shrink-0 items-baseline gap-2 font-sans text-[12px] text-content/40">
           {model ? (
-            <span className="truncate" title={`Model: ${model}`}>
+            <span
+              className="truncate"
+              title={t("sessions.agentTranscript.modelTitle", { model })}
+            >
               {model}
             </span>
           ) : null}
@@ -4052,7 +4145,7 @@ function SubagentPanel({
   if (steps.length === 0 && !report && !output.omitted) {
     return (
       <div
-        aria-label={`Subagent: ${name}`}
+        aria-label={t("wiring.agentTranscript.subagent", { name })}
         title={brief}
         className="-mx-1.5 flex min-w-0 items-center gap-2 px-1.5 py-1"
       >
@@ -4068,7 +4161,11 @@ function SubagentPanel({
       <button
         type="button"
         aria-expanded={open}
-        aria-label={open ? `Hide ${name}'s work` : `Show ${name}'s work`}
+        aria-label={
+          open
+            ? t("sessions.agentTranscript.hideSubagentWork", { name })
+            : t("sessions.agentTranscript.showSubagentWork", { name })
+        }
         title={brief}
         onClick={onToggle}
         // An open row keeps the wash it lit up under the cursor, so the panel
@@ -4329,10 +4426,11 @@ function ActivityStatusRow({ block }: { block: Block }) {
  * you a note you wanted to read.
  */
 function ActivityInterjectionRow({ block }: { block: Block }) {
+  const t = useT();
   const [open, setOpen] = useState(false);
   const meta = block.interjection;
   if (!meta) return null;
-  const chrome = interjectionChrome(meta);
+  const chrome = interjectionChrome(meta, t);
   const summary = proseSummary(block.text);
   const label = (
     <span className="min-w-0 flex-1 truncate font-sans text-sm">
@@ -4369,7 +4467,14 @@ function ActivityInterjectionRow({ block }: { block: Block }) {
         type="button"
         aria-expanded={open}
         aria-label={
-          open ? `Hide the ${chrome.label} note` : `${chrome.label}: ${summary}`
+          open
+            ? t("sessions.agentTranscript.hideInterjectionNote", {
+                label: chrome.label,
+              })
+            : t("sessions.agentTranscript.interjectionNoteLabel", {
+                label: chrome.label,
+                summary,
+              })
         }
         onClick={() => setOpen((value) => !value)}
         className="group flex min-w-0 items-center gap-1.5 py-1 text-left"
@@ -4403,8 +4508,9 @@ function ActivityThinkingRow({
   bare?: boolean;
   onOpenFile?: (path: string) => void;
 }) {
+  const t = useT();
   const [open, setOpen] = useState(false);
-  const text = proseSummary(block.text) || "Thinking";
+  const text = proseSummary(block.text) || t("sessions.agentTranscript.thinkingWord");
   // In a group the rail is the bullet, so there is nothing to breathe while
   // reasoning streams in — the line itself does.
   const pulse = block.streaming ? "zen-thinking-pulse" : "";
@@ -4427,7 +4533,7 @@ function ActivityThinkingRow({
   if (!expandable) {
     return (
       <div
-        aria-label={`Thinking: ${text}`}
+        aria-label={t("sessions.agentTranscript.thinkingLabel", { text })}
         className="flex min-w-0 items-center gap-1.5 py-1"
       >
         {icon}
@@ -4441,7 +4547,11 @@ function ActivityThinkingRow({
       <button
         type="button"
         aria-expanded={open}
-        aria-label={open ? "Hide thinking" : `Show thinking: ${text}`}
+        aria-label={
+          open
+            ? t("sessions.agentTranscript.hideThinking")
+            : t("sessions.agentTranscript.showThinking", { text })
+        }
         onClick={() => setOpen((value) => !value)}
         className="group flex min-w-0 items-center gap-1.5 py-1 text-left"
       >
@@ -4452,7 +4562,7 @@ function ActivityThinkingRow({
           }`}
         >
           {/* Open, the body starts with the paragraph the summary came from. */}
-          {open ? "Thinking" : text}
+          {open ? t("sessions.agentTranscript.thinkingWord") : text}
         </span>
       </button>
       {open ? (
@@ -4486,6 +4596,7 @@ function ActivityNoteRow({
   expandable?: boolean;
   onOpenFile?: (path: string) => void;
 }) {
+  const t = useT();
   const [open, setOpen] = useState(false);
   const text = proseSummary(block.text);
   const icon = bare ? null : (
@@ -4495,7 +4606,7 @@ function ActivityNoteRow({
   if (!expandable) {
     return (
       <div
-        aria-label={`Agent said: ${text}`}
+        aria-label={t("sessions.agentTranscript.agentSaid", { text })}
         className="flex min-w-0 items-center gap-1.5 py-1"
       >
         {icon}
@@ -4511,7 +4622,11 @@ function ActivityNoteRow({
       <button
         type="button"
         aria-expanded={open}
-        aria-label={open ? "Hide the full note" : `Agent said: ${text}`}
+        aria-label={
+          open
+            ? t("sessions.agentTranscript.hideFullNote")
+            : t("sessions.agentTranscript.agentSaid", { text })
+        }
         onClick={() => setOpen((value) => !value)}
         className="group flex min-w-0 items-center gap-1.5 py-1 text-left"
       >
@@ -4546,6 +4661,7 @@ function ActivityToolRow({
   onOpenFile?: (path: string) => void;
   onOpenDiff?: (path: string) => void;
 }) {
+  const t = useT();
   const [errorOpen, setErrorOpen] = useState(false);
   const output = useToolDetail(block, errorOpen);
   const appCall = natsuToolCall(block);
@@ -4554,13 +4670,13 @@ function ActivityToolRow({
       <NatsuCallRow block={block} call={appCall} onApproval={onApproval} />
     );
   }
-  const label = toolCallLabel(block, cwd);
+  const label = toolCallLabel(block, cwd, t);
   const state = toolCallState(block);
   const pending = needsApproval(block);
   const errorDetail =
     !pending && state === "rejected"
       ? output.omitted
-        ? (output.detail?.trim() ?? LOADING_OUTPUT)
+        ? (output.detail?.trim() ?? t(LOADING_OUTPUT_KEY))
         : output.detail?.trim()
       : undefined;
   const summary = (
@@ -4580,7 +4696,7 @@ function ActivityToolRow({
     <div className="flex min-w-0 flex-col">
       {errorDetail ? (
         <div
-          aria-label={`Failed tool call: ${label}`}
+          aria-label={t("wiring.agentTranscript.failedToolCall", { label })}
           className="group flex min-w-0 items-center gap-1.5 py-1"
         >
           {bare ? null : <ActivityToolIcon state={state} live={live} />}
@@ -4594,7 +4710,11 @@ function ActivityToolRow({
           <button
             type="button"
             aria-expanded={errorOpen}
-            aria-label={`${errorOpen ? "Hide" : "Show"} error details for ${label}`}
+            aria-label={
+              errorOpen
+                ? t("sessions.agentTranscript.hideErrorDetails", { label })
+                : t("sessions.agentTranscript.showErrorDetails", { label })
+            }
             onClick={() => setErrorOpen((value) => !value)}
             className="-m-1 shrink-0 rounded p-1"
           >
@@ -4606,7 +4726,7 @@ function ActivityToolRow({
         </div>
       ) : (
         <div
-          aria-label={`Tool call: ${label}`}
+          aria-label={t("wiring.agentTranscript.toolCall", { label })}
           className="flex min-w-0 items-center gap-1.5 py-1"
         >
           {bare ? null : <ActivityToolIcon state={state} live={live} />}
@@ -4642,21 +4762,22 @@ function NatsuCallRow({
   call: NatsuToolCall;
   onApproval?: (requestId: number, decision: ApprovalDecision) => void;
 }) {
+  const t = useT();
   const state = toolCallState(block);
   const [errorOpen, setErrorOpen] = useState(false);
   const stored = useToolDetail(block, errorOpen);
   const output =
     stored.detail?.trim() ||
-    (stored.pending ? LOADING_OUTPUT : undefined) ||
+    (stored.pending ? t(LOADING_OUTPUT_KEY) : undefined) ||
     block.tool?.preview?.output?.trim();
   const hasError = state === "rejected" && (!!output || stored.omitted);
   const pendingApproval = needsApproval(block);
   const command = `natsu app ${call.action}`;
   const verb = pendingApproval
-    ? "Run"
+    ? t("sessions.agentTranscript.natsuRun")
     : state === "pending"
-      ? "Running"
-      : "Ran";
+      ? t("sessions.agentTranscript.natsuRunning")
+      : t("sessions.agentTranscript.natsuRan");
   const summary = (
     <>
       <span
@@ -4686,7 +4807,15 @@ function NatsuCallRow({
         <button
           type="button"
           aria-expanded={errorOpen}
-          aria-label={`${errorOpen ? "Hide" : "Show"} error details for Natsu: ${call.label}`}
+          aria-label={
+            errorOpen
+              ? t("sessions.agentTranscript.hideNatsuErrorDetails", {
+                  label: call.label,
+                })
+              : t("sessions.agentTranscript.showNatsuErrorDetails", {
+                  label: call.label,
+                })
+          }
           onClick={() => setErrorOpen((value) => !value)}
           className="flex w-full min-w-0 items-center gap-1.5 py-1 text-left"
         >
@@ -4782,17 +4911,30 @@ function useElapsedFrom(
 
 function formatWorkingDuration(
   elapsedMs: number | null,
-  modelName?: string,
-  done = false,
+  modelName: string | undefined,
+  done: boolean,
+  t: TFunction,
 ): string {
   const who = modelName?.trim();
   const elapsed = formatElapsed(elapsedMs);
-  const verb = done ? (who ? "worked" : "Worked") : who ? "working" : "Working";
   if (elapsed == null) {
-    if (done) return who ? `${who} ${verb}` : verb;
-    return who ? `${who} ${verb}…` : `${verb}…`;
+    if (done) {
+      return who
+        ? t("sessions.agentTranscript.workedBy", { who })
+        : t("sessions.agentTranscript.worked");
+    }
+    return who
+      ? t("sessions.agentTranscript.workingByEllipsis", { who })
+      : t("sessions.agentTranscript.workingEllipsis");
   }
-  return who ? `${who} ${verb} for ${elapsed}` : `${verb} for ${elapsed}`;
+  if (done) {
+    return who
+      ? t("sessions.agentTranscript.workedByFor", { who, elapsed })
+      : t("sessions.agentTranscript.workedFor", { elapsed });
+  }
+  return who
+    ? t("sessions.agentTranscript.workingByFor", { who, elapsed })
+    : t("sessions.agentTranscript.workingFor", { elapsed });
 }
 
 function formatElapsed(elapsedMs: number | null): string | null {
@@ -4819,23 +4961,24 @@ function ToolCall({
   onOpenDiff?: (path: string) => void;
   embedded?: boolean;
 }) {
+  const t = useT();
   const [open, setOpen] = useState(false);
   const output = useToolDetail(block, open);
   const preview = block.tool?.preview;
-  const label = toolCallLabel(block, cwd);
+  const label = toolCallLabel(block, cwd, t);
   const detail = output.detail?.trim();
   const expanded = output.pending
-    ? LOADING_OUTPUT
+    ? t(LOADING_OUTPUT_KEY)
     : detail && detail !== label
       ? detail
       : label;
   const state = toolCallState(block);
   const stateLabel =
     state === "accepted"
-      ? "Accepted"
+      ? t("sessions.agentTranscript.accepted")
       : state === "rejected"
-        ? "Rejected"
-        : "Pending";
+        ? t("sessions.agentTranscript.rejected")
+        : t("sessions.agentTranscript.pending");
   const editTool = isEditTool(
     block.tool?.kind,
     block.text || block.tool?.title,
@@ -5078,6 +5221,7 @@ function ApprovalControls({
   block: Block;
   onApproval?: (requestId: number, decision: ApprovalDecision) => void;
 }) {
+  const t = useT();
   const approval = block.approval;
   if (!approval || approval.decided || !onApproval) return null;
   return (
@@ -5087,25 +5231,28 @@ function ApprovalControls({
         className="rounded-md bg-content px-2.5 py-0.5 text-[11px] hover:bg-content/80     text-background-base"
         onClick={() => onApproval(approval.requestId, "allow")}
       >
-        Allow
+        {t("sessions.agentTranscript.allow")}
       </button>
       <button
         type="button"
         className="rounded-md bg-content/10 px-2.5 py-0.5 text-[11px] text-content/70 hover:bg-content/20"
         onClick={() => onApproval(approval.requestId, "deny")}
       >
-        Deny
+        {t("sessions.agentTranscript.deny")}
       </button>
     </div>
   );
 }
 
 function HandoffDivider({ block }: { block: Block }) {
+  const t = useT();
   const meta = block.handoff;
   if (!meta) return null;
 
   const preparing = meta.status === "preparing";
-  const label = preparing ? "Preparing a handoff" : HARNESS_TITLE[meta.to];
+  const label = preparing
+    ? t("sessions.agentTranscript.preparingHandoff")
+    : HARNESS_TITLE[meta.to];
 
   return (
     <div className="px-4 py-5">
@@ -5115,8 +5262,10 @@ function HandoffDivider({ block }: { block: Block }) {
           role="separator"
           aria-label={
             preparing
-              ? `Preparing a handoff to ${HARNESS_TITLE[meta.to]}`
-              : `Continued with ${label}`
+              ? t("sessions.agentTranscript.preparingHandoffTo", {
+                  harness: HARNESS_TITLE[meta.to],
+                })
+              : t("sessions.agentTranscript.continuedWith", { label })
           }
           className="flex max-w-[min(100%,20rem)] items-center gap-1.5 px-1.5 font-sans text-[12px] text-content/55"
         >
@@ -5138,24 +5287,27 @@ function HandoffDivider({ block }: { block: Block }) {
 }
 
 /** The label and severity chrome an interjection wears, wherever it sits. */
-function interjectionChrome(meta: InterjectionMeta): {
+function interjectionChrome(
+  meta: InterjectionMeta,
+  t: TFunction,
+): {
   label: string;
   severityText?: string;
   severityClass: string;
 } {
   const label =
     meta.customType === "advisor"
-      ? "Advisor"
+      ? t("sessions.agentTranscript.interjectionAdvisor")
       : meta.customType === "custom"
-        ? "Notice"
+        ? t("sessions.agentTranscript.interjectionNotice")
         : meta.customType;
   const severityText =
     meta.severity === "blocker"
-      ? "Blocker"
+      ? t("sessions.agentTranscript.interjectionBlocker")
       : meta.severity === "concern"
-        ? "Concern"
+        ? t("sessions.agentTranscript.interjectionConcern")
         : meta.severity === "nit"
-          ? "Nit"
+          ? t("sessions.agentTranscript.interjectionNit")
           : undefined;
   const severityClass =
     meta.severity === "blocker"
@@ -5173,6 +5325,7 @@ const INTERJECTION_BODY =
 /** A mid-turn interjection, e.g. OMP advisor notes: a labeled boundary with
  * a collapsible advisory body below it. */
 function InterjectionDivider({ block }: { block: Block }) {
+  const t = useT();
   const [expanded, setExpanded] = useState(false);
   const [overflows, setOverflows] = useState(false);
   const textRef = useRef<HTMLPreElement>(null);
@@ -5196,14 +5349,14 @@ function InterjectionDivider({ block }: { block: Block }) {
 
   const meta = block.interjection;
   if (!meta) return null;
-  const { label, severityText, severityClass } = interjectionChrome(meta);
+  const { label, severityText, severityClass } = interjectionChrome(meta, t);
   return (
     <div className="px-4 py-4">
       <div className="flex items-center gap-3">
         <div className="h-px min-w-4 flex-1 bg-content/12" />
         <div
           role="separator"
-          aria-label={`Interjection: ${label}`}
+          aria-label={t("wiring.agentTranscript.interjection", { label })}
           className="flex items-center gap-2 px-1.5 font-sans text-[12px] text-content/55"
         >
           <span>{label}</span>
@@ -5230,7 +5383,9 @@ function InterjectionDivider({ block }: { block: Block }) {
               onClick={() => setExpanded((value) => !value)}
               className="mt-1 py-1 font-sans text-xs text-content/55 hover:text-content"
             >
-              {expanded ? "Show less" : "Show more"}
+              {expanded
+                ? t("sessions.agentTranscript.showLess")
+                : t("sessions.agentTranscript.showMore")}
             </button>
           ) : null}
         </div>

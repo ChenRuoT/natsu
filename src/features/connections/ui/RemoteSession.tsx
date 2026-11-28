@@ -21,6 +21,7 @@ import { notifyGitChanged } from "../../../platform/tauri/fs";
 import type { Worktree } from "../../source-control/model/worktrees";
 import { useProjectBranchesState } from "../../source-control/hooks/useProjectBranches";
 import { registerRemoteSessionActions } from "../model/remoteSessionActions";
+import { t as tNow, useT } from "../../../shared/i18n/i18n";
 import {
   clearPendingRemoteCommand,
   loadRemoteSession,
@@ -133,6 +134,7 @@ export function RemoteSession({
   render: (overrides: RemoteSessionOverrides) => ReactNode;
 }) {
   const project = remoteProjectFor(shell.cwd);
+  const t = useT();
   const { machines, loaded } = useRemoteMachines(!!project);
   const machine = project
     ? machines.find((entry) => entry.environmentId === project.environmentId)
@@ -142,10 +144,10 @@ export function RemoteSession({
       <div className="flex h-full flex-col items-center justify-center gap-3 p-6 text-center">
         <p className="text-[13px] text-content/60">
           {!project
-            ? "This project’s machine details are missing. Add the project again from the project rail."
+            ? t("connections.remoteSession.missingDetails")
             : loaded
-              ? "The machine for this project isn’t connected on this computer."
-              : "Connecting to the machine…"}
+              ? t("connections.remoteSession.notConnected")
+              : t("connections.remoteSession.connecting")}
         </p>
         {project && loaded ? (
           <button
@@ -155,7 +157,7 @@ export function RemoteSession({
               window.dispatchEvent(new Event(OPEN_CONNECTIONS_EVENT))
             }
           >
-            Manage machines
+            {t("connections.remoteSession.manageMachines")}
           </button>
         ) : null}
       </div>
@@ -197,6 +199,7 @@ function ConnectedRemoteSession({
   project: RemoteProject;
   render: (overrides: RemoteSessionOverrides) => ReactNode;
 }) {
+  const t = useT();
   const [descriptor, setDescriptor] = useState<HostDescriptor | undefined>(() =>
     cachedDescriptors.get(machine.id),
   );
@@ -373,7 +376,7 @@ function ConnectedRemoteSession({
           );
           if (host.environmentId !== machine.environmentId)
             throw new Error(
-              "Host identity changed. Reconnect this machine before continuing.",
+              tNow("connections.remoteSession.identityChanged"),
             );
           if (stale()) return;
           cachedDescriptors.set(machine.id, host);
@@ -389,7 +392,7 @@ function ConnectedRemoteSession({
           : undefined;
         if (stale()) return;
         if (next && next.projectId !== project.projectId)
-          throw new Error("This session belongs to a different host project");
+          throw new Error(tNow("connections.remoteSession.differentProject"));
         setOnline(true);
         reportRemoteMachineStatus(machine.id, true);
         // A catalog request that failed while offline is retried on recovery.
@@ -927,7 +930,7 @@ function ConnectedRemoteSession({
           ...(listed ?? {
             id,
             harness,
-            name: id ? id.replace(/^[a-z]+:/, "") : "Loading models…",
+            name: id ? id.replace(/^[a-z]+:/, "") : t("connections.remoteSession.loadingModels"),
             nativeId: id.replace(/^[a-z]+:/, ""),
           }),
           settings: controls.settings,
@@ -950,6 +953,7 @@ function ConnectedRemoteSession({
     catalogError,
     descriptor,
     providers,
+    t,
     machine.environmentId,
     hostSession?.harness,
     hostSession?.model,
@@ -1032,14 +1036,16 @@ function ConnectedRemoteSession({
     }
   };
   const notice = pending && !sending
-    ? { text: "Waiting for the host to confirm your request.", detail: error,
-        action: { label: "Retry", run: () => void retryPending() } }
+    ? { text: t("connections.remoteSession.waitingHost"), detail: error,
+        action: { label: t("connections.remoteSession.retry"), run: () => void retryPending() } }
     : starting?.failed
       ? {
-          text: `Couldn’t ${starting.draft ? "save the draft" : "send the message"} on ${machine.name}.`,
+          text: starting.draft
+            ? t("connections.remoteSession.saveDraftFailed", { name: machine.name })
+            : t("connections.remoteSession.sendFailed", { name: machine.name }),
           detail: error,
           action: {
-            label: "Try again",
+            label: t("connections.remoteSession.tryAgain"),
             run: () => {
               const turn = { ...starting, failed: false };
               setStarting(turn);
@@ -1066,14 +1072,14 @@ function ConnectedRemoteSession({
       : error
           ? {
               text: error,
-              action: { label: "Dismiss", run: () => setError("") },
+              action: { label: t("connections.remoteSession.dismiss"), run: () => setError("") },
             }
           : catalogProblem
             ? {
-                text: `Couldn’t load models from ${machine.name}.`,
+                text: t("connections.remoteSession.loadModelsFailed", { name: machine.name }),
                 detail: catalogProblem,
                 action: {
-                  label: "Retry",
+                  label: t("connections.remoteSession.retry"),
                   run: () => setCatalogRefresh((value) => value + 1),
                 },
               }
@@ -1082,11 +1088,9 @@ function ConnectedRemoteSession({
   const selectWorktree = async (tree: Worktree) => {
     const parsed = parseRemotePath(tree.path);
     if (!parsed || parsed.environmentId !== machine.environmentId)
-      throw new Error("Choose a worktree on this machine");
+      throw new Error(tNow("connections.remoteSession.chooseWorktree"));
     if (sessionId)
-      throw new Error(
-        "This session’s worktree is fixed. Start a new session to use another.",
-      );
+      throw new Error(tNow("connections.remoteSession.worktreeFixed"));
     if (parsed.hostPath === executionCwd) return;
     rememberRemotePendingWorktree(shell.id, parsed.hostPath);
     setSelectedCwd(parsed.hostPath);
@@ -1103,7 +1107,7 @@ function ConnectedRemoteSession({
         target.model !== configuration.model ||
         !sameModelSettings(target.modelSettings, configuration.settings))
     ) {
-      setError("Select that model in the composer before building this remote plan.");
+      setError(tNow("connections.remoteSession.selectModelFirst"));
       return;
     }
     submit(`Build the approved plan:\n\n${block.text}`, [], { intent: "build" }, false, blockId);

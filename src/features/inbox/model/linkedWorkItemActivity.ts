@@ -1,4 +1,9 @@
 import {
+  translate,
+  type MessageKey,
+  type TFunction,
+} from "../../../shared/i18n/i18n";
+import {
   githubReviewStateLabel,
   type GithubWorkItemComment,
   type GithubWorkItemThread,
@@ -112,7 +117,7 @@ export function completeLinkedWorkItemUpdateCard(
       text:
         comment.kind === "review"
           ? concise(
-              [githubReviewStateLabel(comment.state), comment.body]
+              [githubReviewStateLabel(comment.state, englishT), comment.body]
                 .filter(Boolean)
                 .join(": "),
             )
@@ -163,22 +168,53 @@ export function linkedWorkItemTerminalState(
   return state === "closed" ? "pr_closed" : undefined;
 }
 
-function countLabel(count: number, singular: string): string {
-  return `${count} ${singular}${count === 1 ? "" : "s"}`;
+/** Prompts sent to an agent stay English, so English is the default. */
+const englishT: TFunction = (key, params) => translate("en", key, params);
+
+function countLabel(
+  t: TFunction,
+  count: number,
+  one: MessageKey,
+  other: MessageKey,
+): string {
+  return t(count === 1 ? one : other, { count });
 }
 
+/** Pass the UI `t` for display; the default English is what the agent prompt uses. */
 export function linkedWorkItemUpdateSummary(
   card: LinkedWorkItemUpdateCard,
+  t: TFunction = englishT,
 ): string {
   const parts = [
-    card.counts.commits ? countLabel(card.counts.commits, "new commit") : "",
-    card.counts.reviews ? countLabel(card.counts.reviews, "new review") : "",
-    card.counts.comments ? countLabel(card.counts.comments, "new comment") : "",
+    card.counts.commits
+      ? countLabel(
+          t,
+          card.counts.commits,
+          "inbox.linkedActivity.newCommit.one",
+          "inbox.linkedActivity.newCommit.other",
+        )
+      : "",
+    card.counts.reviews
+      ? countLabel(
+          t,
+          card.counts.reviews,
+          "inbox.linkedActivity.newReview.one",
+          "inbox.linkedActivity.newReview.other",
+        )
+      : "",
+    card.counts.comments
+      ? countLabel(
+          t,
+          card.counts.comments,
+          "inbox.linkedActivity.newComment.one",
+          "inbox.linkedActivity.newComment.other",
+        )
+      : "",
   ].filter(Boolean);
   if (parts.length > 0) return parts.join(" · ");
-  if (card.status === "loading") return "Loading change details…";
-  if (card.status === "error") return "Updated on GitHub · details unavailable";
-  return "Metadata or status changed";
+  if (card.status === "loading") return t("inbox.linkedActivity.loading");
+  if (card.status === "error") return t("inbox.linkedActivity.unavailable");
+  return t("inbox.linkedActivity.changed");
 }
 
 export function linkedWorkItemActivityPrompt(

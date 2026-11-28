@@ -1,4 +1,9 @@
 import { invoke } from "@tauri-apps/api/core";
+import {
+  t as tNow,
+  type MessageKey,
+  type TFunction,
+} from "../../../shared/i18n/i18n";
 
 export type GithubPrCheckState =
   "pass" | "fail" | "pending" | "skipping" | "cancel" | "unknown";
@@ -76,17 +81,20 @@ export const CHECK_STATES: readonly GithubPrCheckState[] = [
   "skipping",
 ];
 
-const CHECK_STATE_LABELS: Record<GithubPrCheckState, string> = {
-  pass: "passed",
-  fail: "failed",
-  pending: "in progress",
-  cancel: "cancelled",
-  unknown: "unknown",
-  skipping: "skipped",
+const CHECK_STATE_LABEL_KEYS: Record<GithubPrCheckState, MessageKey> = {
+  pass: "inbox.checkState.passed",
+  fail: "inbox.checkState.failed",
+  pending: "inbox.checkState.inProgress",
+  cancel: "inbox.checkState.cancelled",
+  unknown: "inbox.checkState.unknown",
+  skipping: "inbox.checkState.skipped",
 };
 
-export function checkStateLabel(state: GithubPrCheckState): string {
-  const label = CHECK_STATE_LABELS[state];
+export function checkStateLabel(
+  state: GithubPrCheckState,
+  t: TFunction = tNow,
+): string {
+  const label = t(CHECK_STATE_LABEL_KEYS[state]);
   return label.charAt(0).toUpperCase() + label.slice(1);
 }
 
@@ -115,11 +123,15 @@ export function countChecks(
 /** One clause per non-zero state, so color never carries the counts alone. */
 export function describeCheckCounts(
   counts: Record<GithubPrCheckState, number>,
+  t: TFunction = tNow,
 ): string | null {
-  const parts = CHECK_STATES.filter((state) => counts[state] > 0).map(
-    (state) => `${counts[state]} ${CHECK_STATE_LABELS[state]}`,
+  const parts = CHECK_STATES.filter((state) => counts[state] > 0).map((state) =>
+    t("inbox.checkState.count", {
+      count: counts[state],
+      label: t(CHECK_STATE_LABEL_KEYS[state]),
+    }),
   );
-  return parts.length > 0 ? parts.join(", ") : null;
+  return parts.length > 0 ? parts.join(t("inbox.checkState.separator")) : null;
 }
 
 export type GithubPrChecksOverall =
@@ -136,56 +148,45 @@ export type GithubPrChecksOverall =
  * or skipping-only list stays neutral, and initial loading never reads as
  * "no checks".
  */
-export function summarizePrChecks(input: {
-  loading: boolean;
-  error: string | null;
-  checks: readonly GithubPrCheck[] | null;
-}): GithubPrChecksOverall {
+export function summarizePrChecks(
+  input: {
+    loading: boolean;
+    error: string | null;
+    checks: readonly GithubPrCheck[] | null;
+  },
+  t: TFunction = tNow,
+): GithubPrChecksOverall {
   if (input.loading) {
-    return { kind: "loading", description: "Loading checks" };
+    return { kind: "loading", description: t("inbox.checkState.loading") };
   }
   if (input.error) {
     const counts = input.checks ? countChecks(input.checks) : null;
-    const saved = counts ? describeCheckCounts(counts) : null;
+    const saved = counts ? describeCheckCounts(counts, t) : null;
     return {
       kind: "error",
       description: saved
-        ? `Checks failed to load, showing saved results that may be out of date: ${saved}`
-        : "Checks failed to load",
+        ? t("inbox.checkState.errorSaved", { saved })
+        : t("inbox.checkState.error"),
     };
   }
   const checks = input.checks ?? [];
   const counts = countChecks(checks);
+  const description =
+    describeCheckCounts(counts, t) ?? t("inbox.checkState.noChecks");
   if (counts.fail > 0) {
-    return {
-      kind: "fail",
-      failed: counts.fail,
-      description: describeCheckCounts(counts) ?? "No checks reported",
-    };
+    return { kind: "fail", failed: counts.fail, description };
   }
   if (counts.pending > 0) {
-    return {
-      kind: "pending",
-      description: describeCheckCounts(counts) ?? "No checks reported",
-    };
+    return { kind: "pending", description };
   }
   if (counts.cancel > 0 || counts.unknown > 0) {
-    return {
-      kind: "neutral",
-      description: describeCheckCounts(counts) ?? "No checks reported",
-    };
+    return { kind: "neutral", description };
   }
   if (counts.pass > 0) {
-    return {
-      kind: "pass",
-      description: describeCheckCounts(counts) ?? "No checks reported",
-    };
+    return { kind: "pass", description };
   }
   // Empty or skipping-only: neutral, but the skipped count still gets said.
-  return {
-    kind: "neutral",
-    description: describeCheckCounts(counts) ?? "No checks reported",
-  };
+  return { kind: "neutral", description };
 }
 
 /** Duration only exists when both stamps parse and complete at or after start. */

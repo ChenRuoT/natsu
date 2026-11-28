@@ -16,6 +16,8 @@ import {
   clearPreparedNewThreadBackground,
 } from "./newThreadBackgroundEffects";
 
+import type { MessageKey } from "../../../shared/i18n/i18n";
+
 const ACCENT_COLOR_KEY = "natsu.accentColor";
 const THEME_HUE_KEY = "natsu.themeHue";
 const THEME_SATURATION_KEY = "natsu.themeSaturation";
@@ -80,6 +82,31 @@ export const NEW_THREAD_BACKGROUND_EFFECT_LABELS: Record<
   halftone: "Halftone",
   scanlines: "Scanlines",
   "gradient-blur": "Haze",
+};
+
+export const NEW_THREAD_BACKGROUND_EFFECT_LABEL_KEYS: Record<
+  NewThreadBackgroundEffect,
+  MessageKey
+> = {
+  none: "settings.appearance.backgroundEffect.none.label",
+  dither: "settings.appearance.backgroundEffect.dither.label",
+  ascii: "settings.appearance.backgroundEffect.ascii.label",
+  halftone: "settings.appearance.backgroundEffect.halftone.label",
+  scanlines: "settings.appearance.backgroundEffect.scanlines.label",
+  "gradient-blur": "settings.appearance.backgroundEffect.gradientBlur.label",
+};
+
+export const NEW_THREAD_BACKGROUND_EFFECT_DESCRIPTION_KEYS: Record<
+  NewThreadBackgroundEffect,
+  MessageKey
+> = {
+  none: "settings.appearance.backgroundEffect.none.description",
+  dither: "settings.appearance.backgroundEffect.dither.description",
+  ascii: "settings.appearance.backgroundEffect.ascii.description",
+  halftone: "settings.appearance.backgroundEffect.halftone.description",
+  scanlines: "settings.appearance.backgroundEffect.scanlines.description",
+  "gradient-blur":
+    "settings.appearance.backgroundEffect.gradientBlur.description",
 };
 
 export const NEW_THREAD_BACKGROUND_EFFECT_DESCRIPTIONS: Record<

@@ -1,3 +1,4 @@
+import { useT } from "../../../shared/i18n/i18n";
 import { useState } from "react";
 import { X } from "../../../shared/ui/icons";
 import { attachmentPreviewSrc, isAttachmentFolder } from "../model/attachments";
@@ -13,6 +14,7 @@ type Props = {
 };
 
 export function AttachmentChip({ attachment, onRemove, photo = false }: Props) {
+  const t = useT();
   const [previewOpen, setPreviewOpen] = useState(false);
   const preview = attachmentPreviewSrc(attachment);
   const image = attachment.kind === "image" && preview;
@@ -28,8 +30,12 @@ export function AttachmentChip({ attachment, onRemove, photo = false }: Props) {
         {image ? (
           <button
             type="button"
-            aria-label={`Open ${attachment.name} full screen`}
-            title={`Open ${attachment.name} full screen`}
+            aria-label={t("sessions.attachmentChip.openFullScreen", {
+              name: attachment.name,
+            })}
+            title={t("sessions.attachmentChip.openFullScreen", {
+              name: attachment.name,
+            })}
             onClick={(event) => {
               event.stopPropagation();
               setPreviewOpen(true);
@@ -64,8 +70,10 @@ export function AttachmentChip({ attachment, onRemove, photo = false }: Props) {
         {onRemove ? (
           <button
             type="button"
-            title="Remove"
-            aria-label={`Remove ${attachment.name}`}
+            title={t("sessions.attachmentChip.remove")}
+            aria-label={t("sessions.attachmentChip.removeName", {
+              name: attachment.name,
+            })}
             onClick={(event) => {
               event.stopPropagation();
               onRemove();

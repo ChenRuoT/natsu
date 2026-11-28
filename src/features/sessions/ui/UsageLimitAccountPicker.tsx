@@ -6,6 +6,7 @@ import {
   type KeyboardEvent as ReactKeyboardEvent,
 } from "react";
 import { ChevronDown } from "../../../shared/ui/icons";
+import { useT } from "../../../shared/i18n/i18n";
 import { Popover } from "../../../shared/ui/Popover";
 import type { HarnessId } from "../model/session";
 import { HarnessIcon } from "./HarnessIcon";
@@ -29,6 +30,7 @@ export function UsageLimitAccountPicker({
   onSelect: (accountId: string) => void;
   variant?: "composer" | "mono";
 }) {
+  const t = useT();
   const snapshot = useSyncExternalStore(
     subscribeProviderAccounts,
     () =>
@@ -80,7 +82,7 @@ export function UsageLimitAccountPicker({
       <button
         ref={button}
         type="button"
-        aria-label="Choose another account"
+        aria-label={t("sessions.usageLimitAccountPicker.chooseLabel")}
         aria-haspopup="menu"
         aria-expanded={open}
         data-mono-account-picker
@@ -99,7 +101,9 @@ export function UsageLimitAccountPicker({
         }
       >
         <span>
-          {variant === "mono" ? "Choose another account" : "Switch account"}
+          {variant === "mono"
+            ? t("sessions.usageLimitAccountPicker.chooseLabel")
+            : t("sessions.usageLimitAccountPicker.switch")}
         </span>
         <ChevronDown
           className={`size-3 shrink-0 text-content/50 ${open ? "rotate-180" : ""}`}
@@ -116,7 +120,7 @@ export function UsageLimitAccountPicker({
           onDismiss={(reason) => dismiss(reason === "escape")}
           ignore="[data-mono-account-picker]"
           role="menu"
-          aria-label="Choose another account"
+          aria-label={t("sessions.usageLimitAccountPicker.chooseLabel")}
           aria-activedescendant={`${menuId}-${active}`}
           tabIndex={-1}
           onKeyDown={onKeyDown}

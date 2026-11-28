@@ -22,6 +22,7 @@ import {
   nativeClipboardAttachments,
 } from "../../../platform/tauri/clipboard";
 import { storeQuickAttachments } from "../model/quickAttachments";
+import { t as tNow } from "../../../shared/i18n/i18n";
 import {
   captureDraft,
   dropPastedText,
@@ -106,7 +107,11 @@ export function useQuickAttachments(
           incoming.length > accepted.length &&
           next.length + accepted.length >= MAX_ATTACHMENTS
         )
-          onError(`You can attach up to ${MAX_ATTACHMENTS} files.`);
+          onError(
+            tNow("quickComposer.attachments.maxFiles", {
+              count: MAX_ATTACHMENTS,
+            }),
+          );
         const stored = await storeQuickAttachments(accepted);
         if (!alive.current) {
           stored.forEach(revokeAttachment);

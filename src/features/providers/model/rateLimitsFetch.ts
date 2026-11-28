@@ -1,5 +1,6 @@
 import { invoke } from "@tauri-apps/api/core";
 import { homeDir } from "../../../platform/tauri/fs";
+import { t as tNow } from "../../../shared/i18n/i18n";
 import {
   errorRateLimits,
   parseClaudeOAuthUsage,
@@ -46,7 +47,7 @@ export async function fetchOpencodeGoRateLimits(): Promise<ProviderRateLimits> {
       "opencode",
       error instanceof Error
         ? error.message
-        : "OpenCode Go usage unavailable",
+        : tNow("providers.rateLimitsFetch.opencodeUsageUnavailable"),
     );
   }
   if (result.status === "ok" && result.body) {
@@ -54,24 +55,24 @@ export async function fetchOpencodeGoRateLimits(): Promise<ProviderRateLimits> {
       const parsed = parseOpencodeGoUsage(JSON.parse(result.body));
       if (parsed.session || parsed.weekly || parsed.monthly) return parsed;
     } catch {
-      return errorRateLimits("opencode", "OpenCode Go response was not JSON");
+      return errorRateLimits("opencode", tNow("providers.rateLimitsFetch.opencodeNotJson"));
     }
     // A 200 with no usable windows is malformed: report an error so the
     // footer retries instead of sticking in "unavailable" forever.
     return errorRateLimits(
       "opencode",
-      "OpenCode Go usage response was unexpected",
+      tNow("providers.rateLimitsFetch.opencodeUnexpected"),
     );
   }
   if (result.status === "unavailable") {
     return unavailableRateLimits(
       "opencode",
-      result.error?.trim() || "OpenCode Go not connected",
+      result.error?.trim() || tNow("providers.rateLimitsFetch.opencodeNotConnected"),
     );
   }
   return errorRateLimits(
     "opencode",
-    result.error?.trim() || "OpenCode Go usage unavailable",
+    result.error?.trim() || tNow("providers.rateLimitsFetch.opencodeUsageUnavailable"),
   );
 }
 
@@ -99,16 +100,16 @@ export async function fetchDevinRateLimits(): Promise<ProviderRateLimits> {
     const inspected = await inspectHarnessBinary("devin");
     cliVersion = /\d+(?:\.\d+)+/.exec(inspected.version ?? "")?.[0];
   } catch {
-    return unavailableRateLimits("devin", "Devin CLI not found");
+    return unavailableRateLimits("devin", tNow("providers.rateLimitsFetch.devinCliNotFound"));
   }
-  if (!cliVersion) return errorRateLimits("devin", "Devin CLI version unknown");
+  if (!cliVersion) return errorRateLimits("devin", tNow("providers.rateLimitsFetch.devinCliVersionUnknown"));
   let result: DevinUsageFetch;
   try {
     result = await invoke<DevinUsageFetch>("fetch_devin_usage", { cliVersion });
   } catch (error) {
     return errorRateLimits(
       "devin",
-      error instanceof Error ? error.message : "Devin usage unavailable",
+      error instanceof Error ? error.message : tNow("providers.rateLimitsFetch.devinUsageUnavailable"),
     );
   }
   if (result.status === "ok" && result.usage) {
@@ -121,12 +122,12 @@ export async function fetchDevinRateLimits(): Promise<ProviderRateLimits> {
   }
   if (result.status === "unavailable") {
     devinIdentity = null;
-    return unavailableRateLimits("devin", result.error?.trim() || "Devin not signed in");
+    return unavailableRateLimits("devin", result.error?.trim() || tNow("providers.rateLimitsFetch.devinNotSignedIn"));
   }
   // A rejected key means that account is no longer signed in; a network
   // failure keeps the identity beside the last usage snapshot.
   if (result.httpStatus === 401 || result.httpStatus === 403) devinIdentity = null;
-  return errorRateLimits("devin", result.error?.trim() || "Devin usage unavailable");
+  return errorRateLimits("devin", result.error?.trim() || tNow("providers.rateLimitsFetch.devinUsageUnavailable"));
 }
 
 export type CodexRateLimitResetOutcome =
@@ -157,17 +158,17 @@ export async function fetchClaudeRateLimits(
     if (result.status === "unavailable") {
       return unavailableRateLimits(
         "claude",
-        result.error?.trim() || "Claude not signed in",
+        result.error?.trim() || tNow("providers.rateLimitsFetch.claudeNotSignedIn"),
       );
     }
     return errorRateLimits(
       "claude",
-      result.error?.trim() || "Claude usage unavailable",
+      result.error?.trim() || tNow("providers.rateLimitsFetch.claudeUsageUnavailable"),
     );
   } catch (error) {
     return errorRateLimits(
       "claude",
-      error instanceof Error ? error.message : "Claude usage unavailable",
+      error instanceof Error ? error.message : tNow("providers.rateLimitsFetch.claudeUsageUnavailable"),
     );
   }
 }
@@ -179,7 +180,7 @@ export async function fetchCodexRateLimits(
   try {
     path = (await resolveCodexBinary()).path;
   } catch {
-    return unavailableRateLimits("codex", "Codex CLI not found");
+    return unavailableRateLimits("codex", tNow("providers.rateLimitsFetch.codexCliNotFound"));
   }
 
   const cwd = await homeDir();
@@ -197,7 +198,7 @@ export async function fetchCodexRateLimits(
     }
     const rec = asRecord(result);
     if (rec && !parsed.session && !parsed.weekly) {
-      return unavailableRateLimits("codex", "No Codex usage data");
+      return unavailableRateLimits("codex", tNow("providers.rateLimitsFetch.codexNoUsageData"));
     }
     return parsed;
   } catch (error) {
@@ -207,10 +208,10 @@ export async function fetchCodexRateLimits(
         message,
       )
     ) {
-      return unavailableRateLimits("codex", "Codex not signed in");
+      return unavailableRateLimits("codex", tNow("providers.rateLimitsFetch.codexNotSignedIn"));
     }
     if (/ENOENT|not found|could not run/i.test(message)) {
-      return unavailableRateLimits("codex", "Codex CLI not found");
+      return unavailableRateLimits("codex", tNow("providers.rateLimitsFetch.codexCliNotFound"));
     }
     return errorRateLimits("codex", message);
   }
@@ -241,7 +242,7 @@ export async function consumeCodexRateLimitResetCredit(
   ) {
     return outcome;
   }
-  throw new Error("Codex returned an unknown reset result");
+  throw new Error(tNow("providers.rateLimitsFetch.codexUnknownReset"));
 }
 
 // Every probe reuses USAGE_CHILD_ID and kills whatever holds it first, so
@@ -291,7 +292,7 @@ async function runCodexAccountRequest<T>(
   watchChild(
     USAGE_CHILD_ID,
     (line) => rpc.pushLine(line),
-    () => rpc.close(new Error("Codex usage probe exited")),
+    () => rpc.close(new Error(tNow("providers.rateLimitsFetch.codexProbeExited"))),
   );
 
   try {
@@ -347,7 +348,7 @@ async function withTimeout<T>(
       new Promise<T>((_, reject) => {
         timer = setTimeout(() => {
           onTimeout();
-          reject(new Error("Codex usage probe timed out"));
+          reject(new Error(tNow("providers.rateLimitsFetch.codexProbeTimedOut")));
         }, ms);
       }),
     ]);

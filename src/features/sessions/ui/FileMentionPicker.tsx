@@ -1,3 +1,4 @@
+import { useT } from "../../../shared/i18n/i18n";
 import { StickyNote } from "../../../shared/ui/icons";
 import { useEffect, useRef, type MouseEvent as ReactMouseEvent } from "react";
 import type { RankedFile } from "../../files/model/fileIndex";
@@ -25,6 +26,7 @@ export function FileMentionPicker({
   onActive,
   onPick,
 }: Props) {
+  const t = useT();
   const lockOverscroll = useLockOverscroll<HTMLDivElement>();
   const activeRef = useRef<HTMLButtonElement>(null);
   const pointer = useRef({ x: Number.NaN, y: Number.NaN, allow: false });
@@ -64,20 +66,24 @@ export function FileMentionPicker({
       {files.length === 0 ? (
         <p className="px-3 py-2.5 text-[12px] text-content/50">
             {loading
-              ? "Indexing files…"
+              ? t("sessions.fileMentionPicker.indexing")
               : query.trim()
                 ? includeNotes
-                  ? "No matching files or notes"
-                  : "No matching files or folders"
+                  ? t("sessions.fileMentionPicker.noMatchingNotes")
+                  : t("sessions.fileMentionPicker.noMatchingFolders")
                 : includeNotes
-                  ? "No files or notes found"
-                  : "No files or folders found"}
+                  ? t("sessions.fileMentionPicker.noNotesFound")
+                  : t("sessions.fileMentionPicker.noFoldersFound")}
         </p>
       ) : (
         <div
           ref={lockOverscroll}
           role="listbox"
-          aria-label={includeNotes ? "Files and notes" : "Files and folders"}
+          aria-label={
+            includeNotes
+              ? t("sessions.fileMentionPicker.filesAndNotes")
+              : t("sessions.fileMentionPicker.filesAndFolders")
+          }
           onMouseMove={onListMouseMove}
           className="max-h-[min(240px,40vh)] overflow-y-auto overscroll-none px-1 py-1"
         >
@@ -131,7 +137,7 @@ export function FileMentionPicker({
                 </span>
                 {note ? (
                   <span className="shrink-0 font-mono text-[11px] text-content/40">
-                    Note
+                    {t("sessions.fileMentionPicker.note")}
                   </span>
                 ) : dir ? (
                   <span className="min-w-0 max-w-[45%] truncate font-mono text-[11px] text-content/40">

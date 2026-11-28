@@ -9,6 +9,7 @@ import {
 } from "../../../shared/ui/icons";
 import { useLockOverscroll } from "../../../shared/hooks/useLockOverscroll";
 import { Modal } from "../../../shared/ui/Modal";
+import { useT } from "../../../shared/i18n/i18n";
 import { HarnessIcon } from "../../sessions/ui/HarnessIcon";
 import {
   sessionDisplayTitle,
@@ -59,6 +60,7 @@ export function ResourcePressureNotice({
   const [stopError, setStopError] = useState("");
   const [stopping, setStopping] = useState<string>();
   const lockOverscroll = useLockOverscroll<HTMLDivElement>();
+  const t = useT();
   useEffect(() => {
     onPressureChange?.(pressure.active);
   }, [pressure.active, onPressureChange]);
@@ -171,7 +173,7 @@ export function ResourcePressureNotice({
     const session = sessionFor(id);
     return session
       ? sessionDisplayTitle(session.title, session.harness)
-      : "Background work";
+      : t("notifications.resourcePressure.backgroundWork");
   };
   const stopWork = async (
     identity: string,
@@ -195,10 +197,10 @@ export function ResourcePressureNotice({
   }
   const reasons = pressure.reasons.map((reason) =>
     reason === "CPU saturation"
-      ? "High CPU usage"
+      ? t("notifications.resourcePressure.reasonCpu")
       : reason === "Memory pressure"
-        ? "Low available memory"
-        : "Slow response",
+        ? t("notifications.resourcePressure.reasonMemory")
+        : t("notifications.resourcePressure.reasonSlow"),
   );
   return (
     <>
@@ -206,11 +208,13 @@ export function ResourcePressureNotice({
         ? createPortal(
             <button
               type="button"
-              aria-label="High resource usage"
+              aria-label={t("notifications.resourcePressure.chipLabel")}
               aria-haspopup="dialog"
               aria-expanded={open}
               onClick={() => setOpen(true)}
-              title={`${reasons.join(" · ")} · Review running work`}
+              title={t("notifications.resourcePressure.chipTitle", {
+                reasons: reasons.join(" · "),
+              })}
               className={`inline-flex h-5 shrink-0 items-center gap-1.5 whitespace-nowrap ${insetChip ? "rounded-full px-2" : "rounded-md px-1.5"} text-content/55 transition-colors hover:bg-content/8 hover:text-content focus-visible:outline-2 focus-visible:outline-accent ${open ? "bg-content/8 text-content" : ""}`}
             >
               <CircleAlert
@@ -218,14 +222,14 @@ export function ResourcePressureNotice({
                 strokeWidth={1.75}
                 aria-hidden
               />
-              <span>High usage</span>
+              <span>{t("notifications.resourcePressure.chipText")}</span>
             </button>,
             chipHost,
           )
         : null}
       {open && chipHost ? (
         <Modal
-          title="Running work"
+          title={t("notifications.resourcePressure.dialogTitle")}
           size="sm"
           fitViewport
           onClose={() => setOpen(false)}
@@ -241,12 +245,12 @@ export function ResourcePressureNotice({
                 <p className="text-[12px] font-medium">
                   {pressure.active
                     ? reasons.join(" · ")
-                    : "Usage is back to normal"}
+                    : t("notifications.resourcePressure.normalTitle")}
                 </p>
                 <p className="mt-0.5 text-[12px] leading-relaxed text-content/55">
                   {pressure.active
-                    ? "Things may feel slower. Stop work you no longer need."
-                    : "The slowdown has cleared. You can close this window."}
+                    ? t("notifications.resourcePressure.activeHint")
+                    : t("notifications.resourcePressure.normalHint")}
                 </p>
               </div>
             </div>
@@ -256,7 +260,7 @@ export function ResourcePressureNotice({
                 title={error}
                 className="mt-3 text-[12px] text-red-500 dark:text-red-400"
               >
-                Couldn't load running work. Trying again…
+                {t("notifications.resourcePressure.loadFailed")}
               </p>
             ) : null}
             {stopError ? (
@@ -265,7 +269,7 @@ export function ResourcePressureNotice({
                 title={stopError}
                 className="mt-3 text-[12px] text-red-500 dark:text-red-400"
               >
-                Couldn't stop this work. Please try again.
+                {t("notifications.resourcePressure.stopFailed")}
               </p>
             ) : null}
             {loading && !processes.length ? (
@@ -274,26 +278,35 @@ export function ResourcePressureNotice({
                 className="flex items-center justify-center gap-2 py-8 text-[12px] text-content/50"
               >
                 <Loader className="size-3.5 animate-spin" />
-                Checking running work…
+                {t("notifications.resourcePressure.checking")}
               </p>
             ) : !processes.length && !error ? (
               <p className="py-6 text-center text-[12px] leading-relaxed text-content/50">
-                No running work found in Natsu.
                 {pressure.active
-                  ? " Other apps may be using these resources."
-                  : ""}
+                  ? t("notifications.resourcePressure.emptyActive")
+                  : t("notifications.resourcePressure.empty")}
               </p>
             ) : null}
             {processes.length ? (
               <>
                 <p className="mt-4 mb-1 text-[11px] font-medium text-content/45">
-                  {groups.size} {groups.size === 1 ? "session" : "sessions"}{" "}
-                  running
+                  {groups.size === 1
+                    ? t("notifications.resourcePressure.sessionsRunning.one", {
+                        count: groups.size,
+                      })
+                    : t(
+                        "notifications.resourcePressure.sessionsRunning.other",
+                        {
+                          count: groups.size,
+                        },
+                      )}
                 </p>
                 <div
                   ref={lockOverscroll}
                   role="list"
-                  aria-label="Running sessions"
+                  aria-label={t(
+                    "notifications.resourcePressure.sessionListLabel",
+                  )}
                   className="max-h-[min(320px,45dvh)] divide-y divide-stroke overflow-y-auto overscroll-contain"
                 >
                   {[...groups].map(([id, rows]) => {
@@ -327,8 +340,13 @@ export function ResourcePressureNotice({
                           {session ? (
                             <button
                               type="button"
-                              aria-label={`Stop session ${title}`}
-                              title="Stop this session and pause queued work"
+                              aria-label={t(
+                                "notifications.resourcePressure.stopSessionLabel",
+                                { title },
+                              )}
+                              title={t(
+                                "notifications.resourcePressure.stopSessionTitle",
+                              )}
                               disabled={!!stopping}
                               className="flex h-7 shrink-0 items-center gap-1.5 rounded-md bg-content/6 px-2.5 text-[12px] text-content/70 hover:bg-red-500/10 hover:text-red-500 disabled:opacity-40 dark:hover:text-red-400"
                               onClick={() =>
@@ -340,10 +358,10 @@ export function ResourcePressureNotice({
                               {stopping === `session:${id}` ? (
                                 <>
                                   <Loader className="size-3 animate-spin" />
-                                  Stopping…
+                                  {t("notifications.resourcePressure.stopping")}
                                 </>
                               ) : (
-                                "Stop"
+                                t("notifications.resourcePressure.stop")
                               )}
                             </button>
                           ) : null}
@@ -351,9 +369,21 @@ export function ResourcePressureNotice({
                         <details className="group/processes ml-[34px] mt-0.5">
                           <summary className="flex cursor-pointer list-none items-center gap-1 text-[11px] text-content/45 hover:text-content/75 [&::-webkit-details-marker]:hidden">
                             <ChevronDown className="size-3 shrink-0 -rotate-90 transition-transform group-open/processes:rotate-0" />
-                            {rows.length}{" "}
-                            {rows.length === 1 ? "process" : "processes"} ·{" "}
-                            {formatMemory(memory)} memory
+                            {rows.length === 1
+                              ? t(
+                                  "notifications.resourcePressure.processSummary.one",
+                                  {
+                                    count: rows.length,
+                                    memory: formatMemory(memory),
+                                  },
+                                )
+                              : t(
+                                  "notifications.resourcePressure.processSummary.other",
+                                  {
+                                    count: rows.length,
+                                    memory: formatMemory(memory),
+                                  },
+                                )}
                           </summary>
                           <div className="mt-2 space-y-2 border-l border-stroke pl-2.5">
                             {rows.map((process) => (
@@ -372,18 +402,39 @@ export function ResourcePressureNotice({
                                     className="truncate text-[10px] tabular-nums text-content/40"
                                     title={process.cwd}
                                   >
-                                    {process.cpuPercent.toFixed(0)}% CPU ·{" "}
-                                    {formatMemory(process.memoryBytes)} · PID{" "}
-                                    {process.pid}
+                                    {t(
+                                      "notifications.resourcePressure.processStats",
+                                      {
+                                        cpu: process.cpuPercent.toFixed(0),
+                                        memory: formatMemory(
+                                          process.memoryBytes,
+                                        ),
+                                        pid: process.pid,
+                                      },
+                                    )}
                                   </p>
                                 </div>
                                 <button
                                   type="button"
-                                  aria-label={`${process.agent ? "Stop agent" : "Stop build/tool"} for ${title} (PID ${process.pid})`}
+                                  aria-label={
+                                    process.agent
+                                      ? t(
+                                          "notifications.resourcePressure.stopAgentLabel",
+                                          { title, pid: process.pid },
+                                        )
+                                      : t(
+                                          "notifications.resourcePressure.stopToolLabel",
+                                          { title, pid: process.pid },
+                                        )
+                                  }
                                   title={
                                     process.agent
-                                      ? "Interrupt the agent"
-                                      : "Stop this tool; keep the agent running"
+                                      ? t(
+                                          "notifications.resourcePressure.interruptAgentTitle",
+                                        )
+                                      : t(
+                                          "notifications.resourcePressure.stopToolTitle",
+                                        )
                                   }
                                   disabled={
                                     !!stopping || (process.agent && !session)
@@ -401,8 +452,10 @@ export function ResourcePressureNotice({
                                   }
                                 >
                                   {stopping === process.identity
-                                    ? "Stopping…"
-                                    : "Stop"}
+                                    ? t(
+                                        "notifications.resourcePressure.stopping",
+                                      )
+                                    : t("notifications.resourcePressure.stop")}
                                 </button>
                               </div>
                             ))}
@@ -413,7 +466,7 @@ export function ResourcePressureNotice({
                   })}
                 </div>
                 <p className="mt-3 border-t border-stroke pt-3 text-[11px] text-content/40">
-                  Stopping work keeps your conversations saved.
+                  {t("notifications.resourcePressure.keepsConversations")}
                 </p>
               </>
             ) : null}

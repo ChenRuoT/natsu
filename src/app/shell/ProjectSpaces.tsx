@@ -8,6 +8,7 @@ import {
   type RecentProject,
 } from "../../features/projects/model/recents";
 import { resolveTabGroupLabel } from "../../features/workspace/model/tabGroups";
+import { useT } from "../../shared/i18n/i18n";
 import { projectKey, projectName } from "../../shared/lib/paths";
 import { Plus, Settings } from "../../shared/ui/icons";
 import { IconButton } from "./TitleBar";
@@ -88,6 +89,7 @@ export function ProjectSpacesBar({
   onOpenSettings?: () => void;
 }) {
   const { groupLabels } = useProjectAppearance();
+  const t = useT();
   const busy = useMemo(() => [...(busyPaths ?? [])], [busyPaths]);
   return (
     <div
@@ -96,13 +98,18 @@ export function ProjectSpacesBar({
     >
       <div className="flex w-7 justify-start">
         {onOpenSettings ? (
-          <IconButton label={`Settings (${MOD},)`} onClick={onOpenSettings}>
+          <IconButton
+            label={t("shell.projectSpaces.settingsLabel", {
+              shortcut: `${MOD},`,
+            })}
+            onClick={onOpenSettings}
+          >
             <Settings className="size-3.5" strokeWidth={1.75} />
           </IconButton>
         ) : null}
       </div>
       <nav
-        aria-label="Projects"
+        aria-label={t("shell.projectSpaces.projectsNav")}
         className="flex min-w-0 items-center justify-center gap-0.5 overflow-hidden"
       >
         {spaces.map((path) => {
@@ -120,7 +127,11 @@ export function ProjectSpacesBar({
               key={path}
               type="button"
               title={label}
-              aria-label={working ? `${label}, working` : label}
+              aria-label={
+                working
+                  ? t("shell.projectSpaces.workingLabel", { label })
+                  : label
+              }
               aria-current={current ? "true" : undefined}
               data-tauri-drag-region="false"
               onClick={() => {
@@ -143,7 +154,12 @@ export function ProjectSpacesBar({
       </nav>
       <div className="flex w-7 justify-end">
         {onOpenProject ? (
-          <IconButton label={`Open project (${MOD}O)`} onClick={onOpenProject}>
+          <IconButton
+            label={t("shell.projectSpaces.openProjectLabel", {
+              shortcut: `${MOD}O`,
+            })}
+            onClick={onOpenProject}
+          >
             <Plus className="size-3.5" strokeWidth={1.75} />
           </IconButton>
         ) : null}

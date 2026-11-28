@@ -1,3 +1,4 @@
+import { useT } from "../../../shared/i18n/i18n";
 import { LAYER } from "../../../shared/lib/layers";
 
 export function FileActionError({
@@ -7,6 +8,7 @@ export function FileActionError({
   message: string;
   onDismiss: () => void;
 }) {
+  const t = useT();
   return (
     <div
       role="alert"
@@ -16,11 +18,11 @@ export function FileActionError({
       <span className="min-w-0 break-words">{message}</span>
       <button
         type="button"
-        aria-label="Dismiss file action error"
+        aria-label={t("files.fileActionError.dismissLabel")}
         className="shrink-0 text-content/60 hover:text-content"
         onClick={onDismiss}
       >
-        Dismiss
+        {t("files.fileActionError.dismiss")}
       </button>
     </div>
   );

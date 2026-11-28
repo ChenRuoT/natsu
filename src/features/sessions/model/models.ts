@@ -1,5 +1,10 @@
 import type { HarnessId } from "./session";
 import { HARNESSES } from "./session";
+import {
+  t as tNow,
+  type MessageKey,
+  type TFunction,
+} from "../../../shared/i18n/i18n";
 import { loadProjectProviderSettings } from "./projectProviders";
 import {
   hasProbedHarnessAvailability,
@@ -19,6 +24,35 @@ export type ModelSetting = {
   options: ModelSettingChoice[];
   description?: string;
 };
+
+/** Built-in setting and option labels that have a translation. Other text shows as provided. */
+const SETTING_TEXT_KEYS = new Map<string, MessageKey>([
+  ["Reasoning", "sessions.models.settingReasoning"],
+  ["Effort", "sessions.models.settingEffort"],
+  ["Fast", "sessions.models.settingFast"],
+  ["Thinking", "sessions.models.settingThinking"],
+  ["Context", "sessions.models.settingContext"],
+  ["Variant", "sessions.models.settingVariant"],
+  ["Service Tier", "sessions.models.settingServiceTier"],
+  ["Extra High", "sessions.models.optionExtraHigh"],
+  ["High", "sessions.models.optionHigh"],
+  ["Medium", "sessions.models.optionMedium"],
+  ["Low", "sessions.models.optionLow"],
+  ["Max", "sessions.models.optionMax"],
+  ["Off", "sessions.models.optionOff"],
+  ["On", "sessions.models.optionOn"],
+  ["Minimal", "sessions.models.optionMinimal"],
+  ["None", "sessions.models.optionNone"],
+  ["Standard", "sessions.models.optionStandard"],
+  ["Default", "sessions.models.optionDefault"],
+  ["Auto", "sessions.models.optionAuto"],
+]);
+
+/** Display text for a setting or option label; provider names and unknown text pass through. */
+export function settingText(text: string, t: TFunction = tNow): string {
+  const key = SETTING_TEXT_KEYS.get(text);
+  return key ? t(key) : text;
+}
 
 export type AgentModel = {
   id: string;

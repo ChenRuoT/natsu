@@ -6,6 +6,7 @@ import {
   type KeyboardEvent as ReactKeyboardEvent,
 } from "react";
 import { Check, MessageSquare } from "../../../shared/ui/icons";
+import { useT } from "../../../shared/i18n/i18n";
 import {
   CUSTOM_OPTION_ID,
   buildQuestionReply,
@@ -26,6 +27,7 @@ export function QuestionForm({ prompt, onReply, onInteraction }: Props) {
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string[]>>({});
   const [custom, setCustom] = useState<Record<string, string>>({});
+  const t = useT();
   const [now, setNow] = useState(Date.now);
 
   useEffect(() => {
@@ -121,7 +123,10 @@ export function QuestionForm({ prompt, onReply, onInteraction }: Props) {
           </span>
           {total > 1 ? (
             <span className="shrink-0 text-[11px] text-content/40">
-              {index + 1} of {total}
+              {t("sessions.questionForm.position", {
+                current: index + 1,
+                total,
+              })}
             </span>
           ) : null}
           <button
@@ -129,7 +134,7 @@ export function QuestionForm({ prompt, onReply, onInteraction }: Props) {
             className="h-6 shrink-0 rounded-md px-1.5 text-[11px] text-content/55 hover:bg-content/10 hover:text-content"
             onClick={skipCurrent}
           >
-            Skip
+            {t("sessions.questionForm.skip")}
           </button>
         </div>
         <div className="mt-2">
@@ -173,11 +178,16 @@ export function QuestionForm({ prompt, onReply, onInteraction }: Props) {
           {prompt.autoResolveAt != null ? (
             <span
               className="mr-auto text-[11px] text-content/40"
-              title="Interact to keep this question open."
+              title={t("sessions.questionForm.interactHint")}
             >
               {prompt.autoResolveAt - now > 60_000
-                ? "Optional question"
-                : `Continues without an answer in ${Math.max(0, Math.ceil((prompt.autoResolveAt - now) / 1000))}s`}
+                ? t("sessions.questionForm.optionalQuestion")
+                : t("sessions.questionForm.continuesWithout", {
+                    seconds: Math.max(
+                      0,
+                      Math.ceil((prompt.autoResolveAt - now) / 1000),
+                    ),
+                  })}
             </span>
           ) : null}
           {index > 0 ? (
@@ -186,7 +196,7 @@ export function QuestionForm({ prompt, onReply, onInteraction }: Props) {
               className="h-6 shrink-0 rounded-md px-1.5 text-[11px] text-content/55 hover:bg-content/10 hover:text-content"
               onClick={goBack}
             >
-              Back
+              {t("sessions.questionForm.back")}
             </button>
           ) : null}
           <button
@@ -194,7 +204,7 @@ export function QuestionForm({ prompt, onReply, onInteraction }: Props) {
             disabled={!ready}
             className="h-6 rounded-md bg-content px-2.5 text-[11px] font-medium text-background-base hover:bg-content/80 disabled:opacity-40"
           >
-            Continue
+            {t("sessions.questionForm.continue")}
           </button>
         </div>
       </form>
@@ -215,6 +225,7 @@ function QuestionFields({
   onSelect: (optionId: string) => void;
   onCustom: (value: string) => void;
 }) {
+  const t = useT();
   const options = displayOptions(question);
   const customSelected = selected.some((id) => isCustomId(question, id));
   const customId = customOptionId(question);
@@ -273,13 +284,15 @@ function QuestionFields({
         {question.prompt}
       </p>
       {question.multiSelect ? (
-        <p className="mt-0.5 text-[11px] text-content/40">Select all that apply</p>
+        <p className="mt-0.5 text-[11px] text-content/40">
+          {t("sessions.questionForm.selectAll")}
+        </p>
       ) : null}
       {options.length === 0 && question.allowCustom ? (
         <input
           value={custom}
           onChange={(event) => onCustom(event.target.value)}
-          placeholder="Type your answer"
+          placeholder={t("sessions.questionForm.typeAnswer")}
           className="mt-1.5 w-full rounded-md border border-content/15 bg-transparent px-2 py-1 text-[12px] text-content outline-none placeholder:text-content/35 focus:border-content/30"
         />
       ) : (
@@ -334,7 +347,9 @@ function QuestionFields({
                   </span>
                   <span className="min-w-0 flex-1">
                     <span className="block text-[12px] leading-snug text-content">
-                      {option.label}
+                      {option.id === CUSTOM_OPTION_ID
+                        ? t("sessions.questionForm.other")
+                        : option.label}
                     </span>
                     {option.description ? (
                       <span className="mt-0.5 block text-[11px] leading-snug text-content/50">
@@ -347,7 +362,7 @@ function QuestionFields({
                   <input
                     value={custom}
                     onChange={(event) => onCustom(event.target.value)}
-                    placeholder="Type your answer"
+                    placeholder={t("sessions.questionForm.typeAnswer")}
                     className="mt-1 w-full rounded-md border border-content/15 bg-transparent px-2 py-1 text-[12px] text-content outline-none placeholder:text-content/35 focus:border-content/30"
                     onClick={(event) => event.stopPropagation()}
                     onFocus={() => {

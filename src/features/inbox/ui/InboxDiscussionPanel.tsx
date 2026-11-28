@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { PanelLeft, RotateCcw } from "../../../shared/ui/icons";
 import { IconButton } from "../../../app/shell/TitleBar";
+import { useT } from "../../../shared/i18n/i18n";
 import { useDragResize } from "../../../shared/hooks/useDragResize";
 import { inboxItemRef, type InboxItem } from "../model/githubTasks";
 import { inboxAskKey } from "../model/inboxAsk";
@@ -22,6 +23,7 @@ export function InboxDiscussionPanel({
   onRestart: (item: InboxItem) => Promise<string>;
   onMount: (portal: InboxSessionPortal | null) => void;
 }) {
+  const t = useT();
   const host = useRef<HTMLDivElement>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -61,12 +63,14 @@ export function InboxDiscussionPanel({
   return (
     <aside
       ref={resize.setPaneRef}
-      aria-label={`Ask about ${inboxItemRef(item)}`}
+      aria-label={t("inbox.discussionPanel.label", {
+        ref: inboxItemRef(item),
+      })}
       className="relative flex min-h-0 shrink-0 flex-col border-l border-stroke max-[1100px]:absolute max-[1100px]:inset-0 max-[1100px]:z-10 max-[1100px]:!w-auto"
     >
       <div
         role="separator"
-        aria-label="Resize discussion"
+        aria-label={t("inbox.discussionPanel.resizeLabel")}
         aria-orientation="vertical"
         onPointerDown={resize.onPointerDown}
         onDoubleClick={resize.onDoubleClick}
@@ -74,10 +78,10 @@ export function InboxDiscussionPanel({
       />
       <header className="flex h-11 shrink-0 items-center border-b border-stroke px-3">
         <span className="min-w-0 flex-1 truncate text-[13px] font-medium">
-          Ask · {inboxItemRef(item)}
+          {t("inbox.discussionPanel.title", { ref: inboxItemRef(item) })}
         </span>
         <IconButton
-          label="Restart conversation"
+          label={t("inbox.discussionPanel.restartLabel")}
           disabled={loading}
           onClick={() => {
             setLoading(true);
@@ -92,7 +96,10 @@ export function InboxDiscussionPanel({
         >
           <RotateCcw className="size-3.5" />
         </IconButton>
-        <IconButton label="Close panel" onClick={onClose}>
+        <IconButton
+          label={t("inbox.discussionPanel.closeLabel")}
+          onClick={onClose}
+        >
           <PanelLeft className="size-3.5" />
         </IconButton>
       </header>

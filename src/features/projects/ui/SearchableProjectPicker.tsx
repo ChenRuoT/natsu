@@ -30,7 +30,8 @@ import { ProjectLogoIcon } from "./ProjectLogoIcon";
 import { ProjectMascot } from "./ProjectMascot";
 import { PixelMascot } from "./PixelMascot";
 import { MonoRailMascot } from "../../monos/ui/MonoRailMascot";
-import { MONO_STATUS_LABEL, type MonoStatus } from "../../monos/model/mono";
+import { MONO_STATUS_LABEL_KEY, type MonoStatus } from "../../monos/model/mono";
+import { useT } from "../../../shared/i18n/i18n";
 
 /** A Mono the picker offers beside the projects. */
 export type PickerMono = {
@@ -92,6 +93,7 @@ export function SearchableProjectPicker({
   projectMenuActive = false,
   monos,
 }: Props) {
+  const t = useT();
   const [open, setOpen] = useState(false);
   const pickerRef = useRef<HTMLDivElement>(null);
   const { groupLabels, groupColors, groupCustomColors, groupMascots } =
@@ -102,7 +104,7 @@ export function SearchableProjectPicker({
   const key = projectKey(cwd);
   const label = inProject
     ? resolveTabGroupLabel(key, groupLabels, basename(cwd) || seed)
-    : "Choose project";
+    : t("projects.projectPicker.chooseProject");
   const logoPath = resolveTabGroupLogo(key, groupLogos);
   const color = resolveTabGroupColor(key, groupColors, groupCustomColors, seed);
   const orderedProjects = pickerProjects(recents, cwd, railCwd);
@@ -110,7 +112,10 @@ export function SearchableProjectPicker({
   const closePicker = () => setOpen(false);
   const openPicker = () => setOpen(true);
 
-  const action = mode === "move" ? "Move note to project" : "Switch project";
+  const action =
+    mode === "move"
+      ? t("projects.projectPicker.moveNoteToProject")
+      : t("projects.projectPicker.switchProject");
 
   return (
     <div
@@ -125,7 +130,7 @@ export function SearchableProjectPicker({
           compact
             ? undefined
             : activeMono
-              ? `${activeMono.name}\n${MONO_STATUS_LABEL[activeMono.status ?? "idle"]}`
+              ? `${activeMono.name}\n${t(MONO_STATUS_LABEL_KEY[activeMono.status ?? "idle"])}`
               : inProject
                 ? cwd
                 : undefined
@@ -138,15 +143,19 @@ export function SearchableProjectPicker({
         }
         data-rail-tip-detail={
           compact && activeMono
-            ? MONO_STATUS_LABEL[activeMono.status ?? "idle"]
+            ? t(MONO_STATUS_LABEL_KEY[activeMono.status ?? "idle"])
             : undefined
         }
         aria-label={
           activeMono
-            ? `${action}, current mono ${activeMono.name}, ${MONO_STATUS_LABEL[activeMono.status ?? "idle"]}`
+            ? t("projects.projectPicker.monoAriaLabel", {
+                action,
+                name: activeMono.name,
+                status: t(MONO_STATUS_LABEL_KEY[activeMono.status ?? "idle"]),
+              })
             : inProject
-              ? `${action}, current project ${label}`
-              : "Choose project for note"
+              ? t("projects.projectPicker.projectAriaLabel", { action, label })
+              : t("projects.projectPicker.chooseProjectForNote")
         }
         aria-expanded={open}
         aria-haspopup="dialog"
@@ -269,10 +278,14 @@ export function ProjectPickerPopover({
   onProjectContextMenu,
   projectMenuActive = false,
   monos,
-  label = "Project picker",
-  emptyMessage = "No projects found",
+  label: labelProp,
+  emptyMessage: emptyMessageProp,
   flyout,
 }: ProjectPickerPopoverProps) {
+  const t = useT();
+  const label = labelProp ?? t("projects.projectPicker.label");
+  const emptyMessage =
+    emptyMessageProp ?? t("projects.projectPicker.noProjectsFound");
   const [query, setQuery] = useState("");
   const [active, setActive] = useState(0);
   const searchRef = useRef<HTMLInputElement>(null);
@@ -395,7 +408,9 @@ export function ProjectPickerPopover({
     >
       <label className="flex h-11 shrink-0 items-center gap-2.5 border-b border-stroke px-3 text-content/45 focus-within:text-content/70">
         <Search className="size-4 shrink-0" strokeWidth={1.75} />
-        <span className="sr-only">Search projects</span>
+        <span className="sr-only">
+          {t("projects.projectPicker.searchProjectsSrLabel")}
+        </span>
         <input
           ref={searchRef}
           value={query}
@@ -405,8 +420,8 @@ export function ProjectPickerPopover({
           }}
           placeholder={
             monos?.items.length
-              ? "Search monos and projects..."
-              : "Search projects..."
+              ? t("projects.projectPicker.searchMonosAndProjects")
+              : t("projects.projectPicker.searchProjects")
           }
           className="min-w-0 flex-1 bg-transparent text-[13px] text-content outline-none placeholder:text-content/35"
         />
@@ -444,7 +459,9 @@ export function ProjectPickerPopover({
             <span className="min-w-0 flex-1 truncate text-[13px] font-medium">
               {mono.name}
             </span>
-            <span className="shrink-0 text-[11px] text-content/40">Mono</span>
+            <span className="shrink-0 text-[11px] text-content/40">
+              {t("projects.projectPicker.monoBadge")}
+            </span>
           </button>
         ))}
         {filteredProjects.length > 0 ? (
@@ -537,7 +554,7 @@ export function ProjectPickerPopover({
               className="flex h-9 w-full items-center gap-2.5 rounded-lg px-2.5 text-left text-[13px] text-content/75 hover:bg-content/8 hover:text-content"
             >
               <Plus className="size-4 shrink-0" strokeWidth={1.75} />
-              <span>New mono</span>
+              <span>{t("projects.projectPicker.newMono")}</span>
             </button>
           ) : null}
           {onOpenProject ? (
@@ -550,7 +567,7 @@ export function ProjectPickerPopover({
               className="flex h-9 w-full items-center gap-2.5 rounded-lg px-2.5 text-left text-[13px] text-content/75 hover:bg-content/8 hover:text-content"
             >
               <Plus className="size-4 shrink-0" strokeWidth={1.75} />
-              <span>New project</span>
+              <span>{t("projects.projectPicker.newProject")}</span>
             </button>
           ) : null}
         </div>

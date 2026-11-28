@@ -1,9 +1,11 @@
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { Copy, Minus, Square, X } from "../../shared/ui/icons";
 import { useEffect, useState } from "react";
+import { useT } from "../../shared/i18n/i18n";
 
 export function WindowControls() {
   const [isMaximized, setIsMaximized] = useState(false);
+  const t = useT();
 
   useEffect(() => {
     let unlisten: (() => void) | undefined;
@@ -58,8 +60,8 @@ export function WindowControls() {
     >
       <button
         type="button"
-        title="Minimize"
-        aria-label="Minimize window"
+        title={t("shell.windowControls.minimizeTitle")}
+        aria-label={t("shell.windowControls.minimizeLabel")}
         data-tauri-drag-region="false"
         onClick={handleMinimize}
         className="flex w-10 items-center justify-center text-content/60 transition-colors hover:bg-content/10 hover:text-content"
@@ -68,8 +70,16 @@ export function WindowControls() {
       </button>
       <button
         type="button"
-        title={isMaximized ? "Restore" : "Maximize"}
-        aria-label={isMaximized ? "Restore window" : "Maximize window"}
+        title={
+          isMaximized
+            ? t("shell.windowControls.restoreTitle")
+            : t("shell.windowControls.maximizeTitle")
+        }
+        aria-label={
+          isMaximized
+            ? t("shell.windowControls.restoreLabel")
+            : t("shell.windowControls.maximizeLabel")
+        }
         data-tauri-drag-region="false"
         onClick={handleToggleMaximize}
         className="flex w-10 items-center justify-center text-content/60 transition-colors hover:bg-content/10 hover:text-content"
@@ -82,8 +92,8 @@ export function WindowControls() {
       </button>
       <button
         type="button"
-        title="Close"
-        aria-label="Close window"
+        title={t("shell.windowControls.closeTitle")}
+        aria-label={t("shell.windowControls.closeLabel")}
         data-tauri-drag-region="false"
         onClick={handleClose}
         className="flex w-10 items-center justify-center text-content/60 transition-colors hover:bg-red-600 hover:text-white"

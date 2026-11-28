@@ -1,3 +1,9 @@
+import {
+  useT,
+  t as tNow,
+  type MessageKey,
+  type TFunction,
+} from "../../../shared/i18n/i18n";
 import { convertFileSrc, invoke } from "@tauri-apps/api/core";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import {
@@ -181,33 +187,42 @@ const RemoteMediaContext = createContext(false);
 /** Show local images and videos a reply links to, rather than the links. */
 const LocalMediaContext = createContext(false);
 
-const REVEAL_LABEL = IS_MAC
-  ? "Reveal in Finder"
+const REVEAL_LABEL_KEY: MessageKey = IS_MAC
+  ? "sessions.agentMarkdown.revealFinder"
   : IS_WIN
-    ? "Reveal in File Explorer"
-    : "Open Containing Folder";
+    ? "sessions.agentMarkdown.revealExplorer"
+    : "sessions.agentMarkdown.openContainingFolder";
 
 function fileLinkMenuItems(
   canOpenInNatsu: boolean,
   canCopyRelativePath: boolean,
+  t: TFunction,
 ): ExplorerMenuItem[] {
   return [
     {
       kind: "item",
       id: "open-natsu",
-      label: "Open in Natsu",
+      label: t("sessions.agentMarkdown.openInNatsu"),
       disabled: !canOpenInNatsu,
     },
-    { kind: "item", id: "open-default", label: "Open in Default App" },
-    { kind: "item", id: "reveal", label: REVEAL_LABEL },
+    {
+      kind: "item",
+      id: "open-default",
+      label: t("sessions.agentMarkdown.openInDefaultApp"),
+    },
+    { kind: "item", id: "reveal", label: t(REVEAL_LABEL_KEY) },
     { kind: "sep" },
-    { kind: "item", id: "copy-path", label: "Copy Path" },
+    {
+      kind: "item",
+      id: "copy-path",
+      label: t("sessions.agentMarkdown.copyPath"),
+    },
     ...(canCopyRelativePath
       ? [
           {
             kind: "item" as const,
             id: "copy-relative-path",
-            label: "Copy Relative Path",
+            label: t("sessions.agentMarkdown.copyRelativePath"),
           },
         ]
       : []),
@@ -441,6 +456,7 @@ function MarkdownCode({
 }
 
 function CodeCopyButton({ code }: { code: string }) {
+  const t = useT();
   const [copied, setCopied] = useState(false);
   const timer = useRef<number | null>(null);
 
@@ -454,8 +470,16 @@ function CodeCopyButton({ code }: { code: string }) {
   return (
     <button
       type="button"
-      title={copied ? "Copied" : "Copy code"}
-      aria-label={copied ? "Copied" : "Copy code"}
+      title={
+        copied
+          ? t("sessions.agentMarkdown.copied")
+          : t("sessions.agentMarkdown.copyCode")
+      }
+      aria-label={
+        copied
+          ? t("sessions.agentMarkdown.copied")
+          : t("sessions.agentMarkdown.copyCode")
+      }
       className={`markdown-code-copy ${copied ? "is-copied" : ""}`}
       onClick={() => {
         void copyText(code.replace(/\r?\n$/, "")).then(
@@ -657,6 +681,7 @@ export const AgentMarkdown = memo(function AgentMarkdown({
    */
   documentPath?: string;
 }) {
+  const t = useT();
   const [fileMenu, setFileMenu] = useState<FileLinkMenu | null>(null);
   const [fileActionError, setFileActionError] = useState<string | null>(null);
   const onFileContextMenu = useCallback(
@@ -789,7 +814,13 @@ export const AgentMarkdown = memo(function AgentMarkdown({
     void action.catch((error) => {
       console.error(`Failed to run file-link action ${id}:`, error);
       setFileActionError(
-        `Could not ${id === "open-default" ? "open the file in its default app" : "complete the file action"}: ${String(error)}`,
+        id === "open-default"
+          ? tNow("sessions.agentMarkdown.openDefaultFailed", {
+              error: String(error),
+            })
+          : tNow("sessions.agentMarkdown.fileActionFailed", {
+              error: String(error),
+            }),
       );
     });
   };
@@ -823,8 +854,8 @@ export const AgentMarkdown = memo(function AgentMarkdown({
               <ExplorerMenu
                 x={fileMenu.x}
                 y={fileMenu.y}
-                items={fileLinkMenuItems(!!onOpenFile, !!cwd)}
-                ariaLabel="File link actions"
+                items={fileLinkMenuItems(!!onOpenFile, !!cwd, t)}
+                ariaLabel={t("sessions.agentMarkdown.fileLinkActions")}
                 onPick={onFileMenuPick}
                 onClose={() => setFileMenu(null)}
               />
@@ -860,6 +891,7 @@ export const MarkdownPreview = memo(function MarkdownPreview({
   /** The Markdown file shown, whose images load from the project, `cwd`. */
   documentPath?: string;
 }) {
+  const t = useT();
   const lockOverscroll = useLockOverscroll<HTMLDivElement>();
 
   return (
@@ -867,7 +899,7 @@ export const MarkdownPreview = memo(function MarkdownPreview({
       ref={lockOverscroll}
       tabIndex={0}
       role="region"
-      aria-label="Markdown preview"
+      aria-label={t("sessions.agentMarkdown.markdownPreview")}
       className="markdown-preview h-full overflow-y-auto overscroll-none [overflow-anchor:none]"
     >
       <div className="px-6 py-8">
@@ -890,6 +922,7 @@ export const MarkdownSource = memo(function MarkdownSource({
 }: {
   text: string;
 }) {
+  const t = useT();
   const lockOverscroll = useLockOverscroll<HTMLDivElement>();
 
   return (
@@ -897,7 +930,7 @@ export const MarkdownSource = memo(function MarkdownSource({
       ref={lockOverscroll}
       tabIndex={0}
       role="region"
-      aria-label="Markdown source"
+      aria-label={t("sessions.agentMarkdown.markdownSource")}
       className="markdown-preview h-full overflow-y-auto overscroll-none [overflow-anchor:none]"
     >
       <pre className="min-h-full min-w-0 whitespace-pre-wrap wrap-break-word px-4 py-3 font-mono text-[13px] leading-5 text-content/85">

@@ -125,6 +125,7 @@ import { markLinkedSessionUpdateSeen } from "../../inbox/model/linkedSessionSeen
 import { RemoteSession } from "../../connections/ui/RemoteSession";
 import { isRemoteProjectPath } from "../../projects/model/recents";
 import type { HostSession } from "../../connections/model/protocol";
+import { useT } from "../../../shared/i18n/i18n";
 
 export type SessionPaneProps = {
   session: Session;
@@ -474,6 +475,7 @@ const LocalSessionPane = memo(function LocalSessionPane({
   );
   const quoteRequestId = useRef(0);
   const jumpVisibility = useTranscriptJumpVisibility();
+  const t = useT();
   const [editingLastTurn, setEditingLastTurn] = useState(false);
   useEffect(() => {
     setEditingLastTurn(false);
@@ -857,8 +859,10 @@ const LocalSessionPane = memo(function LocalSessionPane({
           </span>
           <button
             type="button"
-            title={`Close Pane (${MOD}W)`}
-            aria-label="Close pane"
+            title={t("sessions.sessionPane.closePane", {
+              shortcut: `${MOD}W`,
+            })}
+            aria-label={t("sessions.sessionPane.closePaneLabel")}
             data-no-drag
             className="grid size-5 shrink-0 place-items-center rounded text-content/50 hover:bg-content/10 hover:text-content"
             onPointerDown={(e) => e.stopPropagation()}
@@ -918,7 +922,9 @@ const LocalSessionPane = memo(function LocalSessionPane({
                 </div>
               ) : session.inboxAsk ? (
                 <div className="scrollbar-none h-full min-h-0 overflow-y-auto">
-                  <DiscussionEmpty message="Explore this item with your agent." />
+                  <DiscussionEmpty
+                    message={t("sessions.sessionPane.exploreInboxItem")}
+                  />
                 </div>
               ) : (
                 <EmptySession

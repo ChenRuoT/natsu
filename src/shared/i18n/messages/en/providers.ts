@@ -1,0 +1,103 @@
+export const providers = {
+  "settings.providers.common.cancelButton": "Cancel",
+  "settings.providers.common.saveButton": "Save",
+  "settings.providers.binary.invalidCodexVersion":
+    "Codex CLI returned an invalid version.",
+  "settings.providers.binary.invalidOpenCodeVersion":
+    "OpenCode CLI returned an invalid version.",
+  "settings.providers.binary.openCodeTooOld":
+    "OpenCode v{version} is too old. Upgrade to v{minimum} or newer.",
+  "settings.providers.binary.saveFailed": "Could not save the binary path.",
+  "settings.providers.binary.toggleLabel": "Show {provider} CLI details",
+  "settings.providers.binary.toggleLabelRestart":
+    "Show {provider} CLI details, restart required",
+  "settings.providers.binary.toggleTitle": "{provider} CLI path",
+  "settings.providers.binary.toggleTitleRestart":
+    "{provider} CLI path — restart required",
+  "settings.providers.binary.dialogLabel": "{provider} CLI details",
+  "settings.providers.binary.heading": "{provider} CLI",
+  "settings.providers.binary.globalPathBadge": "Global path",
+  "settings.providers.binary.needsAttentionBadge": "Needs attention",
+  "settings.providers.binary.restartRequiredBadge": "Restart required",
+  "settings.providers.binary.configuredBadge": "Configured",
+  "settings.providers.binary.autoDetectedBadge": "Auto-detected",
+  "settings.providers.binary.pathLabel": "CLI path",
+  "settings.providers.binary.autoDetectedPlaceholder": "Auto-detected path",
+  "settings.providers.binary.pathHelp":
+    "Enter the absolute path to the CLI executable. Changes apply after restarting Natsu.",
+  "settings.providers.binary.useAutoDetectedButton": "Use auto-detected path",
+  "settings.providers.binary.savePathButton": "Save path",
+  "settings.providers.binary.unresolved": "CLI could not be resolved",
+  "settings.providers.binary.checkingSelected": "Checking the selected CLI…",
+  "settings.providers.binary.retryToCheck": "Retry to check this CLI",
+  "settings.providers.binary.checkingVersion": "Checking version…",
+  "settings.providers.binary.revealFailed":
+    "Could not open the CLI location: {error}",
+  "settings.providers.binary.retryConfiguredLabel":
+    "Retry {provider} configured path",
+  "settings.providers.binary.retryAutoLabel": "Retry {provider} auto-detect",
+  "settings.providers.binary.retryConfiguredButton": "Retry configured path",
+  "settings.providers.binary.retryAutoButton": "Retry auto-detect",
+  "settings.providers.binary.openLocationLabel": "Open {provider} CLI location",
+  "settings.providers.binary.openLocationButton": "Open location",
+  "settings.providers.binary.editPathLabel": "Edit {provider} CLI path",
+  "settings.providers.binary.editPathButton": "Edit path",
+  "settings.providers.page.scopeGlobal": "Global",
+  "settings.providers.page.scopeLabel": "Provider defaults scope",
+  "settings.providers.page.agentClisTitle": "Agent CLIs",
+  "settings.providers.page.scopeNoteProject":
+    "These defaults apply to {project} only. A provider with Show in picker off is also kept out of new conversations started in this project. CLI paths remain global for Natsu.",
+  "settings.providers.page.scopeNoteGlobal":
+    "A provider is listed as installed once its CLI is found on your PATH. Uninstalled CLIs stay listed but are left out of the model picker, as are installed ones with Show in picker off. The model beside a provider is what its new conversations start with; Use by default picks the provider itself. CLI paths are global for Natsu and apply to every project.",
+  "settings.providers.page.advancedTitle": "Advanced",
+  "settings.providers.page.idleAgentsLabel": "Keep idle agents ready",
+  "settings.providers.page.idleAgentsHelp":
+    "A finished conversation keeps its agent CLI running for a few minutes, so a follow-up starts instantly. Each one can hold a few hundred MB of memory. Past this many, the one idle longest stops early; it resumes on your next message after a short restart. Choose None on a machine short on memory.",
+  "settings.providers.page.idleAgentsNone": "None",
+  "settings.providers.page.claudeHooksLabel": "Claude Code hooks",
+  "settings.providers.page.claudeHooksHelp":
+    "Run the hooks configured in your settings.json files — PreToolUse command rewrites, blocks, notifications, and the rest — just as the Claude Code CLI would. Turn this off if a hook is misbehaving and you need the session back. Takes effect on the next turn.",
+  "settings.providers.usage.groupTitle": "Usage and privacy",
+  "settings.providers.usage.remainingLabel": "Show remaining usage",
+  "settings.providers.usage.remainingHelp":
+    "Fill usage meters with what is left in each limit instead of what has been used.",
+  "settings.providers.usage.maskEmailsLabel": "Mask account emails",
+  "settings.providers.usage.maskEmailsHelp":
+    "Blur account emails in Settings and the usage popover until you click one, so they stay out of screenshots.",
+  "settings.providers.accounts.groupTitle": "Accounts",
+  "settings.providers.accounts.groupDescription":
+    "Create isolated sign-ins for providers that support account profiles. Account switching stays available from the usage control in the footer.",
+  "settings.providers.accounts.addButton": "Add account",
+  "settings.providers.accounts.count.one": "{count} account",
+  "settings.providers.accounts.count.other": "{count} accounts",
+  "settings.providers.accounts.defaultBadge": "Default",
+  "settings.providers.accounts.providerProfile": "Provider CLI profile",
+  "settings.providers.accounts.isolatedProfile": "Isolated profile",
+  "settings.providers.accounts.renameLabel": "Rename {name}",
+  "settings.providers.accounts.renameTitle": "Rename account",
+  "settings.providers.accounts.removeLabel": "Remove {name}",
+  "settings.providers.accounts.removeTitle": "Remove account",
+  "settings.providers.accounts.removeConfirmMessage":
+    "Remove “{name}”? Its stored credentials will be deleted and any running turns for this account will stop. Existing conversations stay in history, but cannot continue until you switch accounts.",
+  "settings.providers.accounts.removeConfirmTitle": "Remove {provider} account",
+  "settings.providers.accounts.removeConfirmOk": "Remove account",
+  "settings.providers.accounts.removeConfirmCancel": "Cancel",
+  "settings.providers.accounts.saveFailed": "Could not save this account",
+  "settings.providers.accounts.removeFailed": "Could not remove this account",
+  "settings.providers.editor.accountNameLabel": "Account name",
+  "settings.providers.editor.placeholder": "Work or Personal",
+  "settings.providers.editor.newAriaLabel": "New {provider} account",
+  "settings.providers.editor.renameAriaLabel": "Rename {provider} account",
+  "settings.providers.editor.waitingForBrowser": "Waiting for browser…",
+  "settings.providers.editor.signInAndAddButton": "Sign in and add",
+  "settings.providers.row.defaultBadge": "Default",
+  "settings.providers.row.defaultButton": "Default",
+  "settings.providers.row.useByDefaultButton": "Use by default",
+  "settings.providers.row.modelsAvailable.one": "{count} model available.",
+  "settings.providers.row.modelsAvailable.other": "{count} models available.",
+  "settings.providers.row.modelSelectLabel": "{provider} model",
+  "settings.providers.row.hiddenGlobally": "Hidden globally",
+  "settings.providers.row.showInPicker": "Show in picker",
+  "settings.providers.row.pickerToggleLabel":
+    "Show {provider} in the model picker",
+} as const;

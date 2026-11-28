@@ -1,13 +1,15 @@
 import type { ComponentProps } from "react";
 import { workSummaryLine } from "../../sessions/model/transcriptActivity";
 import { MonoActivityTrail } from "../../sessions/ui/AgentTranscript";
+import { useT } from "../../../shared/i18n/i18n";
 
 /** A selected turn's trail, in the order it happened. */
 export function MonoActivityView(
   trail: ComponentProps<typeof MonoActivityTrail>,
 ) {
+  const t = useT();
   // A settled turn sums up its work; a live one's steps speak for themselves.
-  const summary = trail.live ? "" : workSummaryLine(trail.blocks);
+  const summary = trail.live ? "" : workSummaryLine(trail.blocks, false, t);
   return (
     <>
       <p className="flex min-w-0 items-center gap-1.5 px-2 pb-3 pt-1 text-[11px] leading-4 text-content/45">
@@ -20,7 +22,9 @@ export function MonoActivityView(
           }`}
         />
         <span className="shrink-0 text-content/70">
-          {trail.live ? "Working" : "Finished"}
+          {trail.live
+            ? t("mono.activity.working")
+            : t("mono.activity.finished")}
         </span>
         {summary ? <span className="truncate">· {summary}</span> : null}
       </p>

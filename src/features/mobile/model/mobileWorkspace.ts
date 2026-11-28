@@ -1,3 +1,4 @@
+import { t as tNow } from "../../../shared/i18n/i18n";
 import { mobileUsageLimit } from "../../sessions/model/usageLimit";
 import { invoke } from "@tauri-apps/api/core";
 import {
@@ -117,7 +118,7 @@ export async function mobileCatalog(
       id: mobileProjectId(path),
       path,
       name: projectName(path),
-      machine: "Desktop",
+      machine: tNow("mobile.workspace.desktopMachine"),
       branch: "",
       color: resolveTabGroupColor(path, colors),
       mascot: resolveTabGroupMascot(path, mascots),
@@ -279,7 +280,7 @@ export async function mobileConversation(
     ? listMonos().find((mono) => mono.id === id.slice(5))
     : undefined;
   if (id.startsWith("mono:") && !mono)
-    throw new Error("Mono is no longer available");
+    throw new Error(tNow("mobile.workspace.monoGone"));
   const sessionId = mono ? mono.sessionId : id;
   const session = sessionId
     ? (live.find((session) => session.id === sessionId) ??
@@ -345,7 +346,7 @@ export async function mobileModels(
     const path = mobileProjectPaths().find(
       (path) => mobileProjectId(path) === params.projectId,
     );
-    if (!path) throw new Error("Project is no longer available");
+    if (!path) throw new Error(tNow("mobile.workspace.projectGone"));
     current = mobileNewSession(path, runtimeMode);
   }
   const model = resolveModel(current.harness, current.model);
@@ -467,7 +468,7 @@ export function applyMobileChoice(
  *  composer's workspace picker lists them. */
 export async function mobileProjectWorktrees(projectId: string) {
   const cwd = mobileProjectPaths().find((path) => mobileProjectId(path) === projectId);
-  if (!cwd) throw new Error("Project is no longer available");
+  if (!cwd) throw new Error(tNow("mobile.workspace.projectGone"));
   const { worktrees } = await listWorktrees(cwd);
   return {
     worktrees: worktrees
@@ -498,7 +499,7 @@ async function mobileWorktree(cwd: string, path: string) {
   const tree = (await listWorktrees(cwd)).worktrees.find(
     (tree) => !tree.isMain && !tree.missing && pathKey(tree.path) === wanted,
   );
-  if (!tree) throw new Error("That worktree is no longer available");
+  if (!tree) throw new Error(tNow("mobile.workspace.worktreeGone"));
   return tree;
 }
 
@@ -526,7 +527,7 @@ async function readSaved(sessionId: string, saved?: Map<string, Session>) {
 /** The project's checkout, or one of its worktrees when the phone names it. */
 async function mobileRoot(projectId: string, worktreePath?: string) {
   const cwd = mobileProjectPaths().find((path) => mobileProjectId(path) === projectId);
-  if (!cwd) throw new Error("Project is no longer available");
+  if (!cwd) throw new Error(tNow("mobile.workspace.projectGone"));
   return worktreePath ? (await mobileWorktree(cwd, worktreePath)).path : cwd;
 }
 
@@ -723,7 +724,7 @@ export async function mobileProjectGitAction(
         return {};
       case "generate": {
         if (isRemoteProjectPath(cwd))
-          throw new Error("Commit messages can't be generated for remote projects");
+          throw new Error(tNow("mobile.workspace.commitRemote"));
         return { message: await generateCommitMessage(cwd, harness) };
       }
       case "commit": {
@@ -747,7 +748,7 @@ export async function mobileProjectGitAction(
         return { url: await createMobilePr(cwd, harness) };
       }
       default:
-        throw new Error("Unsupported git action");
+        throw new Error(tNow("mobile.workspace.unsupportedGit"));
     }
   } finally {
     notifyGitChanged();
@@ -758,7 +759,7 @@ async function createMobilePr(cwd: string, harness?: HarnessId) {
   const content = isRemoteProjectPath(cwd)
     ? await remotePrContent(cwd)
     : await generatePrContent(cwd, harness);
-  if (!content) throw new Error("Could not prepare pull request content");
+  if (!content) throw new Error(tNow("mobile.workspace.prContent"));
   const url = (
     await gitPrCreate(cwd, content.title, content.body, content.base, content.head)
   ).trim();

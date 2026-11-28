@@ -1,5 +1,6 @@
 import { ArrowDownCircle, Loader } from "../../shared/ui/icons";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useT } from "../../shared/i18n/i18n";
 import {
   installPendingUpdate,
   probeForUpdate,
@@ -102,6 +103,7 @@ export function SidebarUpdate({
   // `busy` only flips after installPendingUpdate awaits readAppVersion, so a
   // second click can still land. The ref closes that window immediately.
   const installing = useRef(false);
+  const t = useT();
 
   const onClick = useCallback(async () => {
     if (busy || installing.current) return;
@@ -114,8 +116,14 @@ export function SidebarUpdate({
   }, [busy, onSnapshot]);
 
   const label = busy
-    ? `Downloading${snapshot.progress != null ? ` ${snapshot.progress}%` : "…"}`
-    : `Update to ${snapshot.availableVersion}`;
+    ? snapshot.progress != null
+      ? t("shell.sidebarUpdate.downloadingPercent", {
+          progress: snapshot.progress,
+        })
+      : t("shell.sidebarUpdate.downloading")
+    : t("shell.sidebarUpdate.updateTo", {
+        version: String(snapshot.availableVersion),
+      });
 
   return (
     <button
@@ -140,7 +148,9 @@ export function SidebarUpdate({
           {label}
         </span>
         <span className="ml-auto block text-[11px] text-content/40">
-          v{snapshot.currentVersion}
+          {t("shell.sidebarUpdate.currentVersion", {
+            version: snapshot.currentVersion,
+          })}
         </span>
       </span>
     </button>

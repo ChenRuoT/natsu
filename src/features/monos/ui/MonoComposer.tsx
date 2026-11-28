@@ -29,6 +29,7 @@ import {
   consumeQuoteRequest,
   type QuoteRequest,
 } from "../../sessions/model/quoteDraft";
+import { t as tNow, useT } from "../../../shared/i18n/i18n";
 
 // Loaded on first open, with its emoji data, so neither weighs on startup.
 const EmojiPickerPopover = lazy(() =>
@@ -105,6 +106,7 @@ export function MonoComposer({
   const field = useRef<HTMLTextAreaElement>(null);
   const inlineMeasure = useRef<HTMLTextAreaElement>(null);
   const box = useRef<HTMLDivElement>(null);
+  const t = useT();
   const [dropError, setDropError] = useState<string | null>(null);
   const submittingRef = useRef(false);
   const [submitting, setSubmitting] = useState(false);
@@ -230,10 +232,7 @@ export function MonoComposer({
             return;
           }
           if (incoming.length === 0) {
-            if (dropped)
-              setDropError(
-                "Nothing to attach from that drop — the file may have been moved, renamed, or deleted.",
-              );
+            if (dropped) setDropError(tNow("mono.composer.nothingToAttach"));
             return;
           }
           add(incoming);
@@ -310,8 +309,8 @@ export function MonoComposer({
   const attachButton = (className: string, tool = false) => (
     <button
       type="button"
-      title="Attach files"
-      aria-label="Attach files"
+      title={t("mono.composer.attachFiles")}
+      aria-label={t("mono.composer.attachFiles")}
       disabled={!enabled || submitting}
       onClick={() => readAttachments(pickAttachments)}
       className={className}
@@ -326,8 +325,8 @@ export function MonoComposer({
     <textarea
       ref={field}
       rows={1}
-      aria-label={`Message ${name}`}
-      placeholder={`Message ${name}`}
+      aria-label={t("mono.composer.message", { name })}
+      placeholder={t("mono.composer.message", { name })}
       spellCheck={autocorrect}
       autoCorrect={autocorrect ? "on" : "off"}
       disabled={!enabled || submitting}
@@ -357,8 +356,12 @@ export function MonoComposer({
   const sendButton = (className: string) => (
     <button
       type="submit"
-      aria-label="Send"
-      title={pendingReads ? "Reading attachments…" : "Send"}
+      aria-label={t("mono.composer.send")}
+      title={
+        pendingReads
+          ? t("mono.composer.readingAttachments")
+          : t("mono.composer.send")
+      }
       disabled={!ready}
       className={`primary-action grid size-6.5 place-items-center rounded-md transition-[background-color,color,transform] duration-150 active:scale-90 disabled:cursor-default ${className}`}
     >
@@ -380,7 +383,7 @@ export function MonoComposer({
       >
         {fileDrag ? (
           <div className="pointer-events-none absolute inset-0 z-20 grid place-items-center rounded-lg bg-accent/8 text-[12px] text-content/70">
-            Drop files to attach
+            {t("mono.composer.dropToAttach")}
           </div>
         ) : null}
         {dropError ? (
@@ -453,8 +456,8 @@ export function MonoComposer({
           <button
             ref={emojiButton}
             type="button"
-            title="Emoji"
-            aria-label="Add emoji"
+            title={t("mono.composer.emoji")}
+            aria-label={t("mono.composer.addEmoji")}
             aria-expanded={emojiOpen}
             disabled={!enabled || submitting}
             onClick={toggleEmoji}

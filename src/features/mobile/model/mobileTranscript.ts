@@ -1,3 +1,4 @@
+import { t as tNow } from "../../../shared/i18n/i18n";
 import { monoReactionBlocks } from "../../monos/model/monoReaction";
 import {
   launchAnchors,
@@ -150,9 +151,9 @@ export function mobileTranscript(
   );
   const model = resolveModel(session.harness, session.model).name;
   const waiting = hasPendingApproval(blocks)
-    ? "Waiting for approval"
+    ? tNow("mobile.transcript.waitingApproval")
     : options.pendingQuestion
-      ? "Waiting for answers"
+      ? tNow("mobile.transcript.waitingAnswers")
       : undefined;
   const [first, end] = options.range?.(turns.map((turn) => turn[0].id)) ?? [
     Math.max(0, turns.length - MAX_TURNS),
@@ -263,12 +264,12 @@ export function mobileTranscript(
         );
         let label = monoWorkStatus(activity, true).label;
         if (options.pendingQuestion && !activity.some(needsApproval))
-          label = "Waiting for answers…";
+          label = tNow("mobile.transcript.waitingAnswersEllipsis");
         else if (options.backgroundTasks?.length)
           label =
             options.backgroundTasks.length === 1
-              ? "Waiting for background task…"
-              : `Waiting for ${options.backgroundTasks.length} background tasks…`;
+              ? tNow("mobile.transcript.waitingTask")
+              : tNow("mobile.transcript.waitingTasks", { count: options.backgroundTasks.length });
         return { ...base, label };
       }
       if (live) return { ...base, waiting };
@@ -312,7 +313,7 @@ export function mobileTranscript(
             out.push({
               type: "notice",
               id: block.id,
-              text: `Waiting for approval on desktop: ${toolCallLabel(block, session.cwd)}`,
+              text: tNow("mobile.transcript.approvalOnDesktop", { label: toolCallLabel(block, session.cwd) }),
             });
           return;
         }
@@ -422,11 +423,11 @@ function blockItem(block: Block, cwd: string): MobileTurnItem | null {
       type: "notice",
       id: block.id,
       text: needsApproval(block)
-        ? `Waiting for approval on desktop: ${toolCallLabel(block, cwd)}`
+        ? tNow("mobile.transcript.approvalOnDesktop", { label: toolCallLabel(block, cwd) })
         : toolCallLabel(block, cwd),
     };
   if (block.role === "handoff")
-    return { type: "notice", id: block.id, text: block.text || "Handed off" };
+    return { type: "notice", id: block.id, text: block.text || tNow("mobile.transcript.handedOff") };
   if (block.role === "system" && block.text.trim())
     return {
       type: "notice",
@@ -450,7 +451,7 @@ function phasesOf(blocks: Block[], cwd: string, live = false): MobilePhase[] {
       id: step.id,
       label: isToolBlock(step)
         ? toolCallLabel(step, cwd)
-        : proseSummary(step.text) || "Thinking",
+        : proseSummary(step.text) || tNow("mobile.transcript.thinking"),
       ...(isToolBlock(step) && toolCallState(step) === "rejected"
         ? { failed: true }
         : {}),

@@ -38,8 +38,18 @@ export function workingTreeDiffEntries(
 }
 
 export function workingTreeDiffEntryLabel(entry: WorkingTreeDiffEntry): string {
+  return workingTreeDiffEntryLabelWith(entry, (kind) =>
+    kind === "staged" ? "Staged" : "Unstaged",
+  );
+}
+
+/** Same label with the side name supplied by the caller, for translation. */
+export function workingTreeDiffEntryLabelWith(
+  entry: WorkingTreeDiffEntry,
+  sideLabel: (kind: GitFileDiffKind) => string,
+): string {
   if (!entry.file.staged || !entry.file.unstaged) return entry.file.relative;
-  return `${entry.file.relative} (${entry.kind === "staged" ? "Staged" : "Unstaged"})`;
+  return `${entry.file.relative} (${sideLabel(entry.kind)})`;
 }
 
 export function workingTreeDiffFocusId(

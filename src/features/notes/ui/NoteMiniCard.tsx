@@ -8,6 +8,7 @@ import {
   type NoteCardMeta,
 } from "../notes";
 import { projectKey } from "../../../shared/lib/paths";
+import { useT } from "../../../shared/i18n/i18n";
 import {
   loadTabGroupColors,
   loadTabGroupCustomColors,
@@ -24,6 +25,8 @@ type Props = {
 };
 
 export function NoteMiniCard({ card, onDismiss, embedded = false }: Props) {
+  const t = useT();
+  const untitled = t("notes.miniCard.untitled");
   const logos = useTabGroupLogos();
   const [mascots] = useState(loadTabGroupMascots);
   const [colors] = useState(loadTabGroupColors);
@@ -50,11 +53,13 @@ export function NoteMiniCard({ card, onDismiss, embedded = false }: Props) {
             strokeWidth={1.75}
           />
           <span className="min-w-0 truncate text-[11px] text-content/50">
-            Note{!embedded && card.slug ? ` · ${card.slug}` : ""}
+            {!embedded && card.slug
+              ? t("notes.miniCard.noteWithSlug", { slug: card.slug })
+              : t("notes.miniCard.note")}
           </span>
         </span>
         <span className="mt-1 line-clamp-1 text-[13px] font-semibold leading-snug text-content">
-          {card.title || "Untitled"}
+          {card.title || untitled}
         </span>
         {!embedded && project ? (
           <span className="mt-1 flex min-w-0 items-center gap-1.5 text-[11px] text-content/45">
@@ -79,8 +84,10 @@ export function NoteMiniCard({ card, onDismiss, embedded = false }: Props) {
       {onDismiss ? (
         <button
           type="button"
-          title="Remove"
-          aria-label={`Remove note ${card.title || "Untitled"}`}
+          title={t("notes.miniCard.remove")}
+          aria-label={t("notes.miniCard.removeNote", {
+            title: card.title || untitled,
+          })}
           onClick={onDismiss}
           className="absolute right-1.5 top-1.5 grid size-5 place-items-center rounded text-content/40 hover:bg-content/10 hover:text-content"
         >

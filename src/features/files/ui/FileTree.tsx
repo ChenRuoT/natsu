@@ -71,6 +71,13 @@ import {
 import { ExplorerMenu, type ExplorerMenuItem } from "./ExplorerMenu";
 import { FileTypeIcon } from "./FileTypeIcon";
 import { PaneHeader } from "../../../shared/ui/PaneHeader";
+import {
+  t as tNow,
+  useT,
+  type MessageKey,
+  type TFunction,
+} from "../../../shared/i18n/i18n";
+import { richText } from "../../../shared/i18n/rich";
 
 const GIT_STATUS_COLOR: Record<string, string> = {
   modified: "text-amber-400",
@@ -97,11 +104,11 @@ type Clip = { mode: "copy" | "cut"; path: string; isDir: boolean };
 type MenuTarget = { path: string; isDir: boolean; isRoot: boolean };
 type MenuState = { x: number; y: number; target: MenuTarget };
 
-const REVEAL_LABEL = IS_MAC
-  ? "Reveal in Finder"
+const REVEAL_LABEL_KEY: MessageKey = IS_MAC
+  ? "files.fileTree.menu.revealInFinder"
   : IS_WIN
-    ? "Reveal in File Explorer"
-    : "Open Containing Folder";
+    ? "files.fileTree.menu.revealInExplorer"
+    : "files.fileTree.menu.openContainingFolder";
 
 type TreeCtxValue = {
   expanded: Set<string>;
@@ -173,62 +180,71 @@ function explorerItems(
   target: MenuTarget,
   clip: Clip | null,
   canOpenTerminal: boolean,
+  t: TFunction,
 ): ExplorerMenuItem[] {
   const pasteParent = target.isDir ? target.path : parentPath(target.path);
   const pasteBlocked =
     !!clip?.isDir &&
     (pasteParent === clip.path || pasteParent.startsWith(`${clip.path}/`));
   return [
-    { kind: "item", id: "new-file", label: "New File" },
-    { kind: "item", id: "new-folder", label: "New Folder" },
+    { kind: "item", id: "new-file", label: t("files.fileTree.menu.newFile") },
+    {
+      kind: "item",
+      id: "new-folder",
+      label: t("files.fileTree.menu.newFolder"),
+    },
     { kind: "sep" },
     {
       kind: "item",
       id: "cut",
-      label: "Cut",
+      label: t("files.fileTree.menu.cut"),
       shortcut: `${MOD}X`,
       disabled: target.isRoot,
     },
     {
       kind: "item",
       id: "copy",
-      label: "Copy",
+      label: t("files.fileTree.menu.copy"),
       shortcut: `${MOD}C`,
       disabled: target.isRoot,
     },
     {
       kind: "item",
       id: "paste",
-      label: "Paste",
+      label: t("files.fileTree.menu.paste"),
       shortcut: `${MOD}V`,
       disabled: pasteBlocked,
     },
     {
       kind: "item",
       id: "duplicate",
-      label: "Duplicate",
+      label: t("files.fileTree.menu.duplicate"),
       disabled: target.isRoot,
     },
     { kind: "sep" },
     {
       kind: "item",
       id: "copy-path",
-      label: "Copy Path",
+      label: t("files.fileTree.menu.copyPath"),
       shortcut: `${MOD}${SHIFT}C`,
     },
-    { kind: "item", id: "copy-relative-path", label: "Copy Relative Path" },
+    {
+      kind: "item",
+      id: "copy-relative-path",
+      label: t("files.fileTree.menu.copyRelativePath"),
+    },
     { kind: "sep" },
     {
       kind: "item",
       id: "rename",
-      label: "Rename",
+      label: t("files.fileTree.menu.rename"),
       shortcut: "F2",
       disabled: target.isRoot,
     },
     {
       kind: "item",
       id: "delete",
-      label: "Delete",
+      label: t("files.fileTree.menu.delete"),
       shortcut: "⌫",
       disabled: target.isRoot,
       danger: true,
@@ -239,11 +255,11 @@ function explorerItems(
           {
             kind: "item" as const,
             id: "open-terminal",
-            label: "Open in Terminal",
+            label: t("files.fileTree.menu.openInTerminal"),
           },
         ]
       : []),
-    { kind: "item", id: "reveal", label: REVEAL_LABEL },
+    { kind: "item", id: "reveal", label: t(REVEAL_LABEL_KEY) },
   ];
 }
 
@@ -260,6 +276,7 @@ export const FileTree = memo(function FileTree({
   onSearch,
   gitStatuses,
 }: Props) {
+  const t = useT();
   const [expanded, setExpanded] = useState(() => loadExpanded(cwd));
   const [selectedPath, setSelectedPath] = useState(() => loadSelected(cwd));
   const [children, setChildren] = useState<FsEntry[] | null>(() =>
@@ -549,8 +566,8 @@ export const FileTree = memo(function FileTree({
     const label = basename(path);
     const ok = window.confirm(
       isDir
-        ? `Delete folder “${label}” and everything inside it?`
-        : `Delete “${label}”?`,
+        ? tNow("files.fileTree.confirmDeleteFolder", { name: label })
+        : tNow("files.fileTree.confirmDelete", { name: label }),
     );
     if (!ok) return;
     await deletePath(path);
@@ -595,7 +612,7 @@ export const FileTree = memo(function FileTree({
       clip.isDir &&
       (destParent === clip.path || destParent.startsWith(`${clip.path}/`))
     ) {
-      throw new Error("Cannot paste a folder into itself.");
+      throw new Error(tNow("files.fileTree.pasteIntoItself"));
     }
     const from = clip.path;
     const mode = clip.mode;
@@ -1016,20 +1033,26 @@ export const FileTree = memo(function FileTree({
         <PaneHeader
           compact={compactHeader}
           role="toolbar"
-          aria-label="Explorer"
+          aria-label={t("files.fileTree.explorerLabel")}
           onContextMenu={(e) => {
             e.preventDefault();
             e.stopPropagation();
           }}
         >
-          <HeaderIcon label="New File" onClick={() => startCreate(false)}>
+          <HeaderIcon
+            label={t("files.fileTree.newFile")}
+            onClick={() => startCreate(false)}
+          >
             <FilePlus className="size-3.5" strokeWidth={1.75} />
           </HeaderIcon>
-          <HeaderIcon label="New Folder" onClick={() => startCreate(true)}>
+          <HeaderIcon
+            label={t("files.fileTree.newFolder")}
+            onClick={() => startCreate(true)}
+          >
             <FolderPlus className="size-3.5" strokeWidth={1.75} />
           </HeaderIcon>
           <HeaderIcon
-            label="Collapse All"
+            label={t("files.fileTree.collapseAll")}
             onClick={() => {
               setCreating(null);
               setRenaming(null);
@@ -1042,7 +1065,9 @@ export const FileTree = memo(function FileTree({
           </HeaderIcon>
           {onSearch ? (
             <HeaderIcon
-              label={`Search in files (${MOD}Shift+F)`}
+              label={t("files.fileTree.searchInFiles", {
+                shortcut: `${MOD}Shift+F`,
+              })}
               onClick={onSearch}
             >
               <Search className="size-3.5" strokeWidth={1.75} />
@@ -1094,7 +1119,10 @@ export const FileTree = memo(function FileTree({
             </p>
           ) : null}
           {rootOpen ? (
-            <div role="tree" aria-label={`${name} files`}>
+            <div
+              role="tree"
+              aria-label={t("files.fileTree.treeLabel", { name })}
+            >
               <TreeChildren
                 parent={cwd}
                 depth={0}
@@ -1110,7 +1138,7 @@ export const FileTree = memo(function FileTree({
         <ExplorerMenu
           x={menu.x}
           y={menu.y}
-          items={explorerItems(menu.target, clip, !!onOpenTerminal)}
+          items={explorerItems(menu.target, clip, !!onOpenTerminal, t)}
           onPick={(id) => {
             const target = menu.target;
             setMenu(null);
@@ -1367,6 +1395,7 @@ export function NameRow({
   onCommit: (raw: string) => Promise<void>;
   onCancel: () => void;
 }) {
+  const t = useT();
   const inputRef = useRef<HTMLInputElement>(null);
   const finished = useRef(false);
   const [value, setValue] = useState(initial);
@@ -1438,7 +1467,7 @@ export function NameRow({
           autoComplete="off"
           autoCorrect="off"
           autoCapitalize="off"
-          aria-label="Type file name. Press Enter to confirm or Escape to cancel."
+          aria-label={t("files.fileTree.nameInputLabel")}
           onChange={(e) => {
             setValue(e.target.value);
             setSubmitError(null);
@@ -1475,36 +1504,32 @@ function NameIssueView({
   issue: NameIssue | null;
   fallback: string | null;
 }) {
+  const t = useT();
   let body: ReactNode = null;
   if (fallback) {
     body = fallback;
   } else if (issue) {
     switch (issue.kind) {
       case "empty":
-        body = "A file or folder name must be provided.";
+        body = t("files.fileTree.nameIssue.empty");
         break;
       case "slash":
-        body = "A file or folder name cannot start with a slash.";
+        body = t("files.fileTree.nameIssue.slash");
         break;
       case "exists":
-        body = (
-          <>
-            A file or folder <span className="font-semibold">{issue.name}</span>{" "}
-            already exists at this location. Please choose a different name.
-          </>
+        body = richText(
+          t("files.fileTree.nameIssue.exists", { name: issue.name }),
+          { strong: (chunk) => <span className="font-semibold">{chunk}</span> },
         );
         break;
       case "invalid":
-        body = (
-          <>
-            The name <span className="font-semibold">{issue.name}</span> is not
-            valid as a file or folder name. Please choose a different name.
-          </>
+        body = richText(
+          t("files.fileTree.nameIssue.invalid", { name: issue.name }),
+          { strong: (chunk) => <span className="font-semibold">{chunk}</span> },
         );
         break;
       case "whitespace":
-        body =
-          "Leading or trailing whitespace detected in file or folder name.";
+        body = t("files.fileTree.nameIssue.whitespace");
         break;
     }
   }

@@ -1,4 +1,6 @@
 import { useId, useState, useSyncExternalStore } from "react";
+import { useT, type MessageKey } from "../../../shared/i18n/i18n";
+import { richText } from "../../../shared/i18n/rich";
 import {
   getCiRepairs,
   subscribeCiRepairs,
@@ -168,83 +170,88 @@ const negative = "text-rose-700 dark:text-rose-400";
 const active = "text-amber-700 dark:text-amber-400";
 const states: Record<
   RepairState,
-  { label: string; summary: string; Icon: IconComponent; color: string }
+  {
+    labelKey: MessageKey;
+    summaryKey: MessageKey;
+    Icon: IconComponent;
+    color: string;
+  }
 > = {
   repairing: {
-    label: "Repairing",
-    summary: "Repair in progress",
+    labelKey: "inbox.checkRepairProgress.state.repairing.label",
+    summaryKey: "inbox.checkRepairProgress.state.repairing.summary",
     Icon: LoaderCircle,
     color: active,
   },
   waiting: {
-    label: "Awaiting CI",
-    summary: "Awaiting new GitHub checks",
+    labelKey: "inbox.checkRepairProgress.state.waiting.label",
+    summaryKey: "inbox.checkRepairProgress.state.waiting.summary",
     Icon: CircleDashed,
     color: neutral,
   },
   refreshing: {
-    label: "Refreshing",
-    summary: "Refreshing GitHub checks",
+    labelKey: "inbox.checkRepairProgress.state.refreshing.label",
+    summaryKey: "inbox.checkRepairProgress.state.refreshing.summary",
     Icon: LoaderCircle,
     color: neutral,
   },
   stale: {
-    label: "Out of date",
-    summary: "GitHub results are out of date",
+    labelKey: "inbox.checkRepairProgress.state.stale.label",
+    summaryKey: "inbox.checkRepairProgress.state.stale.summary",
     Icon: CircleDashed,
     color: neutral,
   },
   pass: {
-    label: "CI passed",
-    summary: "passed",
+    labelKey: "inbox.checkRepairProgress.state.pass.label",
+    summaryKey: "inbox.checkRepairProgress.state.pass.summary",
     Icon: CheckCircle,
     color: positive,
   },
   fail: {
-    label: "Still failing",
-    summary: "still failing",
+    labelKey: "inbox.checkRepairProgress.state.fail.label",
+    summaryKey: "inbox.checkRepairProgress.state.fail.summary",
     Icon: CircleX,
     color: negative,
   },
   pending: {
-    label: "CI running",
-    summary: "running",
+    labelKey: "inbox.checkRepairProgress.state.pending.label",
+    summaryKey: "inbox.checkRepairProgress.state.pending.summary",
     Icon: LoaderCircle,
     color: active,
   },
   cancel: {
-    label: "CI cancelled",
-    summary: "cancelled",
+    labelKey: "inbox.checkRepairProgress.state.cancel.label",
+    summaryKey: "inbox.checkRepairProgress.state.cancel.summary",
     Icon: CircleDashed,
     color: neutral,
   },
   skipping: {
-    label: "CI skipped",
-    summary: "skipped",
+    labelKey: "inbox.checkRepairProgress.state.skipping.label",
+    summaryKey: "inbox.checkRepairProgress.state.skipping.summary",
     Icon: CircleDashed,
     color: neutral,
   },
   unknown: {
-    label: "Unknown",
-    summary: "unknown",
+    labelKey: "inbox.checkRepairProgress.state.unknown.label",
+    summaryKey: "inbox.checkRepairProgress.state.unknown.summary",
     Icon: CircleDashed,
     color: neutral,
   },
   stopped: {
-    label: "Stopped",
-    summary: "Repair stopped",
+    labelKey: "inbox.checkRepairProgress.state.stopped.label",
+    summaryKey: "inbox.checkRepairProgress.state.stopped.summary",
     Icon: CircleDashed,
     color: neutral,
   },
   interrupted: {
-    label: "Interrupted",
-    summary: "Tracking interrupted",
+    labelKey: "inbox.checkRepairProgress.state.interrupted.label",
+    summaryKey: "inbox.checkRepairProgress.state.interrupted.summary",
     Icon: CircleDashed,
     color: neutral,
   },
   "agent-error": {
-    label: "Agent stopped",
-    summary: "Agent could not finish",
+    labelKey: "inbox.checkRepairProgress.state.agentError.label",
+    summaryKey: "inbox.checkRepairProgress.state.agentError.summary",
     Icon: CircleX,
     color: negative,
   },
@@ -261,16 +268,17 @@ function StatusIcon({ state }: { state: RepairState }) {
 }
 
 export function CheckRepairStatus({ item }: { item: RepairItem }) {
+  const t = useT();
   const status = states[item.state];
   return (
     <span
       data-repair-status
       role="status"
-      title={status.summary}
+      title={t(status.summaryKey)}
       className={`inline-flex shrink-0 items-center gap-1.5 text-[11px] font-medium ${status.color}`}
     >
       <StatusIcon state={item.state} />
-      {status.label}
+      {t(status.labelKey)}
     </span>
   );
 }
@@ -286,6 +294,7 @@ function RepairCard({
   view: GithubPrChecksView;
   onShowCheck?: (check: RepairItem["check"]) => void;
 }) {
+  const t = useT();
   const [expanded, setExpanded] = useState(false);
   const detailsId = useId();
   const counts = new Map<RepairState, number>();
@@ -307,7 +316,14 @@ function RepairCard({
     "pass",
   ];
   const lead = priority.find((state) => counts.has(state))!;
-  const label = `${group.items.length} ${group.items.length === 1 ? "check" : "checks"}`;
+  const label =
+    group.items.length === 1
+      ? t("inbox.checkRepairProgress.checkCount.one", {
+          count: group.items.length,
+        })
+      : t("inbox.checkRepairProgress.checkCount.other", {
+          count: group.items.length,
+        });
   const single = group.items.length === 1 ? group.items[0] : undefined;
   const canShowCheck =
     single?.state === "pass" &&
@@ -322,7 +338,7 @@ function RepairCard({
       <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 px-3 py-2.5">
         <button
           type="button"
-          aria-label={`Repair details for ${label}`}
+          aria-label={t("inbox.checkRepairProgress.detailsLabel", { label })}
           aria-expanded={expanded}
           aria-controls={detailsId}
           onClick={() => setExpanded(!expanded)}
@@ -345,11 +361,17 @@ function RepairCard({
                     "unknown",
                   ].includes(state)
                     ? single
-                      ? states[state].label
-                      : `${count} ${states[state].summary}`
+                      ? t(states[state].labelKey)
+                      : t("inbox.checkRepairProgress.countSummary", {
+                          count,
+                          summary: t(states[state].summaryKey),
+                        })
                     : counts.size === 1
-                      ? states[state].summary
-                      : `${count} ${states[state].label.toLowerCase()}`}
+                      ? t(states[state].summaryKey)
+                      : t("inbox.checkRepairProgress.countLabel", {
+                          count,
+                          label: t(states[state].labelKey).toLowerCase(),
+                        })}
                 </span>
               ))}
             </span>
@@ -361,7 +383,9 @@ function RepairCard({
               }
               className="mt-0.5 block truncate text-[11px] text-content/65"
             >
-              {single ? single.check.name : `CI repair for ${label}`}
+              {single
+                ? single.check.name
+                : t("inbox.checkRepairProgress.ciRepairFor", { label })}
             </span>
           </span>
           <ChevronRight
@@ -375,7 +399,7 @@ function RepairCard({
             onClick={() => onShowCheck?.(single.check)}
             className="shrink-0 rounded-md px-2 py-1.5 text-[11px] text-content/70 hover:bg-selection hover:text-content focus-visible:outline focus-visible:outline-1 focus-visible:outline-content/50"
           >
-            Show check
+            {t("inbox.checkRepairProgress.showCheck")}
           </button>
         ) : null}
         {repair.onOpenSession ? (
@@ -385,7 +409,7 @@ function RepairCard({
             className="inline-flex shrink-0 items-center gap-1.5 rounded-md border border-stroke px-2.5 py-1.5 text-[11px] text-content/70 hover:bg-selection hover:text-content focus-visible:outline focus-visible:outline-1 focus-visible:outline-content/50"
           >
             <MessageSquare aria-hidden="true" className="size-3.5" />
-            Open conversation
+            {t("inbox.checkRepairProgress.openConversation")}
           </button>
         ) : null}
       </div>
@@ -394,7 +418,7 @@ function RepairCard({
           id={detailsId}
           className="space-y-2 border-t border-stroke px-3 py-2.5 text-[11px] text-content/55"
         >
-          <p>Included checks</p>
+          <p>{t("inbox.checkRepairProgress.includedChecks")}</p>
           <ul className="flex max-h-36 flex-wrap gap-1.5 overflow-y-auto">
             {group.items.map(({ check }) => (
               <li
@@ -407,11 +431,14 @@ function RepairCard({
             ))}
           </ul>
           <p>
-            Latest PR commit:{" "}
-            <span className="font-mono">
-              {view.checks?.headOid.slice(0, 7) || "Unavailable"}
-            </span>
-            . Results appear in the checks below.
+            {richText(
+              t("inbox.checkRepairProgress.latestCommit", {
+                sha:
+                  view.checks?.headOid.slice(0, 7) ||
+                  t("inbox.checkRepairProgress.unavailable"),
+              }),
+              { mono: (chunk) => <span className="font-mono">{chunk}</span> },
+            )}
           </p>
         </div>
       ) : null}
@@ -432,10 +459,14 @@ export function CheckRepairProgress({
   view: GithubPrChecksView;
   onShowCheck?: (check: RepairItem["check"]) => void;
 }) {
+  const t = useT();
   const groups = useCheckRepairs(cwd, repo, repair.number, view);
   if (!groups.length) return null;
   return (
-    <div className="space-y-2" aria-label="Repair progress">
+    <div
+      className="space-y-2"
+      aria-label={t("inbox.checkRepairProgress.progressLabel")}
+    >
       {groups.map((group) => (
         <RepairCard
           key={group.sessionId}

@@ -1,6 +1,7 @@
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import type { HarnessId, RuntimeMode } from "../../sessions/model/session";
+import { t as tNow, type MessageKey, type TFunction } from "../../../shared/i18n/i18n";
 
 export const AUTOMATIONS_CHANGED = "natsu:automations-changed";
 const LOCAL_CHANGED = "natsu:automations-local-changed";
@@ -156,6 +157,17 @@ export const AUTOMATION_WEEKDAYS = [
   "Saturday",
 ] as const;
 
+/** Message keys for the weekday names, index-aligned with AUTOMATION_WEEKDAYS. */
+export const AUTOMATION_WEEKDAY_KEYS = [
+  "automations.schedule.sunday",
+  "automations.schedule.monday",
+  "automations.schedule.tuesday",
+  "automations.schedule.wednesday",
+  "automations.schedule.thursday",
+  "automations.schedule.friday",
+  "automations.schedule.saturday",
+] as const satisfies readonly MessageKey[];
+
 export function isScheduleKind(value: string): value is AutomationScheduleKind {
   return (
     value === "hourly" ||
@@ -273,7 +285,7 @@ export function gmtOffsetLabel(date = new Date()): string {
     : `GMT${sign}${hours}:${String(rest).padStart(2, "0")}`;
 }
 
-export function nextRunPreview(at: number): string {
+export function nextRunPreview(at: number, t: TFunction = tNow): string {
   const date = new Date(at);
   const day = date
     .toLocaleDateString(undefined, {
@@ -288,7 +300,7 @@ export function nextRunPreview(at: number): string {
       .formatToParts(date)
       .find((part) => part.type === "timeZoneName")?.value ??
     gmtOffsetLabel(date);
-  return `Next run ${day}, ${time} ${zone}`;
+  return t("automations.schedule.nextRun", { day, time, zone });
 }
 
 export function nextAutomationRunAt(
@@ -337,14 +349,25 @@ export function automationScheduleLabel(
     Automation,
     "scheduleKind" | "minute" | "time" | "dayOfWeek"
   >,
+  t: TFunction = tNow,
 ): string {
   const time = formatClock(automation.time);
   if (automation.scheduleKind === "hourly") {
-    return `Hourly at :${String(automation.minute).padStart(2, "0")}`;
+    return t("automations.schedule.hourly", {
+      minute: String(automation.minute).padStart(2, "0"),
+    });
   }
-  if (automation.scheduleKind === "daily") return `Daily at ${time}`;
-  if (automation.scheduleKind === "weekdays") return `Weekdays at ${time}`;
-  return `${AUTOMATION_WEEKDAYS[automation.dayOfWeek] ?? "Weekly"} at ${time}`;
+  if (automation.scheduleKind === "daily") {
+    return t("automations.schedule.daily", { time });
+  }
+  if (automation.scheduleKind === "weekdays") {
+    return t("automations.schedule.weekdays", { time });
+  }
+  const weekday = AUTOMATION_WEEKDAY_KEYS[automation.dayOfWeek];
+  return t("automations.schedule.weekly", {
+    day: weekday ? t(weekday) : t("automations.trigger.weekly"),
+    time,
+  });
 }
 
 export function newAutomationDraft(

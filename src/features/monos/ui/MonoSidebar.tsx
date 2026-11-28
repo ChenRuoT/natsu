@@ -2,6 +2,7 @@ import type { CSSProperties, ReactNode } from "react";
 import { IconButton } from "../../../app/shell/TitleBar";
 import { useDragResize } from "../../../shared/hooks/useDragResize";
 import { PanelRightToggle } from "../../../shared/ui/icons";
+import { useT } from "../../../shared/i18n/i18n";
 
 const MIN_WIDTH = 340;
 const DEFAULT_WIDTH = 400;
@@ -23,6 +24,7 @@ export function MonoSidebar({
   windowControls?: ReactNode;
   children: ReactNode;
 }) {
+  const t = useT();
   const resize = useDragResize({
     min: MIN_WIDTH,
     // The overview hosts whole sessions and documents, so it may grow wide;
@@ -57,7 +59,11 @@ export function MonoSidebar({
       <div
         role="separator"
         aria-orientation="vertical"
-        aria-label={`Resize Mono ${kind}`}
+        aria-label={t(
+          kind === "details"
+            ? "mono.sidebar.resizeDetails"
+            : "mono.sidebar.resizeSessions",
+        )}
         className={`absolute inset-y-0 -left-1 z-20 w-2 cursor-col-resize touch-none ${resize.dragging ? "bg-content/15" : "hover:bg-content/10"}`}
         onPointerDown={resize.onPointerDown}
         onDoubleClick={resize.onDoubleClick}
@@ -82,6 +88,7 @@ export function MonoSidebarHeader({
   onClose: () => void;
   actions?: ReactNode;
 }) {
+  const t = useT();
   return (
     <header
       className="flex h-10 shrink-0 items-stretch border-b border-stroke"
@@ -94,7 +101,7 @@ export function MonoSidebarHeader({
       <div className="flex shrink-0 items-center gap-0.5 px-3">
         {actions}
         <IconButton
-          label={`Hide ${title.toLowerCase()}`}
+          label={t("mono.sidebar.hide", { title: title.toLowerCase() })}
           active
           onClick={onClose}
         >

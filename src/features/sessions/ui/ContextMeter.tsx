@@ -1,3 +1,4 @@
+import { useT } from "../../../shared/i18n/i18n";
 import { useRef, useState } from "react";
 import {
   contextRatio,
@@ -38,19 +39,23 @@ export function ContextMeter({
   /** The conversation has no messages yet. */
   empty?: boolean;
 }) {
+  const t = useT();
   const [hovered, setHovered] = useState(false);
   const [open, setOpen] = useState(false);
   const root = useRef<HTMLDivElement>(null);
   const ratio = contextRatio(usage);
   if (!usage || ratio === null) {
     return empty ? (
-      <span title="No context used yet" className="grid shrink-0">
-        <MeterRing ratio={0} label="No context used yet" />
+      <span
+        title={t("sessions.contextMeter.noContextYet")}
+        className="grid shrink-0"
+      >
+        <MeterRing ratio={0} label={t("sessions.contextMeter.noContextYet")} />
       </span>
     ) : null;
   }
 
-  const { headline, detail } = contextTooltip(usage);
+  const { headline, detail } = contextTooltip(usage, t);
   const actionsOpen = open && onCompact != null;
 
   return (
@@ -63,8 +68,11 @@ export function ContextMeter({
       {onCompact ? (
         <button
           type="button"
-          title="Context usage"
-          aria-label={`${headline}, ${detail}. Open context actions`}
+          title={t("sessions.contextMeter.contextUsage")}
+          aria-label={t("sessions.contextMeter.actionsLabel", {
+            headline,
+            detail,
+          })}
           aria-expanded={actionsOpen}
           onClick={() => setOpen((value) => !value)}
           className="-m-1 grid rounded-sm p-1 outline-none focus-visible:ring-1 focus-visible:ring-accent"
@@ -90,8 +98,8 @@ export function ContextMeter({
               disabled={compactDisabled}
               title={
                 compactDisabled
-                  ? "Wait for the current operation to finish"
-                  : "Compact this conversation's context"
+                  ? t("sessions.contextMeter.compactWait")
+                  : t("sessions.contextMeter.compactAction")
               }
               onClick={() => {
                 setOpen(false);
@@ -99,7 +107,7 @@ export function ContextMeter({
               }}
               className="mt-1.5 w-full rounded-md bg-content/10 px-2 py-1 text-[11px] text-content hover:bg-content/15 disabled:cursor-not-allowed disabled:opacity-40"
             >
-              Compact now
+              {t("sessions.contextMeter.compactNow")}
             </button>
           ) : null}
         </Popover>

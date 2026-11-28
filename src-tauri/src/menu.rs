@@ -2,8 +2,9 @@
 use serde::Deserialize;
 #[cfg(target_os = "macos")]
 use std::collections::HashMap;
-#[cfg(target_os = "macos")]
 use std::sync::atomic::{AtomicBool, Ordering};
+#[cfg(target_os = "macos")]
+use std::sync::Mutex;
 #[cfg(target_os = "macos")]
 use tauri::menu::{
     AboutMetadata, CheckMenuItem, Menu, MenuItem, MenuItemBuilder, MenuItemKind, SubmenuBuilder,
@@ -13,11 +14,91 @@ use tauri::Wry;
 use tauri::{AppHandle, Emitter};
 
 #[cfg(target_os = "macos")]
-#[derive(Deserialize)]
+#[derive(Clone, Deserialize)]
 pub struct KeybindingOverride {
     disabled: Option<bool>,
     shortcut: Option<String>,
 }
+
+/// Whether the webview's language tag asks for Chinese menu text.
+#[cfg_attr(not(target_os = "macos"), allow(dead_code))]
+fn is_zh(language: &str) -> bool {
+    language.to_ascii_lowercase().starts_with("zh")
+}
+
+/// Chinese menu text for `text`, or `text` itself when untranslated. Items the
+/// OS names itself (Cut, Copy, Hide, ...) follow the system language instead.
+fn zh_text(text: &'static str) -> &'static str {
+    match text {
+        "Autosave" => "自动保存",
+        "Check for Updates…" => "检查更新…",
+        "Close All Tabs" => "关闭所有标签页",
+        "Close Other Tabs" => "关闭其他标签页",
+        "Close Pane" => "关闭窗格",
+        "Command Palette…" => "命令面板…",
+        "Edit" => "编辑",
+        "File" => "文件",
+        "Find" => "查找",
+        "Find in Files…" => "在文件中查找…",
+        "Focus Pane Down" => "聚焦下方窗格",
+        "Focus Pane Left" => "聚焦左侧窗格",
+        "Focus Pane Right" => "聚焦右侧窗格",
+        "Focus Pane Up" => "聚焦上方窗格",
+        "Go Back" => "后退",
+        "Go Forward" => "前进",
+        "Go to File…" => "转到文件…",
+        "Help" => "帮助",
+        "Inbox" => "收件箱",
+        "New Tab" => "新建标签页",
+        "New Terminal" => "新建终端",
+        "New Terminal Tab" => "新建终端标签页",
+        "New Window" => "新建窗口",
+        "Next Tab" => "下一个标签页",
+        "Notes" => "笔记",
+        "Open Project…" => "打开项目…",
+        "Previous Tab" => "上一个标签页",
+        "Quit Natsu" => "退出 Natsu",
+        "Reload" => "重新加载",
+        "Report a Bug…" => "报告问题…",
+        "Request a Feature…" => "提出功能建议…",
+        "Reset Zoom" => "重置缩放",
+        "Search…" => "搜索…",
+        "Settings…" => "设置…",
+        "Sidebar Appearance…" => "侧边栏外观…",
+        "Split Pane Down" => "向下拆分窗格",
+        "Split Pane Right" => "向右拆分窗格",
+        "Switch Model…" => "切换模型…",
+        "Toggle Session Sidebar" => "切换会话侧边栏",
+        "Toggle Sidebar" => "切换侧边栏",
+        "Toggle Terminal" => "切换终端",
+        "View" => "视图",
+        "Create a Mono in Natsu to chat here" => "在 Natsu 中创建一个 Mono 后即可在此聊天",
+        "Mono chat" => "Mono 聊天",
+        "Open floating chat" => "打开悬浮聊天",
+        "Quick Composer" => "快速输入框",
+        "View on GitHub" => "在 GitHub 上查看",
+        "Window" => "窗口",
+        "Zoom In" => "放大",
+        "Zoom Out" => "缩小",
+        other => other,
+    }
+}
+
+#[cfg_attr(not(target_os = "macos"), allow(dead_code))]
+static LANGUAGE_ZH: AtomicBool = AtomicBool::new(false);
+
+/// The menu text for the current interface language.
+#[cfg_attr(not(target_os = "macos"), allow(dead_code))]
+pub(crate) fn tr(text: &'static str) -> &'static str {
+    if LANGUAGE_ZH.load(Ordering::Relaxed) {
+        zh_text(text)
+    } else {
+        text
+    }
+}
+
+#[cfg(target_os = "macos")]
+static OVERRIDES: Mutex<Option<HashMap<String, KeybindingOverride>>> = Mutex::new(None);
 
 #[cfg(target_os = "macos")]
 static AUTOSAVE_ENABLED: AtomicBool = AtomicBool::new(false);
@@ -81,9 +162,26 @@ pub fn keybindings_set_overrides(
     app: AppHandle,
     overrides: HashMap<String, KeybindingOverride>,
 ) -> Result<(), String> {
+    *OVERRIDES.lock().map_err(|error| error.to_string())? = Some(overrides.clone());
     let menu = build(&app, &overrides).map_err(|error| error.to_string())?;
     // set_menu hands back the previous menu; this command only needs to know
     // whether it succeeded.
+    app.set_menu(menu)
+        .map(|_| ())
+        .map_err(|error| error.to_string())
+}
+
+/// Rebuilds the menu in the interface language the webview reports.
+#[cfg(target_os = "macos")]
+#[tauri::command]
+pub fn menu_set_language(app: AppHandle, language: String) -> Result<(), String> {
+    LANGUAGE_ZH.store(is_zh(&language), Ordering::Relaxed);
+    let overrides = OVERRIDES
+        .lock()
+        .map_err(|error| error.to_string())?
+        .clone()
+        .unwrap_or_default();
+    let menu = build(&app, &overrides).map_err(|error| error.to_string())?;
     app.set_menu(menu)
         .map(|_| ())
         .map_err(|error| error.to_string())
@@ -196,17 +294,17 @@ fn build(
     let open_settings = menu_item(
         app,
         "open_settings",
-        "Settings…",
+        tr("Settings…"),
         "CmdOrCtrl+,",
         "App: Settings",
         overrides,
     )?;
     let check_for_updates =
-        MenuItemBuilder::with_id("check_for_updates", "Check for Updates…").build(app)?;
+        MenuItemBuilder::with_id("check_for_updates", tr("Check for Updates…")).build(app)?;
     let new_window = menu_item(
         app,
         "new_window",
-        "New Window",
+        tr("New Window"),
         "CmdOrCtrl+Shift+N",
         "App: New Window",
         overrides,
@@ -214,7 +312,7 @@ fn build(
     let open_project = menu_item(
         app,
         "open_project",
-        "Open Project…",
+        tr("Open Project…"),
         "CmdOrCtrl+O",
         "App: Open Project",
         overrides,
@@ -222,7 +320,7 @@ fn build(
     let go_to_file = menu_item(
         app,
         "go_to_file",
-        "Go to File…",
+        tr("Go to File…"),
         "CmdOrCtrl+P",
         "App: Go to File",
         overrides,
@@ -230,7 +328,7 @@ fn build(
     let command_palette = menu_item(
         app,
         "open_command_palette",
-        "Command Palette…",
+        tr("Command Palette…"),
         "CmdOrCtrl+Shift+P",
         "App: Command Palette",
         overrides,
@@ -238,17 +336,17 @@ fn build(
     let open_search = menu_item(
         app,
         "open_search",
-        "Search…",
+        tr("Search…"),
         "CmdOrCtrl+K",
         "App: Search",
         overrides,
     )?;
-    let open_inbox = MenuItemBuilder::with_id("open_inbox", "Inbox").build(app)?;
-    let open_notes = MenuItemBuilder::with_id("open_notes", "Notes").build(app)?;
+    let open_inbox = MenuItemBuilder::with_id("open_inbox", tr("Inbox")).build(app)?;
+    let open_notes = MenuItemBuilder::with_id("open_notes", tr("Notes")).build(app)?;
     let new_tab = menu_item(
         app,
         "new_tab",
-        "New Tab",
+        tr("New Tab"),
         "CmdOrCtrl+T",
         "Tab: New",
         overrides,
@@ -256,7 +354,7 @@ fn build(
     let new_terminal = menu_item(
         app,
         "new_terminal",
-        "New Terminal",
+        tr("New Terminal"),
         "CmdOrCtrl+`",
         "Terminal: New",
         overrides,
@@ -264,7 +362,7 @@ fn build(
     let new_terminal_tab = menu_item(
         app,
         "new_terminal_tab",
-        "New Terminal Tab",
+        tr("New Terminal Tab"),
         "CmdOrCtrl+Shift+`",
         "Terminal: New Tab",
         overrides,
@@ -272,7 +370,7 @@ fn build(
     let toggle_terminal = menu_item(
         app,
         "toggle_terminal",
-        "Toggle Terminal",
+        tr("Toggle Terminal"),
         "CmdOrCtrl+J",
         "Terminal: Toggle Dock",
         overrides,
@@ -280,7 +378,7 @@ fn build(
     let split_right = menu_item(
         app,
         "split_right",
-        "Split Pane Right",
+        tr("Split Pane Right"),
         "CmdOrCtrl+D",
         "Pane: Split Right",
         overrides,
@@ -288,7 +386,7 @@ fn build(
     let split_down = menu_item(
         app,
         "split_down",
-        "Split Pane Down",
+        tr("Split Pane Down"),
         "CmdOrCtrl+Shift+D",
         "Pane: Split Down",
         overrides,
@@ -296,7 +394,7 @@ fn build(
     let close_tab = menu_item(
         app,
         "close_tab",
-        "Close Pane",
+        tr("Close Pane"),
         "CmdOrCtrl+W",
         "Pane: Close",
         overrides,
@@ -304,7 +402,7 @@ fn build(
     let close_other_tabs = menu_item(
         app,
         "close_other_tabs",
-        "Close Other Tabs",
+        tr("Close Other Tabs"),
         "CmdOrCtrl+Alt+T",
         "Tab: Close Others",
         overrides,
@@ -312,7 +410,7 @@ fn build(
     let close_all_tabs = menu_item(
         app,
         "close_all_tabs",
-        "Close All Tabs",
+        tr("Close All Tabs"),
         "CmdOrCtrl+Shift+W",
         "Tab: Close All",
         overrides,
@@ -320,7 +418,7 @@ fn build(
     let next_tab = menu_item(
         app,
         "next_tab",
-        "Next Tab",
+        tr("Next Tab"),
         "CmdOrCtrl+Shift+]",
         "Tab: Next",
         overrides,
@@ -328,7 +426,7 @@ fn build(
     let prev_tab = menu_item(
         app,
         "prev_tab",
-        "Previous Tab",
+        tr("Previous Tab"),
         "CmdOrCtrl+Shift+[",
         "Tab: Previous",
         overrides,
@@ -336,7 +434,7 @@ fn build(
     let back_tab = menu_item(
         app,
         "back_tab",
-        "Go Back",
+        tr("Go Back"),
         "CmdOrCtrl+[",
         "Tab: Back",
         overrides,
@@ -344,7 +442,7 @@ fn build(
     let forward_tab = menu_item(
         app,
         "forward_tab",
-        "Go Forward",
+        tr("Go Forward"),
         "CmdOrCtrl+]",
         "Tab: Forward",
         overrides,
@@ -353,7 +451,7 @@ fn build(
     let focus_left = menu_item(
         app,
         "focus_left",
-        "Focus Pane Left",
+        tr("Focus Pane Left"),
         "CmdOrCtrl+Alt+Left",
         "Pane: Focus Left",
         overrides,
@@ -361,7 +459,7 @@ fn build(
     let focus_right = menu_item(
         app,
         "focus_right",
-        "Focus Pane Right",
+        tr("Focus Pane Right"),
         "CmdOrCtrl+Alt+Right",
         "Pane: Focus Right",
         overrides,
@@ -369,7 +467,7 @@ fn build(
     let focus_up = menu_item(
         app,
         "focus_up",
-        "Focus Pane Up",
+        tr("Focus Pane Up"),
         "CmdOrCtrl+Alt+Up",
         "Pane: Focus Up",
         overrides,
@@ -377,7 +475,7 @@ fn build(
     let focus_down = menu_item(
         app,
         "focus_down",
-        "Focus Pane Down",
+        tr("Focus Pane Down"),
         "CmdOrCtrl+Alt+Down",
         "Pane: Focus Down",
         overrides,
@@ -386,7 +484,7 @@ fn build(
     let toggle_sidebar = menu_item(
         app,
         "toggle_sidebar",
-        "Toggle Sidebar",
+        tr("Toggle Sidebar"),
         "CmdOrCtrl+B",
         "App: Toggle Sidebar",
         overrides,
@@ -394,7 +492,7 @@ fn build(
     let toggle_session_sidebar = menu_item(
         app,
         "toggle_session_sidebar",
-        "Toggle Session Sidebar",
+        tr("Toggle Session Sidebar"),
         "CmdOrCtrl+Shift+B",
         "App: Toggle Session Sidebar",
         overrides,
@@ -402,23 +500,23 @@ fn build(
     let open_model_picker = menu_item(
         app,
         "open_model_picker",
-        "Switch Model…",
+        tr("Switch Model…"),
         "CmdOrCtrl+.",
         "App: Switch Model",
         overrides,
     )?;
     let sidebar_opacity =
-        MenuItemBuilder::with_id("sidebar_opacity", "Sidebar Appearance…").build(app)?;
+        MenuItemBuilder::with_id("sidebar_opacity", tr("Sidebar Appearance…")).build(app)?;
     // No accelerators here on purpose: the webview key handler owns
     // CmdOrCtrl + - 0, and a menu accelerator would fire the same command
     // a second time on top of it.
-    let zoom_in = MenuItemBuilder::with_id("zoom_in", "Zoom In").build(app)?;
-    let zoom_out = MenuItemBuilder::with_id("zoom_out", "Zoom Out").build(app)?;
-    let zoom_reset = MenuItemBuilder::with_id("zoom_reset", "Reset Zoom").build(app)?;
+    let zoom_in = MenuItemBuilder::with_id("zoom_in", tr("Zoom In")).build(app)?;
+    let zoom_out = MenuItemBuilder::with_id("zoom_out", tr("Zoom Out")).build(app)?;
+    let zoom_reset = MenuItemBuilder::with_id("zoom_reset", tr("Reset Zoom")).build(app)?;
     let reload = menu_item(
         app,
         "reload",
-        "Reload",
+        tr("Reload"),
         "CmdOrCtrl+Shift+R",
         "View: Reload",
         overrides,
@@ -426,7 +524,7 @@ fn build(
     let find = menu_item(
         app,
         "find",
-        "Find",
+        tr("Find"),
         "CmdOrCtrl+F",
         "Editor: Find",
         overrides,
@@ -435,7 +533,7 @@ fn build(
     let find_in_project = menu_item(
         app,
         "find_in_project",
-        "Find in Files…",
+        tr("Find in Files…"),
         "CmdOrCtrl+Shift+F",
         "App: Find in Files",
         overrides,
@@ -443,13 +541,13 @@ fn build(
     let autosave = CheckMenuItem::with_id(
         app,
         "toggle_autosave",
-        "Autosave",
+        tr("Autosave"),
         true,
         AUTOSAVE_ENABLED.load(Ordering::Relaxed),
         None::<&str>,
     )?;
 
-    let file = SubmenuBuilder::with_id(app, "file", "File")
+    let file = SubmenuBuilder::with_id(app, "file", tr("File"))
         .item(&new_window)
         .item(&open_project)
         .item(&open_search)
@@ -474,7 +572,7 @@ fn build(
         .item(&forward_tab)
         .build()?;
 
-    let view = SubmenuBuilder::new(app, "View")
+    let view = SubmenuBuilder::new(app, tr("View"))
         .item(&toggle_sidebar)
         .item(&toggle_session_sidebar)
         .item(&open_inbox)
@@ -495,7 +593,7 @@ fn build(
         .item(&sidebar_opacity)
         .build()?;
 
-    let edit = SubmenuBuilder::new(app, "Edit")
+    let edit = SubmenuBuilder::new(app, tr("Edit"))
         .undo()
         .redo()
         .separator()
@@ -509,7 +607,7 @@ fn build(
 
     #[cfg(target_os = "macos")]
     {
-        let quit = MenuItemBuilder::with_id("quit", "Quit Natsu")
+        let quit = MenuItemBuilder::with_id("quit", tr("Quit Natsu"))
             .accelerator("CmdOrCtrl+Q")
             .build(app)?;
         let app_menu = SubmenuBuilder::new(app, "Natsu")
@@ -526,15 +624,18 @@ fn build(
             .build()?;
         // Tauri registers this submenu via NSApp.setWindowsMenu:, which throws
         // on macOS 12 when the menu is empty and aborts the app at launch.
-        let window_menu = SubmenuBuilder::with_id(app, tauri::menu::WINDOW_SUBMENU_ID, "Window")
-            .minimize()
-            .maximize()
-            .build()?;
-        let github = MenuItemBuilder::with_id("help_github", "View on GitHub").build(app)?;
-        let report_bug = MenuItemBuilder::with_id("help_report_bug", "Report a Bug…").build(app)?;
+        let window_menu =
+            SubmenuBuilder::with_id(app, tauri::menu::WINDOW_SUBMENU_ID, tr("Window"))
+                .minimize()
+                .maximize()
+                .build()?;
+        let github = MenuItemBuilder::with_id("help_github", tr("View on GitHub")).build(app)?;
+        let report_bug =
+            MenuItemBuilder::with_id("help_report_bug", tr("Report a Bug…")).build(app)?;
         let request_feature =
-            MenuItemBuilder::with_id("help_request_feature", "Request a Feature…").build(app)?;
-        let help = SubmenuBuilder::with_id(app, tauri::menu::HELP_SUBMENU_ID, "Help")
+            MenuItemBuilder::with_id("help_request_feature", tr("Request a Feature…"))
+                .build(app)?;
+        let help = SubmenuBuilder::with_id(app, tauri::menu::HELP_SUBMENU_ID, tr("Help"))
             .item(&github)
             .separator()
             .item(&report_bug)
@@ -545,4 +646,54 @@ fn build(
 
     #[allow(unreachable_code)]
     Menu::with_items(app, &[&file, &edit, &view])
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{is_zh, zh_text};
+
+    #[test]
+    fn language_tags_select_chinese() {
+        assert!(is_zh("zh-CN"));
+        assert!(is_zh("ZH-Hans"));
+        assert!(!is_zh("en"));
+        assert!(!is_zh("fr"));
+    }
+
+    #[test]
+    fn every_menu_text_has_a_chinese_translation() {
+        // The Mono chat popup is macOS-only code, so check its texts here too.
+        let menu = include_str!("menu.rs");
+        let menu = &menu[..menu.find("#[cfg(test)]").unwrap()];
+        let sources = [
+            menu,
+            include_str!("mono_chat.rs"),
+            include_str!("mono_chat/menu_bar.rs"),
+        ];
+        let body = sources.join("\n");
+        let mut count = 0;
+        for (at, _) in body.match_indices("tr(\"") {
+            // `from_str("...")` and similar longer names are not `tr` calls.
+            if body[..at]
+                .chars()
+                .next_back()
+                .is_some_and(|c| c.is_alphanumeric() || c == '_')
+            {
+                continue;
+            }
+            let part = &body[at + 4..];
+            let text = &part[..part.find('"').unwrap()];
+            let translated = zh_text(Box::leak(text.to_owned().into_boxed_str()));
+            assert_ne!(translated, text, "no Chinese text for {text:?}");
+            count += 1;
+        }
+        assert!(count > 40, "expected many menu texts, found {count}");
+        // The popup's action titles are constants passed to `tr` indirectly.
+        let bar = include_str!("mono_chat/menu_bar.rs");
+        for part in bar.split("title: \"").skip(1) {
+            let text = &part[..part.find('"').unwrap()];
+            let translated = zh_text(Box::leak(text.to_owned().into_boxed_str()));
+            assert_ne!(translated, text, "no Chinese text for {text:?}");
+        }
+    }
 }

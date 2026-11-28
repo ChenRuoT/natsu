@@ -28,6 +28,7 @@ import {
 } from "@codemirror/view";
 import { MOD, ALT, SHIFT } from "../../../platform/tauri/platform";
 import { keybindingPressed } from "../../settings/model/settings";
+import { t as tNow } from "../../../shared/i18n/i18n";
 import {
   handleFilePreviewFindKey,
   openFindInActiveFilePreview,
@@ -235,22 +236,34 @@ class FindPanel implements Panel {
     this.query = getSearchQuery(view.state);
     panels.set(view, this);
 
-    this.searchField = inputField("Find", {
+    this.searchField = inputField(tNow("files.editorSearch.find"), {
       name: "search",
       "main-field": "true",
       value: this.query.search,
     });
-    this.replaceField = inputField("Replace", {
+    this.replaceField = inputField(tNow("files.editorSearch.replace"), {
       name: "replace",
       value: this.query.replace,
     });
     this.count = elt("span", { class: "cm-find-count" });
-    this.caseButton = toggleButton("Aa", "Match Case", `${ALT}C`);
-    this.wordButton = toggleButton("ab", "Match Whole Word", `${ALT}W`);
-    this.regexButton = toggleButton(".*", "Use Regular Expression", `${ALT}R`);
+    this.caseButton = toggleButton(
+      "Aa",
+      tNow("files.editorSearch.matchCase"),
+      `${ALT}C`,
+    );
+    this.wordButton = toggleButton(
+      "ab",
+      tNow("files.editorSearch.matchWholeWord"),
+      `${ALT}W`,
+    );
+    this.regexButton = toggleButton(
+      ".*",
+      tNow("files.editorSearch.useRegex"),
+      `${ALT}R`,
+    );
     this.expandButton = iconButton(
       "cm-find-expand",
-      "Toggle Replace",
+      tNow("files.editorSearch.toggleReplace"),
       `${MOD}${ALT}F`,
       svgIcon("M6 4l4 4-4 4"),
     );
@@ -258,19 +271,19 @@ class FindPanel implements Panel {
 
     const prevButton = iconButton(
       "cm-find-step",
-      "Previous Match",
+      tNow("files.editorSearch.previousMatch"),
       `${MOD}${SHIFT}G`,
       svgIcon("M4 10l4-4 4 4"),
     );
     const nextButton = iconButton(
       "cm-find-step",
-      "Next Match",
+      tNow("files.editorSearch.nextMatch"),
       `${MOD}G`,
       svgIcon("M4 6l4 4 4-4"),
     );
     const closeButton = iconButton(
       "cm-find-close",
-      "Close",
+      tNow("files.editorSearch.close"),
       "Escape",
       svgIcon("M4.5 4.5l7 7M11.5 4.5l-7 7"),
     );
@@ -282,8 +295,10 @@ class FindPanel implements Panel {
       elt(
         "div",
         { class: "cm-find-replace-actions" },
-        textButton("Replace", () => replaceNext(this.view)),
-        textButton("All", () => replaceAll(this.view)),
+        textButton(tNow("files.editorSearch.replace"), () =>
+          replaceNext(this.view),
+        ),
+        textButton(tNow("files.editorSearch.all"), () => replaceAll(this.view)),
       ),
     );
 
@@ -464,7 +479,7 @@ class FindPanel implements Panel {
       return;
     }
     if (!this.query.valid) {
-      this.count.textContent = "Invalid regex";
+      this.count.textContent = tNow("files.editorSearch.invalidRegex");
       this.count.dataset.state = "invalid";
       this.dom.classList.add("is-invalid");
       this.dom.classList.remove("is-empty");
@@ -477,13 +492,15 @@ class FindPanel implements Panel {
     this.dom.classList.toggle("is-empty", total === 0);
     this.dom.classList.remove("is-invalid");
     if (total === 0) {
-      this.count.textContent = "No results";
+      this.count.textContent = tNow("files.editorSearch.noResults");
       this.count.dataset.state = "empty";
       return;
     }
     const suffix = capped ? "+" : "";
     this.count.textContent =
-      current > 0 ? `${current} of ${total}${suffix}` : `${total}${suffix}`;
+      current > 0
+        ? `${tNow("files.editorSearch.position", { current, total })}${suffix}`
+        : `${total}${suffix}`;
     this.count.dataset.state = "ok";
   }
 

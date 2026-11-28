@@ -11,6 +11,7 @@ import {
   useNewLayoutPromptDismissed,
 } from "../../features/settings/model/displayPrefs";
 import { LAYER } from "../../shared/lib/layers";
+import { useT } from "../../shared/i18n/i18n";
 import { GlassBackdrop } from "./GlassBackdrop";
 
 export function NewLayoutNotice({
@@ -20,6 +21,7 @@ export function NewLayoutNotice({
   topOffset?: number;
   onHeightChange?: (height: number) => void;
 }) {
+  const t = useT();
   const panelRef = useRef<HTMLElement>(null);
   const dismissed = useNewLayoutPromptDismissed();
   const enabled = useSyncExternalStore(
@@ -47,17 +49,18 @@ export function NewLayoutNotice({
   return createPortal(
     <section
       ref={panelRef}
-      aria-label="Try the Focused layout"
+      aria-label={t("shell.newLayoutNotice.ariaLabel")}
       role="status"
       style={{ zIndex: LAYER.toast, top: topOffset }}
       className="fixed right-3 isolate w-[min(340px,calc(100vw-24px))] overflow-hidden rounded-xl border border-content/10 text-content shadow-xl"
     >
       <GlassBackdrop />
       <div className="relative z-[1] px-3 py-3">
-        <p className="text-[13px] font-semibold">Try the Focused layout</p>
+        <p className="text-[13px] font-semibold">
+          {t("shell.newLayoutNotice.title")}
+        </p>
         <p className="mt-1 text-[12px] leading-relaxed text-content/60">
-          A project switcher, workspace tabs and a right panel. Switch back to
-          Classic anytime in Settings → Appearance → Layout.
+          {t("shell.newLayoutNotice.body")}
         </p>
         <div className="mt-3 flex justify-end gap-2">
           <button
@@ -65,7 +68,7 @@ export function NewLayoutNotice({
             className="rounded-md px-2.5 py-1.5 text-[12px] text-content/60 hover:bg-content/10 hover:text-content"
             onClick={() => saveNewLayoutPromptDismissed(true)}
           >
-            Not now
+            {t("shell.newLayoutNotice.notNow")}
           </button>
           <button
             type="button"
@@ -75,7 +78,7 @@ export function NewLayoutNotice({
               saveInsetLayout(true);
             }}
           >
-            Try it
+            {t("shell.newLayoutNotice.tryIt")}
           </button>
         </div>
       </div>

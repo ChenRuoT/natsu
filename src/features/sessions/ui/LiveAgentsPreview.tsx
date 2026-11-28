@@ -1,3 +1,8 @@
+import {
+  useT,
+  type MessageKey,
+  type TFunction,
+} from "../../../shared/i18n/i18n";
 import { useEffect, useState } from "react";
 import { useLockOverscroll } from "../../../shared/hooks/useLockOverscroll";
 import { formatLiveElapsed, type LiveAgent } from "../model/liveAgents";
@@ -18,6 +23,19 @@ import { TerminalSpinner } from "./TerminalSpinner";
 
 const LIVE_AGENT_MIN = 2;
 const LIVE_AGENT_CAP = 4;
+
+/** Fixed activity labels that `liveAgentsFromSessions` produces in English. */
+const LIVE_ACTIVITY_KEYS = new Map<string, MessageKey>([
+  ["Done", "sessions.liveAgentsPreview.done"],
+  ["Question", "sessions.liveAgentsPreview.question"],
+  ["Working", "sessions.liveAgentsPreview.working"],
+  ["Preparing a handoff", "sessions.liveAgentsPreview.preparingHandoff"],
+]);
+
+function translateActivity(activity: string, t: TFunction): string {
+  const key = LIVE_ACTIVITY_KEYS.get(activity);
+  return key ? t(key) : activity;
+}
 
 type Props = {
   agents: LiveAgent[];
@@ -40,6 +58,7 @@ export function LiveAgentsPreview({
   groupCustomColors: groupCustomColorsProp,
   groupMascots: groupMascotsProp,
 }: Props) {
+  const t = useT();
   const [loadedGroupLabels] = useState(loadTabGroupLabels);
   const [loadedGroupColors] = useState(loadTabGroupColors);
   const [loadedGroupCustomColors] = useState(loadTabGroupCustomColors);
@@ -69,12 +88,12 @@ export function LiveAgentsPreview({
 
   return (
     <section
-      aria-label="Working agents"
+      aria-label={t("sessions.liveAgentsPreview.label")}
       className={`shrink-0 px-2 ${bottomSpacing ? "pb-2" : ""}`}
       data-live-agents-preview="full"
     >
       <span className="sr-only" aria-live="polite" aria-atomic="true">
-        {agents.length} working agents
+        {t("wiring.LiveAgentsPreview.workingCount", { count: agents.length })}
       </span>
       <div className="overflow-hidden rounded-lg bg-content/5">
         <div className="flex items-center gap-2 px-3.5 py-1.5">
@@ -83,7 +102,7 @@ export function LiveAgentsPreview({
             className="size-1.5 shrink-0 rounded-full bg-accent shadow-[0_0_8px_var(--color-accent)] motion-safe:animate-pulse"
           />
           <span className="min-w-0 flex-1 truncate text-xs text-content/50">
-            Working
+            {t("sessions.liveAgentsPreview.working")}
           </span>
           <span className="text-[11px] tabular-nums text-content/40">
             {agents.length}
@@ -121,7 +140,9 @@ export function LiveAgentsPreview({
             ) : (
               <ChevronDown className="size-3" strokeWidth={1.75} />
             )}
-            {expanded ? "Show less" : `${extra} more`}
+            {expanded
+              ? t("sessions.liveAgentsPreview.showLess")
+              : t("sessions.liveAgentsPreview.moreCount", { count: extra })}
           </button>
         ) : null}
       </div>
@@ -148,6 +169,7 @@ function LiveAgentCard({
   groupCustomColors: Record<string, string>;
   groupMascots: Record<string, string>;
 }) {
+  const t = useT();
   const seed = projectName(agent.cwd);
   const key = projectKey(agent.cwd);
   const project = resolveTabGroupLabel(key, groupLabels, seed);
@@ -160,10 +182,10 @@ function LiveAgentCard({
       ? formatLiveElapsed(agent.startedAt, now)
       : "";
   const activity = agent.needsApproval
-    ? "Need approval"
+    ? t("sessions.liveAgentsPreview.needApproval")
     : agent.done
-      ? "Done"
-      : agent.activity;
+      ? t("sessions.liveAgentsPreview.done")
+      : translateActivity(agent.activity, t);
   const live = !agent.needsApproval && !agent.done;
   const title = [agent.title, project, activity, elapsed]
     .filter(Boolean)
