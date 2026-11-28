@@ -2,6 +2,7 @@ import { router, Stack, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 
 import { ModelList } from "@/features/models/ModelPicker";
+import { useT } from "@/i18n/i18n";
 
 // The models of every provider for a session, or a new one in the project,
 // searched from the header.
@@ -11,12 +12,13 @@ export default function ModelsScreen() {
     sessionId?: string;
   }>();
   const [query, setQuery] = useState("");
+  const t = useT();
   return (
     <>
       <Stack.Screen
         options={{
           headerSearchBarOptions: {
-            placeholder: "Find a model",
+            placeholder: t("app.modelsIndex.searchPlaceholder"),
             hideWhenScrolling: false,
             autoCapitalize: "none",
             onChangeText: (event) => setQuery(event.nativeEvent.text),

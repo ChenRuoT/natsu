@@ -28,6 +28,7 @@ import {
   modalStackOptions,
 } from "@/features/files/codeScreen";
 import { applySavedAppearance } from "@/features/settings/appearance";
+import { applySavedLanguage } from "@/features/settings/language";
 import { modalSheetOptions } from "@/ui/ModalSheet";
 import { useLayoutChanging, useMonoOnlyLayout } from "@/features/settings/monoOnly";
 import { DitherLoading } from "@/ui/DitherLoading";
@@ -45,6 +46,7 @@ import {
 
 // Light or dark as set in settings, or as the phone is.
 applySavedAppearance();
+applySavedLanguage();
 
 const navigationTheme = (scheme: Scheme, colors: Palette) => {
   const base = scheme === "dark" ? DarkTheme : DefaultTheme;

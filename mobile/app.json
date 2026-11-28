@@ -16,6 +16,7 @@
       "infoPlist": {
         "CFBundleDisplayName": "Natsu",
         "NSLocalNetworkUsageDescription": "Connect securely to your paired Natsu desktop.",
+        "CFBundleAllowMixedLocalizations": true,
         "ITSAppUsesNonExemptEncryption": false
       }
     },
@@ -43,6 +44,9 @@
     "web": {
       "output": "static",
       "favicon": "./assets/images/favicon.png"
+    },
+    "locales": {
+      "zh-Hans": "./locales/zh-Hans.json"
     },
     "plugins": [
       [

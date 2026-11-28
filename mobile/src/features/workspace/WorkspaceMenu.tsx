@@ -39,6 +39,7 @@ import { useRef, useState, type ReactNode } from "react";
 import { Pressable, Text as RNText, View } from "react-native";
 
 import { formatCount, useDiffTheme } from "@/features/changes/diffTheme";
+import { useT } from "@/i18n/i18n";
 import { Icon } from "@/ui/Icon";
 import { themedStyles, useColors } from "@/ui/theme";
 
@@ -87,6 +88,7 @@ export function WorkspaceMenu({
   loading: boolean;
   onOpenChanges: () => void;
 }) {
+  const t = useT();
   const colors = useColors();
   const styles = useStyles();
   const [open, setOpen] = useState(false);
@@ -106,7 +108,7 @@ export function WorkspaceMenu({
     <>
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel={`Workspace: ${branch}`}
+        accessibilityLabel={t("workspace.workspaceMenu.triggerLabel", { branch })}
         onPress={() => setOpen(true)}
         // A taller target than the line itself.
         hitSlop={{ top: 4, bottom: 4 }}
@@ -166,6 +168,7 @@ function WorkspaceSheet({
   onChange: (value: Workspace) => void;
   onOpenChanges: () => void;
 }) {
+  const t = useT();
   const diff = useDiffTheme();
   const { additions, deletions } = totals(files);
   // Controlled so a reopened sheet starts at the top level, not the page it closed on.
@@ -194,23 +197,23 @@ function WorkspaceSheet({
             // which otherwise paints a pushed page opaque.
             scrollContentBackground("hidden"),
             containerBackground("clear", "navigation"),
-            navigationTitle("Workspace"),
+            navigationTitle(t("workspace.workspaceMenu.title")),
             navigationBarTitleDisplayMode("inline"),
           ]}
         >
-          <Section title="Start the session in">
+          <Section title={t("workspace.workspaceMenu.startIn")}>
             <Choice
               symbol="folder"
-              title="Current checkout"
-              hint={checkoutBranch || "The project's own folder"}
+              title={t("workspace.workspaceMenu.currentCheckout")}
+              hint={checkoutBranch || t("workspace.workspaceMenu.ownFolderHint")}
               selected={value.mode === "current"}
               busy={pending === "current"}
               onPress={() => onChange({ mode: "current" })}
             />
             <Choice
               symbol="arrow.triangle.branch"
-              title="New worktree"
-              hint="A fresh branch, in a folder of its own"
+              title={t("workspace.workspaceMenu.newWorktree")}
+              hint={t("workspace.workspaceMenu.newWorktreeHint")}
               selected={value.mode === "worktree"}
               busy={pending === "worktree"}
               onPress={() => onChange({ mode: "worktree" })}
@@ -220,7 +223,7 @@ function WorkspaceSheet({
                 <HStack spacing={14}>
                   <RowIcon symbol="folder.badge.gearshape" />
                   <VStack alignment="leading" spacing={2}>
-                    <Text>Existing worktree</Text>
+                    <Text>{t("workspace.workspaceMenu.existingWorktree")}</Text>
                     <Text
                       modifiers={[
                         font({ textStyle: "footnote" }),
@@ -231,7 +234,9 @@ function WorkspaceSheet({
                     >
                       {existing
                         ? existing.name
-                        : `${worktrees.length} ${worktrees.length === 1 ? "worktree" : "worktrees"}`}
+                        : worktrees.length === 1
+                          ? t("workspace.workspaceMenu.worktreeCount.one", { count: worktrees.length })
+                          : t("workspace.workspaceMenu.worktreeCount.other", { count: worktrees.length })}
                     </Text>
                   </VStack>
                   <Spacer />
@@ -246,7 +251,7 @@ function WorkspaceSheet({
           </Section>
           <Section
             footer={value.mode === "worktree" ? (
-              <Text>Changes are available after the worktree is created.</Text>
+              <Text>{t("workspace.workspaceMenu.changesAfterCreate")}</Text>
             ) : undefined}
           >
             <Button
@@ -263,9 +268,11 @@ function WorkspaceSheet({
               <HStack spacing={14} modifiers={[contentShape(shapes.rectangle())]}>
                 <RowIcon symbol="plus.forwardslash.minus" />
                 <VStack alignment="leading" spacing={2}>
-                  <Text>View changes</Text>
+                  <Text>{t("workspace.workspaceMenu.viewChanges")}</Text>
                   <Text modifiers={[font({ textStyle: "footnote" }), SECONDARY]}>
-                    {`${formatCount(files.length)} ${files.length === 1 ? "file" : "files"} changed`}
+                    {files.length === 1
+                      ? t("workspace.workspaceMenu.filesChanged.one", { count: formatCount(files.length) })
+                      : t("workspace.workspaceMenu.filesChanged.other", { count: formatCount(files.length) })}
                   </Text>
                 </VStack>
                 <Spacer />
@@ -290,7 +297,7 @@ function WorkspaceSheet({
               listStyle("insetGrouped"),
               scrollContentBackground("hidden"),
               containerBackground("clear", "navigation"),
-              navigationTitle("Worktrees"),
+              navigationTitle(t("workspace.workspaceMenu.worktreesTitle")),
               navigationBarTitleDisplayMode("inline"),
             ]}
           >
@@ -438,6 +445,7 @@ function BranchLine({
   files: ChangedFile[];
   compact?: boolean;
 }) {
+  const t = useT();
   const colors = useColors();
   const styles = useStyles();
   const diff = useDiffTheme();
@@ -454,7 +462,9 @@ function BranchLine({
         {branch}
       </RNText>
       <RNText style={count} numberOfLines={1}>
-        {`·  ${formatCount(files.length)} ${files.length === 1 ? "file" : "files"}`}
+        {`·  ${files.length === 1
+          ? t("workspace.workspaceMenu.fileCount.one", { count: formatCount(files.length) })
+          : t("workspace.workspaceMenu.fileCount.other", { count: formatCount(files.length) })}`}
       </RNText>
       <RNText style={[count, { color: diff.add.fg }]}>{`+${formatCount(additions)}`}</RNText>
       <RNText style={[count, { color: diff.del.fg }]}>{`-${formatCount(deletions)}`}</RNText>

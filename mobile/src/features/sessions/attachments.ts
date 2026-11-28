@@ -9,6 +9,8 @@ import { ImageManipulator, SaveFormat } from "expo-image-manipulator";
 import { launchImageLibraryAsync, type ImagePickerAsset } from "expo-image-picker";
 import { AppState } from "react-native";
 
+import { t as tNow } from "@/i18n/i18n";
+
 /** A file or photo held in the composer until it's sent. */
 export type Attachment = {
   id: string;
@@ -89,7 +91,10 @@ export async function pickFiles(room: number): Promise<Attachment[]> {
   if (picked.canceled) return [];
   const files = picked.result.slice(0, room);
   const tooLarge = files.find((file) => file.size > MAX_FILE_BYTES);
-  if (tooLarge) throw new Error(`${tooLarge.name} is over the 10 MB limit.`);
+  if (tooLarge)
+    throw new Error(
+      tNow("sessions.attachments.fileTooLarge", { name: tooLarge.name }),
+    );
   return Promise.all(
     files.map(async (file) => ({
       id: makeId(),
@@ -117,7 +122,7 @@ export async function pasteImage(room: number): Promise<Attachment[]> {
   if (!image) {
     // Still an image there, but none given: the user chose Don't Allow.
     if (await hasImageAsync().catch(() => false)) return [];
-    throw new Error("There's no image on the clipboard to paste.");
+    throw new Error(tNow("sessions.attachments.noClipboardImage"));
   }
   // The bytes follow the data URI's prefix, wrapped into lines on Android.
   const { data, wrapped } = clipboardBase64(image.data);
@@ -126,8 +131,10 @@ export async function pasteImage(room: number): Promise<Attachment[]> {
   const bytes = base64Bytes(data);
   if (width * height > MAX_PASTE_PIXELS || bytes > MAX_PASTE_BYTES)
     throw new Error(
-      `This image is too large to paste (${Math.round(width)} x ${Math.round(height)}). ` +
-        "Save it to Photos and attach it from Photo Library instead.",
+      tNow("sessions.attachments.imageTooLarge", {
+        width: Math.round(width),
+        height: Math.round(height),
+      }),
     );
   const name = "Pasted image.png";
   if (heldAsIs("image/png", bytes, width, height))
@@ -202,9 +209,9 @@ export function pngSize(data: string): { width: number; height: number } | null 
 function pasteError(reason: unknown): Error {
   const code = (reason as { code?: unknown } | null)?.code;
   if (code === "ERR_NO_PERMISSION")
-    return new Error("The app this image was copied from no longer shares it. Copy it again and paste.");
+    return new Error(tNow("sessions.attachments.pasteNoPermission"));
   if (code === "ERR_PASTE_FAILURE")
-    return new Error("The image on the clipboard couldn't be read. Copy it again and paste.");
+    return new Error(tNow("sessions.attachments.pasteFailed"));
   return reason instanceof Error ? reason : new Error(String(reason));
 }
 
@@ -246,7 +253,7 @@ export function merge(existing: Attachment[], added: Attachment[]): Attachment[]
   const next = [...existing, ...added].slice(0, MAX_ATTACHMENTS);
   const total = next.reduce((sum, attachment) => sum + attachment.data.length, 0);
   if (total > MAX_TOTAL_BASE64)
-    throw new Error("These attachments are too large to send together. Remove some and try again.");
+    throw new Error(tNow("sessions.attachments.combinedTooLarge"));
   return next;
 }
 

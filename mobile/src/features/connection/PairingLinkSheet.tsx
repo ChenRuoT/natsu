@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { Pressable, Text, TextInput, useWindowDimensions, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { useT } from "@/i18n/i18n";
 import { themedStyles, useColors, useScheme } from "@/ui/theme";
 
 /** Takes a pairing link copied from the desktop, the keyboard up as it opens. */
@@ -15,6 +16,7 @@ export function PairingLinkSheet({
   onDismiss: () => void;
   onConnect: (link: string) => void;
 }) {
+  const t = useT();
   const colors = useColors();
   const scheme = useScheme();
   const styles = useStyles();
@@ -48,15 +50,14 @@ export function PairingLinkSheet({
       <RNHostView matchContents={{ vertical: true }}>
         <View style={[styles.sheet, { width, paddingBottom: Math.max(bottom, 16) + 8 }]}>
           <Text accessibilityRole="header" style={styles.title}>
-            Paste a pairing link
+            {t("workspace.pairingLinkSheet.title")}
           </Text>
           <Text style={styles.hint}>
-            On your desktop, open Settings → Connections, choose Pair phone, and
-            copy the link.
+            {t("workspace.pairingLinkSheet.hint")}
           </Text>
           <TextInput
             ref={input}
-            accessibilityLabel="Pairing link"
+            accessibilityLabel={t("workspace.pairingLinkSheet.inputLabel")}
             placeholder="natsu://pair…"
             placeholderTextColor={colors.muted}
             value={link}
@@ -82,7 +83,7 @@ export function PairingLinkSheet({
               pressed && styles.pressed,
             ]}
           >
-            <Text style={styles.buttonLabel}>Connect</Text>
+            <Text style={styles.buttonLabel}>{t("workspace.pairingLinkSheet.connect")}</Text>
           </Pressable>
         </View>
       </RNHostView>

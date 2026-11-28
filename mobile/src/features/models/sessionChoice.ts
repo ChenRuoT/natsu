@@ -8,6 +8,7 @@ import {
 } from "@/features/settings/defaultModel";
 import type { Harness, Project } from "@/features/workspace/types";
 import { useWorkspace } from "@/features/workspace/WorkspaceProvider";
+import { t as tNow } from "@/i18n/i18n";
 
 import { DEFAULT_ACCESS } from "./access";
 import type { ModelPick, RuntimeMode } from "./types";
@@ -47,7 +48,7 @@ const applying = new Map<string, ReturnType<typeof setTimeout>>();
 
 const failed = (reason: unknown) =>
   Alert.alert(
-    "Could not change the session",
+    tNow("app.sessionChoice.failedTitle"),
     reason instanceof Error ? reason.message : String(reason),
   );
 

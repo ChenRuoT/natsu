@@ -7,6 +7,7 @@ import { useProjectGit, type GitStatus } from "@/features/connection/useProjectG
 import { PageBottomBlur, useSessionLayout } from "@/features/sessions/SessionScreen";
 import type { ChangedFile } from "@/features/workspace/types";
 import { FileTypeIcon } from "@/features/files/FileTypeIcon";
+import { useT, type TFunction } from "@/i18n/i18n";
 import { GradualBlur } from "@/ui/GradualBlur";
 import { Icon, type IconName } from "@/ui/Icon";
 import { LiquidView } from "@/ui/LiquidView";
@@ -63,6 +64,7 @@ export function ChangesView({
   /** The composer's harness, which writes commit messages and pull requests. */
   harness?: string;
 }) {
+  const t = useT();
   const colors = useColors();
   const styles = useStyles();
   const { pageTop: top, bareBottom, dockBottom } = useSessionLayout();
@@ -99,7 +101,7 @@ export function ChangesView({
   // Partly staged files stay with the unstaged ones, their circle half filled.
   const staged = shown.filter((file) => file.staged && !file.unstaged);
   const unstaged = shown.filter((file) => !(file.staged && !file.unstaged));
-  const bar = fresh ? null : barAction(files.length, staged.length, git.status);
+  const bar = fresh ? null : barAction(files.length, staged.length, git.status, t);
   // The composer slides away with the chat page; the commit button takes its
   // place, else only the safe area and its blur are left below.
   const bottom = bar ? dockBottom + BAR + BAR_FADE : bareBottom;
@@ -127,7 +129,7 @@ export function ChangesView({
     } catch (reason) {
       setWanted((current) => new Map([...current].filter(([path]) => !paths.includes(path))));
       Alert.alert(
-        toStaged ? "Couldn't stage" : "Couldn't unstage",
+        toStaged ? t("changes.changesView.stageFailed") : t("changes.changesView.unstageFailed"),
         reason instanceof Error ? reason.message : String(reason),
       );
     }
@@ -166,7 +168,7 @@ export function ChangesView({
         {files.length === 0 ? (
           // Nothing to list: the Changes card, folded and at zero, rather than a note.
           <View style={styles.sections}>
-            <Section title="Changes" count={0} loading={loading && !error} />
+            <Section title={t("changes.changesView.sectionChanges")} count={0} loading={loading && !error} />
             {error ? <Text style={styles.empty}>{error}</Text> : null}
           </View>
         ) : (
@@ -174,11 +176,11 @@ export function ChangesView({
             {staged.length > 0 ? (
               <Section
                 key="staged"
-                title="Staged Changes"
+                title={t("changes.changesView.sectionStaged")}
                 count={staged.length}
                 open={!collapsed.has("staged")}
                 onToggle={() => toggleSection("staged")}
-                action={{ icon: "minus", label: "Unstage All", onPress: () => void stageAll(false) }}
+                action={{ icon: "minus", label: t("changes.changesView.unstageAll"), onPress: () => void stageAll(false) }}
               >
                 {list(staged)}
               </Section>
@@ -186,11 +188,11 @@ export function ChangesView({
             {unstaged.length > 0 ? (
               <Section
                 key="changes"
-                title="Changes"
+                title={t("changes.changesView.sectionChanges")}
                 count={unstaged.length}
                 open={!collapsed.has("changes")}
                 onToggle={() => toggleSection("changes")}
-                action={{ icon: "add", label: "Stage All", onPress: () => void stageAll(true) }}
+                action={{ icon: "add", label: t("changes.changesView.stageAll"), onPress: () => void stageAll(true) }}
               >
                 {list(unstaged)}
               </Section>
@@ -320,15 +322,24 @@ function barAction(
   changed: number,
   staged: number,
   status: GitStatus | null,
+  t: TFunction,
 ): { icon: IconName; label: string; stage?: boolean } | null {
-  if (staged > 0) return { icon: "check", label: `Commit ${staged} ${staged === 1 ? "file" : "files"}` };
-  if (changed > 0) return { icon: "add", label: "Stage All", stage: true };
+  if (staged > 0)
+    return {
+      icon: "check",
+      label:
+        staged === 1
+          ? t("changes.changesView.commitFiles.one", { count: staged })
+          : t("changes.changesView.commitFiles.other", { count: staged }),
+    };
+  if (changed > 0) return { icon: "add", label: t("changes.changesView.stageAll"), stage: true };
   if (!status?.remote) return null;
-  if (!status.upstream) return { icon: "send", label: "Publish Branch" };
-  if (status.ahead > 0 || status.behind > 0) return { icon: "send", label: "Sync" };
-  if (status.pr) return { icon: "branch", label: `PR #${status.pr.number}` };
+  if (!status.upstream) return { icon: "send", label: t("changes.changesView.publishBranch") };
+  if (status.ahead > 0 || status.behind > 0) return { icon: "send", label: t("changes.changesView.sync") };
+  if (status.pr)
+    return { icon: "branch", label: t("changes.changesView.prNumber", { number: status.pr.number }) };
   if (status.aheadOfDefault > 0 && status.branch !== status.defaultBranch)
-    return { icon: "branch", label: "Create PR" };
+    return { icon: "branch", label: t("changes.changesView.createPr") };
   return null;
 }
 
@@ -341,6 +352,7 @@ function FileChange({
   onPress: () => void;
   onToggle: () => void;
 }) {
+  const t = useT();
   const colors = useColors();
   const styles = useStyles();
   const { name, dir } = splitPath(file.relative);
@@ -360,7 +372,7 @@ function FileChange({
     >
       <Pressable
         accessibilityRole="checkbox"
-        accessibilityLabel={staged ? `Unstage ${name}` : `Stage ${name}`}
+        accessibilityLabel={staged ? t("changes.changesView.unstageFile", { name }) : t("changes.changesView.stageFile", { name })}
         accessibilityState={{ checked: staged ? true : partly ? "mixed" : false }}
         onPress={onToggle}
         hitSlop={{ top: 12, bottom: 12, left: 14, right: 8 }}

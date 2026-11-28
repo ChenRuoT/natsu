@@ -1,0 +1,11 @@
+{
+  "ios": {
+    "NSLocalNetworkUsageDescription": "安全连接到你已配对的 Natsu 桌面端。",
+    "NSCameraUsageDescription": "扫描 Natsu 桌面端上的配对码。",
+    "NSPhotoLibraryUsageDescription": "选择照片附加到消息，或用作新会话的背景。",
+    "NSMicrophoneUsageDescription": "对你的 Natsu 会话进行语音听写。"
+  },
+  "android": {
+    "app_name": "Natsu"
+  }
+}

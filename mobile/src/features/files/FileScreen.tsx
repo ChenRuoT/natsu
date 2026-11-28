@@ -7,6 +7,7 @@ import { splitPath } from "@/features/changes/diffTheme";
 import { useConnection } from "@/features/connection/ConnectionProvider";
 import { Markdown } from "@/features/sessions/Markdown";
 import type { FileContents } from "@/features/workspace/types";
+import { useT } from "@/i18n/i18n";
 import { themedStyles, useColors } from "@/ui/theme";
 
 import { CodeView, type CodeRow } from "./CodeView";
@@ -46,6 +47,7 @@ export function FileScreen({
   path: string;
   worktreePath?: string;
 }) {
+  const t = useT();
   const styles = useStyles();
   const colors = useColors();
   const { command } = useConnection();
@@ -135,13 +137,17 @@ export function FileScreen({
           headerTitle: () => (
             <CodeHeaderTitle name={name}>
               {dir || "/"}
-              {rows ? `  ${rows.length} lines` : ""}
+              {rows
+                ? `  ${rows.length === 1
+                    ? t("files.fileScreen.lines.one", { count: rows.length })
+                    : t("files.fileScreen.lines.other", { count: rows.length })}`
+                : ""}
             </CodeHeaderTitle>
           ),
           headerLeft: () => (
             <HeaderButton
               icon="close"
-              label="Close"
+              label={t("files.fileScreen.close")}
               onPress={() => router.back()}
             />
           ),
@@ -151,14 +157,14 @@ export function FileScreen({
                 {markdown ? (
                   <HeaderButton
                     icon={preview ? "source" : "preview"}
-                    label={preview ? "Show source" : "Show preview"}
+                    label={preview ? t("files.fileScreen.showSource") : t("files.fileScreen.showPreview")}
                     onPress={() => setPreview((previewPreference = !preview))}
                   />
                 ) : null}
                 {rendered ? null : (
                   <HeaderButton
                     icon="wrap"
-                    label={wrap ? "Don't wrap lines" : "Wrap lines"}
+                    label={wrap ? t("files.fileScreen.unwrapLines") : t("files.fileScreen.wrapLines")}
                     on={wrap}
                     onPress={toggleWrap}
                   />

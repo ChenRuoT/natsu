@@ -28,6 +28,7 @@ import Animated, {
   type SharedValue,
 } from "react-native-reanimated";
 
+import { t as tNow, useT } from "@/i18n/i18n";
 import { Icon } from "@/ui/Icon";
 import { themedStyles, useColors } from "@/ui/theme";
 
@@ -63,6 +64,7 @@ type Phase = "preparing" | "recording" | "transcribing" | "done";
 export function DictationBar({ onClose }: { onClose: (words: string | null) => void }) {
   const colors = useColors();
   const styles = useStyles();
+  const t = useT();
   const [phase, setPhase] = useState<Phase>("preparing");
   const stage = useRef<Phase>("preparing");
   const recorder = useRef<AudioRecorder | null>(null);
@@ -92,14 +94,18 @@ export function DictationBar({ onClose }: { onClose: (words: string | null) => v
       // Lets other apps' audio, paused for the recording, play on.
       await endAudioSession();
       const uri = current.uri;
-      if (!uri) throw new Error("Nothing was recorded.");
+      if (!uri) throw new Error(tNow("sessions.dictationBar.nothingRecorded"));
       const words = await transcribe(await new File(uri).arrayBuffer());
       if (stage.current !== "transcribing") return;
       stage.current = "done";
-      if (!words) Alert.alert("No speech heard", "Try again a little closer to the microphone.");
+      if (!words)
+        Alert.alert(
+          tNow("sessions.dictationBar.noSpeechTitle"),
+          tNow("sessions.dictationBar.noSpeechMessage"),
+        );
       close.current(words || null);
     } catch (reason) {
-      fail("Could not transcribe", reason);
+      fail(tNow("sessions.dictationBar.couldNotTranscribe"), reason);
     }
   };
 
@@ -112,13 +118,16 @@ export function DictationBar({ onClose }: { onClose: (words: string | null) => v
       if (!permission.granted) {
         stage.current = "done";
         Alert.alert(
-          "Microphone access",
-          "Natsu needs the microphone to take dictation.",
+          tNow("sessions.dictationBar.microphoneAccessTitle"),
+          tNow("sessions.dictationBar.microphoneAccessMessage"),
           permission.canAskAgain
-            ? [{ text: "OK" }]
+            ? [{ text: tNow("sessions.dictationBar.ok") }]
             : [
-                { text: "Cancel", style: "cancel" },
-                { text: "Open Settings", onPress: () => void Linking.openSettings() },
+                { text: tNow("sessions.dictationBar.cancel"), style: "cancel" },
+                {
+                  text: tNow("sessions.dictationBar.openSettings"),
+                  onPress: () => void Linking.openSettings(),
+                },
               ],
         );
         close.current(null);
@@ -139,7 +148,10 @@ export function DictationBar({ onClose }: { onClose: (words: string | null) => v
       recorder.current = created;
       created.addListener("recordingStatusUpdate", (status) => {
         if (status.hasError || status.mediaServicesDidReset) {
-          fail("Recording interrupted", status.error ?? "The microphone was taken away.");
+          fail(
+            tNow("sessions.dictationBar.recordingInterrupted"),
+            status.error ?? tNow("sessions.dictationBar.microphoneTakenAway"),
+          );
         } else if (status.isFinished) {
           // At the time limit: what was said so far goes in.
           void finish();
@@ -152,7 +164,9 @@ export function DictationBar({ onClose }: { onClose: (words: string | null) => v
       setPhase("recording");
       void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     };
-    start().catch((reason) => fail("Could not start dictation", reason));
+    start().catch((reason) =>
+      fail(tNow("sessions.dictationBar.couldNotStart"), reason),
+    );
 
     return () => {
       stage.current = "done";
@@ -207,7 +221,7 @@ export function DictationBar({ onClose }: { onClose: (words: string | null) => v
     <View style={styles.row}>
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel="Cancel dictation"
+        accessibilityLabel={t("sessions.dictationBar.cancelLabel")}
         hitSlop={4}
         onPress={cancel}
         style={({ pressed }) => [styles.cancel, pressed && styles.pressed]}
@@ -223,14 +237,16 @@ export function DictationBar({ onClose }: { onClose: (words: string | null) => v
           </>
         ) : (
           <Text style={styles.status} numberOfLines={1}>
-            {phase === "transcribing" ? "Transcribing…" : "Starting…"}
+            {phase === "transcribing"
+              ? t("sessions.dictationBar.transcribing")
+              : t("sessions.dictationBar.starting")}
           </Text>
         )}
       </View>
 
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel="Finish dictation"
+        accessibilityLabel={t("sessions.dictationBar.finishLabel")}
         hitSlop={4}
         disabled={phase !== "recording"}
         onPress={() => void finish()}

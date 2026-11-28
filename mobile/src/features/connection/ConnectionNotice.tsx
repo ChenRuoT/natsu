@@ -9,6 +9,7 @@ import Animated, {
 } from "react-native-reanimated";
 
 import { useSessionLayout } from "@/features/sessions/SessionScreen";
+import { useT } from "@/i18n/i18n";
 import { LiquidView } from "@/ui/LiquidView";
 import { withAlpha, themedStyles, useColors } from "@/ui/theme";
 
@@ -50,11 +51,12 @@ export function ReconnectingStatus() {
   const styles = useStyles();
   const offline = useOffline();
   const connection = useConnection();
+  const t = useT();
   if (!offline) return null;
   return (
     // Glass, as the header's buttons are, faintly red.
     <LiquidView
-      accessibilityLabel="Reconnecting to your desktop. Tap to try again now."
+      accessibilityLabel={t("workspace.connectionNotice.reconnectingLabel")}
       // A failed try shows as staying offline.
       onPress={() => void connection.refresh().catch(() => {})}
       pressedScale={1.04}
@@ -63,7 +65,7 @@ export function ReconnectingStatus() {
     >
       <PulsingDot />
       <Text style={styles.statusLabel} numberOfLines={1}>
-        Reconnecting to desktop
+        {t("workspace.connectionNotice.reconnecting")}
       </Text>
     </LiquidView>
   );

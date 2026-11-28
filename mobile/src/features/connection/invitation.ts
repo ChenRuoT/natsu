@@ -1,3 +1,4 @@
+import { t as tNow } from "@/i18n/i18n";
 import type { Desktop, Identity } from "./nativeLink";
 export type Invitation = Omit<Desktop, "deviceId"> & {
   version: number;
@@ -5,15 +6,13 @@ export type Invitation = Omit<Desktop, "deviceId"> & {
   identity: Identity;
 };
 export function parseInvitation(text: string): Invitation {
-  if (text.length > 12_000) throw new Error("This pairing code is too large");
+  if (text.length > 12_000) throw new Error(tNow("workspace.invitation.tooLarge"));
   const url = new URL(text.trim());
   if (url.protocol !== "natsu:" || url.hostname !== "pair")
-    throw new Error(
-      "Scan a Natsu pairing code from desktop Settings → Connections",
-    );
+    throw new Error(tNow("workspace.invitation.scanHint"));
   const code = url.searchParams.get("i");
   if (!code || !/^[A-Za-z0-9_-]+$/.test(code))
-    throw new Error("Invalid pairing code");
+    throw new Error(tNow("workspace.invitation.invalid"));
   const base64 = code.replaceAll("-", "+").replaceAll("_", "/");
   const bytes = atob(base64.padEnd(Math.ceil(base64.length / 4) * 4, "="));
   const invitation = JSON.parse(
@@ -44,10 +43,8 @@ export function parseInvitation(text: string): Invitation {
     typeof invitation.identity?.privateKey !== "string" ||
     typeof invitation.expires !== "number"
   )
-    throw new Error("Invalid pairing code");
+    throw new Error(tNow("workspace.invitation.invalid"));
   if (invitation.expires <= Date.now() / 1000)
-    throw new Error(
-      "This code expired. Choose Pair phone on desktop to make a new one.",
-    );
+    throw new Error(tNow("workspace.invitation.expired"));
   return invitation;
 }

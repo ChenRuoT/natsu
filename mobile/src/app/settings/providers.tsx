@@ -16,6 +16,7 @@ import { SettingsPage, SettingsRow } from "@/features/settings/SettingsUI";
 import { projectForRoute } from "@/features/workspace/routing";
 import type { Harness } from "@/features/workspace/types";
 import { useWorkspace } from "@/features/workspace/WorkspaceProvider";
+import { useT } from "@/i18n/i18n";
 import { Icon } from "@/ui/Icon";
 import { themedStyles, useColors } from "@/ui/theme";
 
@@ -25,6 +26,7 @@ import { themedStyles, useColors } from "@/ui/theme";
 export default function ProvidersScreen() {
   const colors = useColors();
   const styles = useStyles();
+  const t = useT();
   const { projectId } = useLocalSearchParams<{ projectId?: string }>();
   const { projects } = useWorkspace();
   // The desktop lists models for a project: the open one, or the first.
@@ -48,7 +50,7 @@ export default function ProvidersScreen() {
 
   return (
     <SettingsPage>
-      <Text style={styles.heading}>New sessions start with</Text>
+      <Text style={styles.heading}>{t("app.settingsProviders.heading")}</Text>
       <View style={styles.list}>
         {catalog?.harnesses.map((harness, index) => {
           const selected = harness.id === defaults.harness;
@@ -62,7 +64,12 @@ export default function ProvidersScreen() {
                 value={
                   selected
                     ? defaults.models[harness.id]?.name
-                    : `${count} ${count === 1 ? "model" : "models"}`
+                    : t(
+                        count === 1
+                          ? "app.settingsProviders.modelCount.one"
+                          : "app.settingsProviders.modelCount.other",
+                        { count },
+                      )
                 }
                 accessory={
                   selected ? (
@@ -88,8 +95,10 @@ export default function ProvidersScreen() {
 
       <Text style={styles.note}>
         {defaults.harness
-          ? "A model keeps its effort and other settings. Sessions you have already started keep their own."
-          : `New sessions use the provider and model set on the desktop${desktopModel ? `, ${desktopModel}` : ""}.`}
+          ? t("app.settingsProviders.chosenNote")
+          : desktopModel
+            ? t("app.settingsProviders.desktopNoteWithModel", { model: desktopModel })
+            : t("app.settingsProviders.desktopNote")}
       </Text>
 
       {/* Only once a provider is picked: until then the desktop's is in use. */}
@@ -100,7 +109,7 @@ export default function ProvidersScreen() {
           style={({ pressed }) => [styles.button, pressed && styles.pressed]}
         >
           <Icon name="computer" size={18} color={colors.content} />
-          <Text style={styles.buttonLabel}>Use desktop default</Text>
+          <Text style={styles.buttonLabel}>{t("app.settingsProviders.useDesktopDefault")}</Text>
         </Pressable>
       ) : null}
 

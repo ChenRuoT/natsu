@@ -2,6 +2,8 @@ import { router, useLocalSearchParams, useNavigationContainerRef } from "expo-ro
 import { Fragment, useState } from "react";
 import { Alert, Linking, StyleSheet, Switch, Text, View } from "react-native";
 
+import { useT } from "@/i18n/i18n";
+import { richText } from "@/i18n/rich";
 import { useConnection } from "@/features/connection/ConnectionProvider";
 import { MONOS_ENABLED } from "@/features/connection/selection";
 import { useNotificationsBlocked } from "@/features/notifications/SessionNotifications";
@@ -33,6 +35,7 @@ const CATEGORY_ICONS: Record<NotificationCategory, IconName> = {
 export default function SettingsScreen() {
   const colors = useColors();
   const styles = useStyles();
+  const t = useT();
   // The project open under settings, whose chat background it sets.
   const { projectId } = useLocalSearchParams<{ projectId?: string }>();
   const project = projectForRoute(useWorkspace().projects, projectId);
@@ -64,19 +67,19 @@ export default function SettingsScreen() {
   const selected = connection.selection;
   const disconnect = () =>
     Alert.alert(
-      "Disconnect desktop?",
-      "You can pair again by scanning a new code. Your workspace choices will be remembered.",
+      t("app.settingsIndex.disconnectTitle"),
+      t("app.settingsIndex.disconnectMessage"),
       [
-        { text: "Cancel", style: "cancel" },
+        { text: t("app.settingsIndex.cancel"), style: "cancel" },
         {
-          text: "Disconnect",
+          text: t("app.settingsIndex.disconnect"),
           style: "destructive",
           onPress: () => {
             void connection
               .disconnect()
               .then(() => router.replace("/"))
               .catch((reason) =>
-                Alert.alert("Could not disconnect", String(reason)),
+                Alert.alert(t("app.settingsIndex.disconnectFailedTitle"), String(reason)),
               );
           },
         },
@@ -96,20 +99,20 @@ export default function SettingsScreen() {
           </Text>
           <Text style={styles.desktopStatus}>
             {connection.connected
-              ? "Connected to desktop"
-              : "Desktop unavailable. Your saved workspace stays here."}
+              ? t("app.settingsIndex.desktopConnected")
+              : t("app.settingsIndex.desktopUnavailable")}
           </Text>
         </View>
       </View>
 
-      <Text style={styles.heading}>Notifications</Text>
+      <Text style={styles.heading}>{t("app.settingsIndex.notificationsHeading")}</Text>
       <View style={styles.card}>
         {NOTIFICATION_CATEGORIES.map((category, index) => (
           <Fragment key={category.id}>
             {index > 0 ? <View style={styles.divider} /> : null}
             <SettingsRow
               icon={CATEGORY_ICONS[category.id]}
-              label={category.label}
+              label={t(category.labelKey)}
               onPress={() =>
                 notifications.setEnabled(
                   category.id,
@@ -131,17 +134,29 @@ export default function SettingsScreen() {
       </View>
       {blocked ? (
         <Text style={styles.note} onPress={() => void Linking.openSettings()}>
-          Notifications are off for this app in system settings.{" "}
-          <Text style={{ color: colors.accent }}>Open Settings</Text>
+          {richText(t("app.settingsIndex.blockedNote"), {
+            link: (chunk) => <Text style={{ color: colors.accent }}>{chunk}</Text>,
+          })}
         </Text>
       ) : null}
 
-      <Text style={styles.heading}>Preferences</Text>
+      <Text style={styles.heading}>{t("app.settingsIndex.preferencesHeading")}</Text>
       <View style={styles.card}>
         <SettingsRow
           icon="appearance"
-          label="Appearance"
-          value={appearance === "system" ? theme : `${theme}, ${appearance}`}
+          label={t("app.settingsIndex.appearanceLabel")}
+          value={
+            appearance === "system"
+              ? theme
+              : t("app.settingsIndex.themeAndScheme", {
+                  theme,
+                  scheme: t(
+                    appearance === "light"
+                      ? "app.settingsIndex.schemeLight"
+                      : "app.settingsIndex.schemeDark",
+                  ),
+                })
+          }
           onPress={() =>
             router.push({ pathname: "/settings/appearance", params })
           }
@@ -149,8 +164,8 @@ export default function SettingsScreen() {
         <View style={styles.divider} />
         <SettingsRow
           icon="robot"
-          label="Providers"
-          value={defaultModel?.name ?? "Desktop default"}
+          label={t("app.settingsIndex.providersLabel")}
+          value={defaultModel?.name ?? t("app.settingsIndex.desktopDefault")}
           onPress={() =>
             router.push({ pathname: "/settings/providers", params })
           }
@@ -158,9 +173,11 @@ export default function SettingsScreen() {
         <View style={styles.divider} />
         <SettingsRow
           icon="lock"
-          label="Permissions"
+          label={t("app.settingsIndex.permissionsLabel")}
           value={
-            defaultAccess ? accessMode(defaultAccess).label : "Desktop default"
+            defaultAccess
+              ? t(accessMode(defaultAccess).labelKey)
+              : t("app.settingsIndex.desktopDefault")
           }
           onPress={() =>
             router.push({ pathname: "/settings/permissions", params })
@@ -168,15 +185,15 @@ export default function SettingsScreen() {
         />
       </View>
 
-      <Text style={styles.heading}>New sessions</Text>
+      <Text style={styles.heading}>{t("app.settingsIndex.newSessionsHeading")}</Text>
       <View style={styles.card}>
         <SettingsRow
           icon="chat"
-          label="Open after starting"
+          label={t("app.settingsIndex.openAfterStartingLabel")}
           onPress={() => setOpenAfterStarting(!openAfterStarting)}
           accessory={
             <Switch
-              accessibilityLabel="Open sessions after starting"
+              accessibilityLabel={t("app.settingsIndex.openAfterStartingA11y")}
               value={openAfterStarting}
               onValueChange={setOpenAfterStarting}
               trackColor={{ true: colors.accent }}
@@ -185,20 +202,20 @@ export default function SettingsScreen() {
         />
       </View>
       <Text style={styles.note}>
-        Turn off to stay on the new session screen and start more sessions.
+        {t("app.settingsIndex.openAfterStartingNote")}
       </Text>
 
       {MONOS_ENABLED ? (
         <>
-          <Text style={styles.heading}>Layout</Text>
+          <Text style={styles.heading}>{t("app.settingsIndex.layoutHeading")}</Text>
           <View style={styles.card}>
             <SettingsRow
               icon="chat"
-              label="Monos only"
+              label={t("app.settingsIndex.monosOnly")}
               onPress={() => changeLayout(!(picked ?? monoOnly))}
               accessory={
                 <Switch
-                  accessibilityLabel="Monos only"
+                  accessibilityLabel={t("app.settingsIndex.monosOnly")}
                   value={picked ?? monoOnly}
                   onValueChange={changeLayout}
                   trackColor={{ true: colors.accent }}
@@ -207,16 +224,20 @@ export default function SettingsScreen() {
             />
           </View>
           <Text style={styles.note}>
-            A list of your Monos and their chats, with no sidebar or projects.
+            {t("app.settingsIndex.monosOnlyNote")}
           </Text>
         </>
       ) : null}
 
-      <Text style={styles.heading}>Workspace</Text>
+      <Text style={styles.heading}>{t("app.settingsIndex.workspaceHeading")}</Text>
       <View style={styles.card}>
         <SettingsRow
           icon="folder"
-          label={MONOS_ENABLED ? "Projects and monos" : "Projects"}
+          label={
+            MONOS_ENABLED
+              ? t("app.settingsIndex.projectsAndMonos")
+              : t("app.settingsIndex.projects")
+          }
           value={String(
             (selected?.projectIds.length ?? 0) +
               (MONOS_ENABLED ? (selected?.monoIds.length ?? 0) : 0),
@@ -226,7 +247,7 @@ export default function SettingsScreen() {
         <View style={styles.divider} />
         <SettingsRow
           icon="computer"
-          label="Reconnect"
+          label={t("app.settingsIndex.reconnect")}
           showChevron={false}
           onPress={() => void connection.refresh()}
         />
@@ -235,7 +256,7 @@ export default function SettingsScreen() {
       <View style={[styles.card, styles.lastCard]}>
         <SettingsRow
           icon="computerOff"
-          label="Disconnect desktop"
+          label={t("app.settingsIndex.disconnectDesktop")}
           showChevron={false}
           destructive
           onPress={disconnect}

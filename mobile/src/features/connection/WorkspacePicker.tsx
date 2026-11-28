@@ -19,6 +19,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MonoMascot } from "@/features/mascots/PixelMascot";
 import { ProjectMascot } from "@/features/mascots/ProjectMascot";
 import { SettingsRow } from "@/features/settings/SettingsUI";
+import { useT } from "@/i18n/i18n";
 import { GradualBlur } from "@/ui/GradualBlur";
 import { Icon } from "@/ui/Icon";
 import { LiquidView } from "@/ui/LiquidView";
@@ -47,6 +48,7 @@ export function WorkspacePicker({
 }) {
   const colors = useColors();
   const styles = useStyles();
+  const t = useT();
   const connection = useConnection();
   const insets = useSafeAreaInsets();
   const androidHeader = editing && Platform.OS === "android";
@@ -104,16 +106,17 @@ export function WorkspacePicker({
         {/* In Settings the header titles it, as on the other pages. */}
         {editing ? null : (
           <>
-            <Text style={styles.title}>Your mobile{"\n"}workspace</Text>
+            <Text style={styles.title}>{t("workspace.workspacePicker.title")}</Text>
             <Text style={styles.subtitle}>
-              Pick the {MONOS_ENABLED ? "projects and monos" : "projects"} you
-              want here.{"\n"}You can change this anytime in Settings.
+              {MONOS_ENABLED
+                ? t("workspace.workspacePicker.subtitleMonos")
+                : t("workspace.workspacePicker.subtitleProjects")}
             </Text>
           </>
         )}
 
         {monos.length ? (
-          <Section title="Monos" editing={editing}>
+          <Section title={t("workspace.workspacePicker.sectionMonos")} editing={editing}>
             {monos.map((mono) => (
               <PickCard
                 key={mono.id}
@@ -134,7 +137,7 @@ export function WorkspacePicker({
           </Section>
         ) : null}
         {connection.catalog.projects.length ? (
-          <Section title="Projects" editing={editing}>
+          <Section title={t("workspace.workspacePicker.sectionProjects")} editing={editing}>
             {connection.catalog.projects.map((project) => (
               <PickCard
                 key={project.id}
@@ -157,7 +160,7 @@ export function WorkspacePicker({
         {empty ? (
           connection.connected ? (
             <Text style={styles.empty}>
-              Open a project or create a mono on your desktop, then refresh.
+              {t("workspace.workspacePicker.empty")}
             </Text>
           ) : (
             <ActivityIndicator color={colors.content} style={styles.loading} />
@@ -180,7 +183,7 @@ export function WorkspacePicker({
         <LiquidView
           onPress={() => void save()}
           disabled={disabled}
-          accessibilityLabel="Save"
+          accessibilityLabel={t("workspace.workspacePicker.save")}
           tintColor={colors.inverseSurface}
           style={{ opacity: disabled ? 0.5 : 1 }}
           innerStyle={styles.save}
@@ -190,23 +193,23 @@ export function WorkspacePicker({
           ) : (
             <Text style={styles.saveLabel}>
               {editing
-                ? "Save"
+                ? t("workspace.workspacePicker.save")
                 : count
-                  ? "Continue with " +
-                    count +
-                    (count === 1 ? " item" : " items")
-                  : "Choose later"}
+                  ? count === 1
+                    ? t("workspace.workspacePicker.continueWith.one", { count })
+                    : t("workspace.workspacePicker.continueWith.other", { count })
+                  : t("workspace.workspacePicker.chooseLater")}
             </Text>
           )}
         </LiquidView>
         {!connection.connected || !count ? (
           <Pressable hitSlop={8} onPress={() => void connection.refresh()}>
-            <Text style={styles.link}>Refresh desktop</Text>
+            <Text style={styles.link}>{t("workspace.workspacePicker.refreshDesktop")}</Text>
           </Pressable>
         ) : null}
         {editing ? null : (
           <Pressable hitSlop={8} onPress={() => void connection.disconnect()}>
-            <Text style={styles.link}>Connect another desktop</Text>
+            <Text style={styles.link}>{t("workspace.workspacePicker.connectAnother")}</Text>
           </Pressable>
         )}
       </View>

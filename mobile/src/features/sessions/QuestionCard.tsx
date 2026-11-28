@@ -12,6 +12,7 @@ import {
 import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
 import type { DisplayedQuestionPrompt, Question, QuestionReply } from "@/features/workspace/types";
 import { useWorkspace } from "@/features/workspace/WorkspaceProvider";
+import { t as tNow, useT, type TFunction } from "@/i18n/i18n";
 import { Icon } from "@/ui/Icon";
 import { LiquidView } from "@/ui/LiquidView";
 import { radii, themedStyles, useColors, useScheme } from "@/ui/theme";
@@ -50,6 +51,7 @@ function QuestionForm({ conversationId, prompt }: {
   const colors = useColors();
   const { height } = useWindowDimensions();
   const { answerQuestion, keepQuestionOpen } = useWorkspace();
+  const t = useT();
   const kept = useRef<{ conversationId: string; requestId: number } | null>(null);
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string[]>>({});
@@ -70,7 +72,7 @@ function QuestionForm({ conversationId, prompt }: {
     try {
       await answerQuestion(conversationId, prompt.requestId, buildReply(questions, nextAnswers, nextCustom));
     } catch (reason) {
-      Alert.alert("Answer not sent", reason instanceof Error ? reason.message : String(reason));
+      Alert.alert(tNow("sessions.questionCard.answerNotSent"), reason instanceof Error ? reason.message : String(reason));
     } finally {
       setSending(false);
     }
@@ -91,8 +93,8 @@ function QuestionForm({ conversationId, prompt }: {
     else setStep(index + 1);
   };
 
-  const title = question.header?.trim() || prompt.title?.trim() || "Question";
-  const options = displayOptions(question);
+  const title = question.header?.trim() || prompt.title?.trim() || t("sessions.questionCard.defaultTitle");
+  const options = displayOptions(question, t);
   const selected = answers[question.id] ?? [];
   const customId = customOptionId(question);
   const customSelected = selected.some((id) => isCustomId(question, id));
@@ -148,10 +150,10 @@ function QuestionForm({ conversationId, prompt }: {
         </Text>
         {total > 1 ? (
           <Text style={styles.meta}>
-            {index + 1} of {total}
+            {t("sessions.questionCard.progress", { current: index + 1, total })}
           </Text>
         ) : null}
-        <TextButton label="Skip" onPress={skip} disabled={sending} />
+        <TextButton label={t("sessions.questionCard.skip")} onPress={skip} disabled={sending} />
       </View>
       <ScrollView
         style={[styles.body, { maxHeight: Math.min(BODY_MAX, height * BODY_SHARE) }]}
@@ -159,7 +161,7 @@ function QuestionForm({ conversationId, prompt }: {
         keyboardShouldPersistTaps="handled"
       >
         <Text style={styles.prompt}>{question.prompt}</Text>
-        {question.multiSelect ? <Text style={styles.meta}>Select all that apply</Text> : null}
+        {question.multiSelect ? <Text style={styles.meta}>{t("sessions.questionCard.selectAll")}</Text> : null}
         {options.length === 0 && question.allowCustom ? (
           customInput
         ) : (
@@ -205,12 +207,14 @@ function QuestionForm({ conversationId, prompt }: {
         {prompt.autoResolveAt != null ? (
           <Text style={[styles.meta, styles.countdown]} numberOfLines={1}>
             {prompt.autoResolveAt - now > 60_000
-              ? "Optional question"
-              : `Continues without an answer in ${Math.max(0, Math.ceil((prompt.autoResolveAt - now) / 1000))}s`}
+              ? t("sessions.questionCard.optional")
+              : t("sessions.questionCard.autoResolve", {
+                  seconds: Math.max(0, Math.ceil((prompt.autoResolveAt - now) / 1000)),
+                })}
           </Text>
         ) : null}
         {index > 0 ? (
-          <TextButton label="Back" onPress={() => setStep(index - 1)} disabled={sending} />
+          <TextButton label={t("sessions.questionCard.back")} onPress={() => setStep(index - 1)} disabled={sending} />
         ) : null}
         <Pressable
           accessibilityRole="button"
@@ -223,7 +227,9 @@ function QuestionForm({ conversationId, prompt }: {
             pressed && styles.pressed,
           ]}
         >
-          <Text style={styles.continueLabel}>{last ? "Send" : "Continue"}</Text>
+          <Text style={styles.continueLabel}>
+            {last ? t("sessions.questionCard.send") : t("sessions.questionCard.continue")}
+          </Text>
         </Pressable>
       </View>
     </Animated.View>
@@ -234,11 +240,12 @@ function CustomInput({ value, onChange }: { value: string; onChange: (value: str
   const styles = useStyles();
   const colors = useColors();
   const scheme = useScheme();
+  const t = useT();
   return (
     <TextInput
       value={value}
       onChangeText={onChange}
-      placeholder="Type your answer"
+      placeholder={t("sessions.questionCard.customPlaceholder")}
       placeholderTextColor={colors.muted}
       keyboardAppearance={scheme}
       cursorColor={colors.accent}
@@ -288,10 +295,16 @@ function isOther(option: { id: string; label: string }) {
   return option.id === CUSTOM_OPTION_ID || /^other$/i.test(option.label.trim());
 }
 
-function displayOptions(question: Question): Question["options"] {
+function displayOptions(
+  question: Question,
+  t: TFunction = tNow,
+): Question["options"] {
   if (question.options.length === 0) return question.options;
   if (question.options.some(isOther) || !question.allowCustom) return question.options;
-  return [...question.options, { id: CUSTOM_OPTION_ID, label: "Other" }];
+  return [
+    ...question.options,
+    { id: CUSTOM_OPTION_ID, label: t("sessions.questionCard.other") },
+  ];
 }
 
 function customOptionId(question: Question) {

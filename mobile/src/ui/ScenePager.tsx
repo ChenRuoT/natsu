@@ -33,6 +33,8 @@ import { useContentWidth } from "./ContentPane";
 
 import { LinearGradient } from "expo-linear-gradient";
 
+import { useT } from "@/i18n/i18n";
+
 import { useColors, useScheme } from "./theme";
 
 // The Expo Router drawer's motion (react-native-drawer-layout): its spring and
@@ -233,6 +235,7 @@ export function ScenePagerHost({
   drawer?: ReactNode;
 }) {
   const colors = useColors();
+  const t = useT();
   const width = useContentWidth();
   const drawerWidth = Math.min(Math.round(width * 0.82), 330);
   const progress = useSharedValue(0);
@@ -554,7 +557,7 @@ export function ScenePagerHost({
                 />
                 {open ? (
                   <Pressable
-                    accessibilityLabel="Close sidebar"
+                    accessibilityLabel={t("app.scenePager.closeSidebar")}
                     style={StyleSheet.absoluteFill}
                     onPress={actions.close}
                   />

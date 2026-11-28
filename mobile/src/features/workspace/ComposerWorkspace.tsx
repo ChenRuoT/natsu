@@ -1,5 +1,6 @@
 import { Pressable, Text, View } from "react-native";
 
+import { useT } from "@/i18n/i18n";
 import { Icon } from "@/ui/Icon";
 import { themedStyles, useColors } from "@/ui/theme";
 
@@ -16,6 +17,7 @@ export function ComposerWorkspace({
   onChange: (value: Workspace) => void;
   disabled?: boolean;
 }) {
+  const t = useT();
   const styles = useStyles();
   const colors = useColors();
   const current = value.mode === "current";
@@ -23,8 +25,8 @@ export function ComposerWorkspace({
     value.mode === "existing"
       ? value.worktree.name
       : current
-        ? "Current checkout"
-        : "New worktree";
+        ? t("workspace.composerWorkspace.currentCheckout")
+        : t("workspace.composerWorkspace.newWorktree");
   const content = (
     <>
       <Icon
@@ -48,8 +50,8 @@ export function ComposerWorkspace({
       accessibilityLabel={label}
       accessibilityHint={
         current
-          ? "Start this session in a new worktree"
-          : "Start this session in the current checkout"
+          ? t("workspace.composerWorkspace.newWorktreeHint")
+          : t("workspace.composerWorkspace.currentCheckoutHint")
       }
       disabled={disabled}
       hitSlop={6}

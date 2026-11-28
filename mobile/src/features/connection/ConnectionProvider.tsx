@@ -29,6 +29,7 @@ import {
   type Desktop,
   type Identity,
 } from "./nativeLink";
+import { t as tNow } from "@/i18n/i18n";
 import { normalizeSelection, type MobileSelection } from "./selection";
 
 export type Catalog = {
@@ -102,7 +103,7 @@ export function ConnectionProvider({ children }: { children: ReactNode }) {
         if (saved) setCatalog(JSON.parse(saved));
       } catch {
         if (!disposed)
-          setError("Could not restore the desktop connection. Connect again.");
+          setError(tNow("workspace.connectionProvider.restoreFailed"));
       } finally {
         if (!disposed) setRestoring(false);
       }
@@ -124,7 +125,7 @@ export function ConnectionProvider({ children }: { children: ReactNode }) {
         !Array.isArray(next.monos) ||
         !Array.isArray(next.sessions)
       )
-        throw new Error("Desktop sent an invalid workspace");
+        throw new Error(tNow("workspace.connectionProvider.invalidWorkspace"));
       if (next.addresses?.length) {
         value.desktop.addresses = next.addresses;
         await Storage.setItem(PAIRING, JSON.stringify(value.desktop));
@@ -259,7 +260,7 @@ export function ConnectionProvider({ children }: { children: ReactNode }) {
       id?: string,
     ): Promise<T> => {
       const value = active.current;
-      if (!value) throw new Error("Connect your desktop first");
+      if (!value) throw new Error(tNow("workspace.connectionProvider.connectFirst"));
       return request<T>(value, method, params, id);
     },
     [],

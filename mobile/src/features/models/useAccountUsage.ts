@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { useConnection } from "@/features/connection/ConnectionProvider";
+import { t as tNow } from "@/i18n/i18n";
 
 export type AccountUsageSnapshot = {
   status: {
@@ -86,8 +87,8 @@ export function useAccountUsage(
               accounts: previous?.key === key ? previous.accounts : {},
               error:
                 message === "Unsupported mobile operation"
-                  ? "Update the desktop app to show account usage."
-                  : "Could not refresh usage. Try again.",
+                  ? tNow("app.accountUsage.updateDesktop")
+                  : tNow("app.accountUsage.refreshFailed"),
               refreshing: false,
             }));
           },

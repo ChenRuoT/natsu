@@ -2,6 +2,7 @@ import { router } from "expo-router";
 import { Fragment } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
+import { t as tNow, useT, type TFunction } from "@/i18n/i18n";
 import { Icon } from "@/ui/Icon";
 import { themedStyles, useColors } from "@/ui/theme";
 
@@ -10,12 +11,14 @@ import type { MonoProfile } from "./monoProfile";
 type MonoDocument = MonoProfile["documents"][number];
 
 /** How long ago, as a chat list says it: now, then minutes, hours, days. */
-export function ago(ms: number) {
+export function ago(ms: number, t: TFunction = tNow) {
   const seconds = Math.max(0, (Date.now() - ms) / 1000);
-  if (seconds < 60) return "now";
-  if (seconds < 3600) return `${Math.floor(seconds / 60)}m`;
-  if (seconds < 86400) return `${Math.floor(seconds / 3600)}h`;
-  return `${Math.floor(seconds / 86400)}d`;
+  if (seconds < 60) return t("workspace.monoDocuments.agoNow");
+  if (seconds < 3600)
+    return t("workspace.monoDocuments.agoMinutes", { count: Math.floor(seconds / 60) });
+  if (seconds < 86400)
+    return t("workspace.monoDocuments.agoHours", { count: Math.floor(seconds / 3600) });
+  return t("workspace.monoDocuments.agoDays", { count: Math.floor(seconds / 86400) });
 }
 
 /**
@@ -32,9 +35,11 @@ export function MonoDocumentRows({
   documents: MonoDocument[];
   limit?: number;
 }) {
+  const t = useT();
   const styles = useStyles();
   const colors = useColors();
-  if (!documents.length) return <Text style={styles.empty}>No documents yet.</Text>;
+  if (!documents.length)
+    return <Text style={styles.empty}>{t("workspace.monoDocuments.empty")}</Text>;
   const newest = [...documents].sort((a, b) => b.updatedAt - a.updatedAt);
   const shown = limit === undefined ? newest : newest.slice(0, limit);
   const more = newest.length - shown.length;
@@ -45,7 +50,7 @@ export function MonoDocumentRows({
           {index > 0 ? <View style={styles.divider} /> : null}
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel={`Open ${document.title}`}
+            accessibilityLabel={t("workspace.monoDocuments.openLabel", { title: document.title })}
             onPress={() =>
               router.push({
                 pathname: "/mono-profile/[monoId]/document",
@@ -64,7 +69,7 @@ export function MonoDocumentRows({
             <Text style={styles.title} numberOfLines={1}>
               {document.title}
             </Text>
-            <Text style={styles.detail}>{ago(document.updatedAt)}</Text>
+            <Text style={styles.detail}>{ago(document.updatedAt, t)}</Text>
           </Pressable>
         </Fragment>
       ))}
@@ -73,7 +78,7 @@ export function MonoDocumentRows({
           <View style={styles.divider} />
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel={`See all ${newest.length} documents`}
+            accessibilityLabel={t("workspace.monoDocuments.seeAllLabel", { count: newest.length })}
             onPress={() =>
               router.push({ pathname: "/mono-profile/[monoId]/documents", params: { monoId } })
             }
@@ -82,7 +87,7 @@ export function MonoDocumentRows({
             <View style={styles.icon}>
               <Icon name="list" size={18} color={colors.accent} />
             </View>
-            <Text style={[styles.title, styles.more]}>See all</Text>
+            <Text style={[styles.title, styles.more]}>{t("workspace.monoDocuments.seeAll")}</Text>
             <Text style={styles.detail}>{newest.length}</Text>
             <Icon name="chevronRight" size={16} color={colors.muted} />
           </Pressable>

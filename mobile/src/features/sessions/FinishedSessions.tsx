@@ -15,6 +15,7 @@ import Animated, {
 import { relativeTime } from "@/features/workspace/relativeTime";
 import type { SessionSummary } from "@/features/workspace/types";
 import { useWorkspace } from "@/features/workspace/WorkspaceProvider";
+import { useT } from "@/i18n/i18n";
 import { Icon } from "@/ui/Icon";
 import {
   GlassPresence,
@@ -66,6 +67,7 @@ export function FinishedSessions({
   const styles = useStyles();
   const colors = useColors();
   const { rememberSession, edited } = useWorkspace();
+  const t = useT();
   const [open, setOpen] = useState(false);
   // As deleted or renamed here, ahead of the desktop.
   const entries = useMemo(
@@ -135,10 +137,10 @@ export function FinishedSessions({
           style={[styles.header, headerStyle]}
           pointerEvents={open ? "box-none" : "none"}
         >
-          <Text style={styles.headerLabel}>Finished</Text>
+          <Text style={styles.headerLabel}>{t("sessions.finishedSessions.header")}</Text>
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel="Clear finished sessions"
+            accessibilityLabel={t("sessions.finishedSessions.clearAll")}
             hitSlop={8}
             onPress={() => {
               void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -146,11 +148,11 @@ export function FinishedSessions({
             }}
             style={({ pressed }) => [styles.clear, pressed && styles.pressed]}
           >
-            <Text style={styles.clearLabel}>Clear</Text>
+            <Text style={styles.clearLabel}>{t("sessions.finishedSessions.clear")}</Text>
           </Pressable>
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel="Stack finished sessions"
+            accessibilityLabel={t("sessions.finishedSessions.stack")}
             hitSlop={8}
             onPress={() => setOpen(false)}
             style={({ pressed }) => [styles.clear, pressed && styles.pressed]}
@@ -220,6 +222,7 @@ function Card({
   const styles = useStyles();
   const colors = useColors();
   const { session } = entry;
+  const t = useT();
   // Springs to its new place as cards land on top of it or leave.
   const slot = useSharedValue(index);
   useEffect(() => {
@@ -271,10 +274,10 @@ function Card({
           accessibilityRole="button"
           accessibilityLabel={
             !open && count > 1
-              ? `${count} finished sessions. Show them`
-              : `${session.title}, finished. Open`
+              ? t("sessions.finishedSessions.stackedLabel", { count })
+              : t("sessions.finishedSessions.cardLabel", { title: session.title })
           }
-          accessibilityActions={[{ name: "longpress", label: "Put away" }]}
+          accessibilityActions={[{ name: "longpress", label: t("sessions.finishedSessions.putAway") }]}
           onAccessibilityAction={({ nativeEvent }) => {
             if (nativeEvent.actionName === "longpress") onLongPress();
           }}

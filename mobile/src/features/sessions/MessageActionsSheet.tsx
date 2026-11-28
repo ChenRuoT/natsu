@@ -29,6 +29,7 @@ import {
 import * as Haptics from "expo-haptics";
 import { Fragment, useRef, useState } from "react";
 
+import { useT } from "@/i18n/i18n";
 import { useColors, withAlpha } from "@/ui/theme";
 
 /** Reactions offered on a Mono's message, two rows of six as Messages lays
@@ -73,6 +74,7 @@ export function MessageActionsSheet({
   const [held, setHeld] = useState(message);
   if (message && message !== held) setHeld(message);
   const unread = held?.role === "agent" && onMarkUnread;
+  const t = useT();
   const pick = (action: () => void) => {
     after.current = action;
     onDismiss();
@@ -112,16 +114,16 @@ export function MessageActionsSheet({
                   </Section>
                 ) : null}
                 <Section>
-                  <Row symbol="arrowshape.turn.up.left" label="Reply" onPress={() => pick(() => onReply(held))} />
+                  <Row symbol="arrowshape.turn.up.left" label={t("sessions.messageActionsSheet.reply")} onPress={() => pick(() => onReply(held))} />
                   {unread ? (
-                    <Row symbol="message.badge" label="Mark as unread" onPress={() => pick(onMarkUnread)} />
+                    <Row symbol="message.badge" label={t("sessions.messageActionsSheet.markUnread")} onPress={() => pick(onMarkUnread)} />
                   ) : null}
                 </Section>
                 <Section>
-                  <Row symbol="doc.on.doc" label="Copy" onPress={() => pick(() => onCopy(held))} />
+                  <Row symbol="doc.on.doc" label={t("sessions.messageActionsSheet.copy")} onPress={() => pick(() => onCopy(held))} />
                   <Row
                     symbol="character.cursor.ibeam"
-                    label="Select Text"
+                    label={t("sessions.messageActionsSheet.selectText")}
                     onPress={() => pick(() => onSelect(held))}
                   />
                 </Section>

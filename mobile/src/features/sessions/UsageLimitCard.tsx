@@ -3,6 +3,7 @@ import { Pressable, Text, View } from "react-native";
 import { useConnection } from "@/features/connection/ConnectionProvider";
 import type { UsageLimitState } from "@/features/workspace/types";
 import { useWorkspace } from "@/features/workspace/WorkspaceProvider";
+import { useT } from "@/i18n/i18n";
 import { themedStyles } from "@/ui/theme";
 
 /** Eligibility, reset wording and scheduling belong to the desktop. */
@@ -14,6 +15,7 @@ export function UsageLimitCard({
   state: UsageLimitState;
 }) {
   const styles = useStyles();
+  const t = useT();
   const { connected } = useConnection();
   const { recoverUsage } = useWorkspace();
   const pending = useRef(false);
@@ -36,19 +38,19 @@ export function UsageLimitCard({
   const disabled = sending || !connected;
   return (
     <View style={styles.card} accessibilityLiveRegion="polite">
-      <Text style={styles.title}>Usage limit reached</Text>
+      <Text style={styles.title}>{t("sessions.usageLimitCard.title")}</Text>
       <Text style={styles.text}>
-        Your conversation is saved. {state.resetLabel}
+        {t("sessions.usageLimitCard.saved", { resetLabel: state.resetLabel })}
       </Text>
       <Text style={styles.hint}>{state.limitation}</Text>
       {!connected ? (
         <Text style={styles.hint}>
-          Reconnect to desktop to change continuation settings.
+          {t("sessions.usageLimitCard.reconnectHint")}
         </Text>
       ) : null}
       {error ? (
         <Text style={styles.error}>
-          {error} Try again using the controls below.
+          {t("sessions.usageLimitCard.errorRetry", { error })}
         </Text>
       ) : null}
       <View style={styles.controls}>
@@ -58,7 +60,11 @@ export function UsageLimitCard({
           onPress={() => void run()}
           style={disabled || !state.canResume ? styles.dimmed : undefined}
         >
-          <Text style={styles.action}>{sending ? "Updating…" : "Resume"}</Text>
+          <Text style={styles.action}>
+            {sending
+              ? t("sessions.usageLimitCard.updating")
+              : t("sessions.usageLimitCard.resume")}
+          </Text>
         </Pressable>
         <Pressable
           accessibilityRole="switch"
@@ -72,8 +78,8 @@ export function UsageLimitCard({
         >
           <Text style={styles.action}>
             {state.resumeAtReset
-              ? "Cancel automatic resume"
-              : "Resume at reset"}
+              ? t("sessions.usageLimitCard.cancelAutoResume")
+              : t("sessions.usageLimitCard.resumeAtReset")}
           </Text>
         </Pressable>
       </View>

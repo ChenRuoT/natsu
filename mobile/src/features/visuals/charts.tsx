@@ -5,6 +5,7 @@ import { useState, type ReactNode } from "react";
 import { type LayoutChangeEvent, StyleSheet, Text, View } from "react-native";
 import Svg, { G, Path, Rect, Text as SvgText } from "react-native-svg";
 
+import { useT } from "@/i18n/i18n";
 import { useColors, useScheme, withAlpha } from "@/ui/theme";
 
 import { CELL, center, cells, inked, step } from "./dither";
@@ -629,6 +630,7 @@ export function Progress({
  * the accent, denser the busier it was. Day by day from a Sunday.
  */
 export function ContributionGraph({ levels }: { levels: number[] }) {
+  const t = useT();
   const colors = useColors();
   const axis = useAxis();
   const TONES = [0, 0.25, 0.5, 0.75, 1];
@@ -681,11 +683,11 @@ export function ContributionGraph({ levels }: { levels: number[] }) {
           <Svg width={width} height={height}>
             <Cells paths={paths} x={GUTTER} y={MONTHS} />
             {[
-              [1, "Mon"],
-              [3, "Wed"],
-              [5, "Fri"],
+              [1, t("workspace.charts.weekdayMon")],
+              [3, t("workspace.charts.weekdayWed")],
+              [5, t("workspace.charts.weekdayFri")],
             ].map(([r, name]) => (
-              <SvgText key={name} {...axis} x={0} y={MONTHS + (r as number) * pitch + (SQUARE * CELL) / 2 + 3.5}>
+              <SvgText key={r} {...axis} x={0} y={MONTHS + (r as number) * pitch + (SQUARE * CELL) / 2 + 3.5}>
                 {name}
               </SvgText>
             ))}

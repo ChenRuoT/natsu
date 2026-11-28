@@ -5,6 +5,7 @@ import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 import { Markdown } from "@/features/sessions/Markdown";
 import { SettingsPage } from "@/features/settings/SettingsUI";
 import { useMonoProfile } from "@/features/workspace/monoProfile";
+import { useT, type TFunction } from "@/i18n/i18n";
 import { radii, themedStyles, useColors } from "@/ui/theme";
 
 // A habit, pushed inside a Mono's profile as the desktop opens it beside the
@@ -15,10 +16,11 @@ export default function HabitScreen() {
   const { profile, error, refreshing, refresh } = useMonoProfile(monoId);
   const styles = useStyles();
   const colors = useColors();
+  const t = useT();
   const habit = profile?.habits.find((h) => h.id === habitId);
   return (
     <SettingsPage onRefresh={refresh} refreshing={refreshing}>
-      <Stack.Screen options={{ title: habit?.name ?? "Habit" }} />
+      <Stack.Screen options={{ title: habit?.name ?? t("app.monoProfileHabit.fallbackTitle") }} />
       {!profile ? (
         error ? (
           <Text style={styles.note}>{error}</Text>
@@ -26,28 +28,31 @@ export default function HabitScreen() {
           <ActivityIndicator color={colors.muted} style={styles.loading} />
         )
       ) : !habit ? (
-        <Text style={styles.note}>This habit is no longer there.</Text>
+        <Text style={styles.note}>{t("app.monoProfileHabit.gone")}</Text>
       ) : (
         <>
           <View style={styles.card}>
-            <Line label="Schedule" value={habit.schedule} />
+            <Line label={t("app.monoProfileHabit.schedule")} value={habit.schedule} />
             <View style={styles.divider} />
-            <Line label={habit.running ? "Running" : "Next run"} value={habit.enabled || habit.running ? habit.when : "Paused"} />
+            <Line
+              label={habit.running ? t("app.monoProfileHabit.running") : t("app.monoProfileHabit.nextRun")}
+              value={habit.enabled || habit.running ? habit.when : t("app.monoProfileHabit.paused")}
+            />
             {habit.lastOutcome ? (
               <>
                 <View style={styles.divider} />
-                <Line label="Last run" value={habit.lastOutcome} />
+                <Line label={t("app.monoProfileHabit.lastRun")} value={habit.lastOutcome} />
               </>
             ) : null}
           </View>
           {habit.lastError ? <Text style={styles.error}>{habit.lastError}</Text> : null}
 
-          <Text style={styles.heading}>Instructions</Text>
+          <Text style={styles.heading}>{t("app.monoProfileHabit.instructions")}</Text>
           <View style={[styles.card, styles.padded]}>
             <Markdown text={habit.instructions} />
           </View>
 
-          <Text style={styles.heading}>Recent runs</Text>
+          <Text style={styles.heading}>{t("app.monoProfileHabit.recentRuns")}</Text>
           <View style={styles.card}>
             {habit.runs.length ? (
               habit.runs.map((run, index) => (
@@ -56,7 +61,7 @@ export default function HabitScreen() {
                   <View style={styles.run}>
                     <View style={styles.runHead}>
                       <Text style={styles.runTitle}>{new Date(run.at).toLocaleString([], { dateStyle: "medium", timeStyle: "short" })}</Text>
-                      <Text style={styles.runDetail}>{run.outcome}{run.durationMs ? ` · ${duration(run.durationMs)}` : ""}</Text>
+                      <Text style={styles.runDetail}>{run.outcome}{run.durationMs ? ` · ${duration(t, run.durationMs)}` : ""}</Text>
                     </View>
                     {run.error ? <Text style={styles.runError} numberOfLines={3}>{run.error}</Text> : null}
                     {run.report ? <Text style={styles.runDetail} numberOfLines={4}>{run.report}</Text> : null}
@@ -64,7 +69,7 @@ export default function HabitScreen() {
                 </Fragment>
               ))
             ) : (
-              <Text style={styles.empty}>It hasn&apos;t run yet.</Text>
+              <Text style={styles.empty}>{t("app.monoProfileHabit.neverRun")}</Text>
             )}
           </View>
         </>
@@ -83,9 +88,14 @@ function Line({ label, value }: { label: string; value: string }) {
   );
 }
 
-function duration(ms: number) {
+function duration(t: TFunction, ms: number) {
   const seconds = Math.round(ms / 1000);
-  return seconds < 60 ? `${seconds}s` : `${Math.floor(seconds / 60)}m ${seconds % 60}s`;
+  return seconds < 60
+    ? t("app.monoProfileHabit.durationSeconds", { seconds })
+    : t("app.monoProfileHabit.durationMinutes", {
+        minutes: Math.floor(seconds / 60),
+        seconds: seconds % 60,
+      });
 }
 
 const useStyles = themedStyles((colors) => ({

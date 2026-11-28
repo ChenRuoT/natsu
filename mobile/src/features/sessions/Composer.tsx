@@ -17,6 +17,7 @@ import Animated, {
 import { PulsingDot, useOffline } from "@/features/connection/ConnectionNotice";
 import type { Harness } from "@/features/workspace/types";
 import { FileTypeIcon } from "@/features/files/FileTypeIcon";
+import { t as tNow, useT, type MessageKey } from "@/i18n/i18n";
 import { Icon, type IconName } from "@/ui/Icon";
 import { LiquidView } from "@/ui/LiquidView";
 import { themedStyles, useColors, useScheme } from "@/ui/theme";
@@ -38,10 +39,10 @@ import { TypingPostureFocus } from "./TypingPostureFocus";
 import { ProviderLogo } from "./ProviderLogo";
 import { COMPOSER_INPUT_ID } from "./SessionScreen";
 
-export const COMPOSER_PLACEHOLDER = "Plan, ask, build…";
+export const COMPOSER_PLACEHOLDER_KEY = "sessions.composer.placeholder" satisfies MessageKey;
 /** Mid-turn the desktop steers with the message or queues it, as its setting says. */
-const BUSY_PLACEHOLDER = "Send a follow-up…";
-const OFFLINE_PLACEHOLDER = "Reconnecting to desktop…";
+const BUSY_PLACEHOLDER_KEY = "sessions.composer.busyPlaceholder" satisfies MessageKey;
+const OFFLINE_PLACEHOLDER_KEY = "sessions.composer.offlinePlaceholder" satisfies MessageKey;
 
 const BUTTON = 36;
 /** Gap between the round buttons and the composer's edge. */
@@ -127,6 +128,7 @@ export function Composer({
   const scheme = useScheme();
   const colors = useColors();
   const styles = useStyles();
+  const t = useT();
   const offline = useOffline();
   // Losing the desktop holds back only what needs it, Send and Stop; the
   // person can keep writing. An error waits until it's back.
@@ -257,7 +259,7 @@ export function Composer({
 
   const dictate = () => {
     if (!canDictate()) {
-      Alert.alert("Dictation unavailable", "Dictation needs iOS 26 or later.");
+      Alert.alert(tNow("sessions.composer.dictationUnavailableTitle"), tNow("sessions.composer.dictationUnavailableMessage"));
       return;
     }
     // The keyboard makes way; a draft keeps the card open above the recording.
@@ -276,7 +278,10 @@ export function Composer({
 
   const attach = async (pick: (room: number) => Promise<Attachment[]>) => {
     const limit = () =>
-      Alert.alert("Attachment limit", `A message can carry up to ${MAX_ATTACHMENTS} files.`);
+      Alert.alert(
+        tNow("sessions.composer.attachmentLimitTitle"),
+        tNow("sessions.composer.attachmentLimitMessage", { max: MAX_ATTACHMENTS }),
+      );
     const room = MAX_ATTACHMENTS - held.current.length;
     if (room <= 0) return limit();
     try {
@@ -291,7 +296,7 @@ export function Composer({
       // Ready to say what they're for.
       input.current?.focus();
     } catch (reason) {
-      Alert.alert("Could not attach", reason instanceof Error ? reason.message : String(reason));
+      Alert.alert(tNow("sessions.composer.couldNotAttach"), reason instanceof Error ? reason.message : String(reason));
     }
   };
 
@@ -323,12 +328,13 @@ export function Composer({
         return restored.kept;
       });
       const why = reason instanceof Error ? reason.message : String(reason);
+      const names = dropped.map((attachment) => attachment.name).join(", ");
       Alert.alert(
-        "Message not sent",
+        tNow("sessions.composer.messageNotSentTitle"),
         dropped.length
-          ? `${why}\n\nA message can carry up to ${MAX_ATTACHMENTS} files within its size limit, so ` +
-              `${dropped.map((attachment) => attachment.name).join(", ")}, added while it was sending, ` +
-              `${dropped.length === 1 ? "was" : "were"} removed.`
+          ? dropped.length === 1
+            ? tNow("sessions.composer.messageNotSentDroppedOne", { why, max: MAX_ATTACHMENTS, names })
+            : tNow("sessions.composer.messageNotSentDroppedOther", { why, max: MAX_ATTACHMENTS, names })
           : why,
       );
     } finally {
@@ -365,7 +371,7 @@ export function Composer({
           </Text>
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel="Cancel reply"
+            accessibilityLabel={t("sessions.composer.cancelReply")}
             hitSlop={10}
             onPress={onClearReply}
           >
@@ -421,7 +427,13 @@ export function Composer({
               ),
             )
           }
-          placeholder={offline ? OFFLINE_PLACEHOLDER : busy ? BUSY_PLACEHOLDER : COMPOSER_PLACEHOLDER}
+          placeholder={t(
+            offline
+              ? OFFLINE_PLACEHOLDER_KEY
+              : busy
+                ? BUSY_PLACEHOLDER_KEY
+                : COMPOSER_PLACEHOLDER_KEY,
+          )}
           placeholderTextColor={colors.muted}
           multiline
           keyboardAppearance={scheme}
@@ -438,8 +450,8 @@ export function Composer({
           >
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel={`Couldn't continue: ${notice.text}`}
-              accessibilityHint="Dismisses the error so you can write again"
+              accessibilityLabel={t("sessions.composer.errorLabel", { text: notice.text })}
+              accessibilityHint={t("sessions.composer.errorHint")}
               onPress={notice.dismiss}
               style={({ pressed }) => [styles.status, pressed && styles.pressed]}
             >
@@ -482,14 +494,18 @@ export function Composer({
       >
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel={`Model: ${model || "Desktop default"}${effort ? `, ${effort} effort` : ""}`}
-          accessibilityHint="Choose the model, account, effort and permissions"
+          accessibilityLabel={
+            effort
+              ? t("sessions.composer.modelLabelEffort", { model: model || t("sessions.composer.desktopDefault"), effort })
+              : t("sessions.composer.modelLabel", { model: model || t("sessions.composer.desktopDefault") })
+          }
+          accessibilityHint={t("sessions.composer.modelHint")}
           onPress={onModelPress}
           style={({ pressed }) => [styles.modelPill, pressed && styles.pressed]}
         >
           {harness ? <ProviderLogo harness={harness} size={16} color={colors.content} /> : null}
           <Text style={styles.model} numberOfLines={1}>
-            {model || "Desktop default"}
+            {model || t("sessions.composer.desktopDefault")}
             {effort ? <Text style={styles.effort}> {effort}</Text> : null}
           </Text>
           <Icon name="chevronDown" size={14} color={colors.muted} />
@@ -505,18 +521,18 @@ export function Composer({
         {canSend ? (
           <RoundButton
             icon="send"
-            label="Send"
-            hint={offline ? "Available once your desktop reconnects" : undefined}
+            label={t("sessions.composer.send")}
+            hint={offline ? t("sessions.composer.sendOfflineHint") : undefined}
             onPress={() => void send()}
             primary
             disabled={offline}
           />
         ) : busy && onStop ? (
-          <RoundButton label="Stop" onPress={() => { void onStop().catch(reason => Alert.alert("Could not stop", String(reason))); }} primary disabled={offline}>
+          <RoundButton label={t("sessions.composer.stop")} onPress={() => { void onStop().catch(reason => Alert.alert(tNow("sessions.composer.couldNotStop"), String(reason))); }} primary disabled={offline}>
             <View style={styles.stop} />
           </RoundButton>
         ) : (
-          <RoundButton icon="mic" label="Dictate" onPress={dictate} />
+          <RoundButton icon="mic" label={t("sessions.composer.dictate")} onPress={dictate} />
         )}
         {offline && canSend ? (
           <View pointerEvents="none" style={styles.sendStatus}>
@@ -555,11 +571,12 @@ function AddMenu({
 }) {
   const styles = useStyles();
   const colors = useColors();
+  const t = useT();
   if (Platform.OS === "android") return (
-    <ChoiceMenu label="Add photos or files" actions={[
-      ...(onPaste ? [{ label: "Paste Image", icon: "copy" as const, onPress: onPaste }] : []),
-      { label: "Photo Library", icon: "image", onPress: onPhotos },
-      { label: "Files", icon: "folder", onPress: onFiles },
+    <ChoiceMenu label={t("sessions.composer.addMenu")} actions={[
+      ...(onPaste ? [{ label: t("sessions.composer.pasteImage"), icon: "copy" as const, onPress: onPaste }] : []),
+      { label: t("sessions.composer.photoLibrary"), icon: "image", onPress: onPhotos },
+      { label: t("sessions.composer.files"), icon: "folder", onPress: onFiles },
     ]}>
       <View style={styles.round}><Icon name="add" size={18} color={colors.content} /></View>
     </ChoiceMenu>
@@ -571,7 +588,7 @@ function AddMenu({
       </View>
       <Host style={StyleSheet.absoluteFill}>
         <Menu
-          modifiers={[accessibilityLabel("Add photos or files")]}
+          modifiers={[accessibilityLabel(t("sessions.composer.addMenu"))]}
           label={
             <HStack
               modifiers={[
@@ -584,10 +601,10 @@ function AddMenu({
           }
         >
           {onPaste ? (
-            <Button label="Paste Image" systemImage="doc.on.clipboard" onPress={onPaste} />
-          ) : null}
-          <Button label="Photo Library" systemImage="photo.on.rectangle" onPress={onPhotos} />
-          <Button label="Files" systemImage="folder" onPress={onFiles} />
+            <Button label={t("sessions.composer.pasteImage")} systemImage="doc.on.clipboard" onPress={onPaste} />
+) : null}
+          <Button label={t("sessions.composer.photoLibrary")} systemImage="photo.on.rectangle" onPress={onPhotos} />
+          <Button label={t("sessions.composer.files")} systemImage="folder" onPress={onFiles} />
         </Menu>
       </Host>
     </View>
@@ -604,6 +621,7 @@ function AttachmentChip({
 }) {
   const styles = useStyles();
   const colors = useColors();
+  const t = useT();
   const image = isImage(attachment);
   return (
     <View style={image ? styles.thumb : styles.fileChip}>
@@ -619,7 +637,7 @@ function AttachmentChip({
       )}
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel={`Remove ${attachment.name}`}
+        accessibilityLabel={t("sessions.composer.removeAttachment", { name: attachment.name })}
         hitSlop={8}
         onPress={onRemove}
         style={({ pressed }) => [styles.remove, pressed && styles.pressed]}

@@ -1,3 +1,4 @@
+import type { MessageKey } from "@/i18n/i18n";
 import type { IconName } from "@/ui/Icon";
 
 import type { RuntimeMode } from "./types";
@@ -5,35 +6,36 @@ import type { RuntimeMode } from "./types";
 /**
  * The desktop's permission modes (RUNTIME_MODES with their labels and hints
  * in src/features/sessions/model/session.ts), with the AccessPicker's icons.
+ * Their text is keyed: call `t(mode.labelKey)` and `t(mode.hintKey)`.
  */
 export const ACCESS_MODES: {
   id: RuntimeMode;
-  label: string;
-  hint: string;
+  labelKey: MessageKey;
+  hintKey: MessageKey;
   icon: IconName;
 }[] = [
   {
     id: "supervised",
-    label: "Supervised",
-    hint: "Ask before commands and file changes.",
+    labelKey: "app.access.supervisedLabel",
+    hintKey: "app.access.supervisedHint",
     icon: "lock",
   },
   {
     id: "auto-accept-edits",
-    label: "Auto-accept edits",
-    hint: "Auto-approve edits, ask before other actions.",
+    labelKey: "app.access.autoAcceptEditsLabel",
+    hintKey: "app.access.autoAcceptEditsHint",
     icon: "edit",
   },
   {
     id: "auto",
-    label: "Auto",
-    hint: "An AI reviewer can approve or deny actions.",
+    labelKey: "app.access.autoLabel",
+    hintKey: "app.access.autoHint",
     icon: "sparkle",
   },
   {
     id: "full-access",
-    label: "Full access",
-    hint: "Allow commands, edits, and supported MCP confirmations in non-plan turns without prompts.",
+    labelKey: "app.access.fullAccessLabel",
+    hintKey: "app.access.fullAccessHint",
     icon: "shield",
   },
 ];

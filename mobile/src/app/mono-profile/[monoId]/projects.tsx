@@ -7,6 +7,7 @@ import { useOffline } from "@/features/connection/ConnectionNotice";
 import { ProjectMascot } from "@/features/mascots/ProjectMascot";
 import { SettingsPage, SettingsRow } from "@/features/settings/SettingsUI";
 import { useWorkspace } from "@/features/workspace/WorkspaceProvider";
+import { useT } from "@/i18n/i18n";
 import { Icon } from "@/ui/Icon";
 import { radii, themedStyles, useColors } from "@/ui/theme";
 
@@ -20,13 +21,14 @@ export default function MonoProjectsScreen() {
   const offline = useOffline();
   const styles = useStyles();
   const colors = useColors();
+  const t = useT();
   if (!mono) return null;
   const toggle = (projectId: string) => {
     void Haptics.selectionAsync();
     const assigned = mono.projectIds.includes(projectId);
     editMono(mono, assigned ? { removeProject: projectId } : { addProject: projectId }).catch(
       (reason: unknown) =>
-        Alert.alert("Couldn’t save", reason instanceof Error ? reason.message : String(reason)),
+        Alert.alert(t("app.monoProfileProjects.saveFailedTitle"), reason instanceof Error ? reason.message : String(reason)),
     );
   };
   return (
@@ -51,8 +53,8 @@ export default function MonoProjectsScreen() {
       </View>
       <Text style={styles.note}>
         {offline
-          ? "Connect to your desktop to change this Mono's projects."
-          : `${mono.name} can start sessions and make changes in the projects checked here.`}
+          ? t("app.monoProfileProjects.offlineNote")
+          : t("app.monoProfileProjects.note", { name: mono.name })}
       </Text>
     </SettingsPage>
   );

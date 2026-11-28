@@ -3,6 +3,7 @@ import { Pressable, TextInput } from "react-native";
 import Animated from "react-native-reanimated";
 
 import { useKeyboardLift, useSessionLayout } from "@/features/sessions/SessionScreen";
+import { useT } from "@/i18n/i18n";
 import { Icon } from "@/ui/Icon";
 import { LiquidView } from "@/ui/LiquidView";
 import { themedStyles, useColors, useScheme } from "@/ui/theme";
@@ -19,7 +20,7 @@ export const SEARCH_BAR = 50;
 export function FileSearchBar({
   value,
   onChange,
-  placeholder = "Search files",
+  placeholder,
   autoFocus,
   accessory,
 }: {
@@ -31,6 +32,7 @@ export function FileSearchBar({
    *  takes its place while the field has focus. */
   accessory?: ReactNode;
 }) {
+  const t = useT();
   const scheme = useScheme();
   const colors = useColors();
   const styles = useStyles();
@@ -57,7 +59,7 @@ export function FileSearchBar({
           onFocus={() => setFocused(true)}
           onBlur={() => setFocused(false)}
           autoFocus={autoFocus}
-          placeholder={placeholder}
+          placeholder={placeholder ?? t("files.fileSearchBar.placeholder")}
           placeholderTextColor={colors.muted}
           returnKeyType="search"
           autoCorrect={false}
@@ -70,7 +72,7 @@ export function FileSearchBar({
         {value ? (
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel="Clear search"
+            accessibilityLabel={t("files.fileSearchBar.clearLabel")}
             onPress={() => onChange("")}
             hitSlop={10}
             style={styles.clear}
@@ -82,7 +84,7 @@ export function FileSearchBar({
       {focused ? (
         <LiquidView
           onPress={close}
-          accessibilityLabel="Close search"
+          accessibilityLabel={t("files.fileSearchBar.closeLabel")}
           borderRadius={SEARCH_BAR / 2}
           innerStyle={styles.round}
         >

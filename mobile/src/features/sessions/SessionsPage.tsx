@@ -14,6 +14,7 @@ import Animated, { FadeIn, FadeOut, LinearTransition } from "react-native-reanim
 import { FileSearchBar, SEARCH_BAR } from "@/features/files/FileSearchBar";
 import type { Harness, SessionSummary, Worktree } from "@/features/workspace/types";
 import { useWorkspace } from "@/features/workspace/WorkspaceProvider";
+import { useT } from "@/i18n/i18n";
 import { AnimationsPaused } from "@/ui/AnimationsPaused";
 import { GradualBlur } from "@/ui/GradualBlur";
 import { themedStyles, useColors } from "@/ui/theme";
@@ -70,6 +71,7 @@ export function SessionsPage({
   const harnesses = [...new Set<Harness>(listed.map((session) => session.harness))];
   if (filter.harness && !harnesses.includes(filter.harness)) harnesses.push(filter.harness);
   const narrowed = !!needle || filter !== NO_FILTER || !!worktree;
+  const t = useT();
 
   const actions = useSessionActions(() => {});
   const { closeOpenRow } = actions;
@@ -131,7 +133,9 @@ export function SessionsPage({
           ListEmptyComponent={
             pages ? (
               <Text style={styles.empty}>
-                {narrowed ? "No matching sessions." : "No sessions yet."}
+                {narrowed
+                  ? t("sessions.sessionsPage.noMatching")
+                  : t("sessions.sessionsPage.noSessions")}
               </Text>
             ) : null
           }
@@ -153,7 +157,7 @@ export function SessionsPage({
         <FileSearchBar
           value={query}
           onChange={setQuery}
-          placeholder="Search sessions"
+          placeholder={t("sessions.sessionsPage.searchPlaceholder")}
           accessory={
             <SessionFilterMenu value={filter} onChange={setFilter} harnesses={harnesses} />
           }

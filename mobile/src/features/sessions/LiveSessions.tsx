@@ -26,6 +26,7 @@ import Svg, { Path } from "react-native-svg";
 
 import type { SessionSummary } from "@/features/workspace/types";
 import { useWorkspace } from "@/features/workspace/WorkspaceProvider";
+import { t as tNow, useT, type TFunction } from "@/i18n/i18n";
 import {
   GlassPresence,
   LiquidView,
@@ -224,6 +225,7 @@ function NowWorking({
   );
 
   const session = displayed[index];
+  const t = useT();
 
   const openSession = (picked: SessionSummary) => {
     setOpen(false);
@@ -234,7 +236,7 @@ function NowWorking({
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     markStoppedHere(picked.id);
     stop(picked.id).catch((reason) =>
-      Alert.alert("Could not stop", String(reason)),
+      Alert.alert(tNow("sessions.liveSessions.couldNotStop"), String(reason)),
     );
   };
 
@@ -270,8 +272,10 @@ function NowWorking({
                 pressedScale={1.02}
                 accessibilityLabel={
                   displayed.length > 1
-                    ? `${displayed.length} working sessions. ${open ? "Hide" : "Show"} them`
-                    : `${session.title}, ${statusLabel(session)}. Open`
+                    ? open
+                      ? t("sessions.liveSessions.workingSessionsHide", { count: displayed.length })
+                      : t("sessions.liveSessions.workingSessionsShow", { count: displayed.length })
+                    : t("sessions.liveSessions.openSession", { title: session.title, status: statusLabel(session, t) })
                 }
               >
                 <Artwork session={session} pulse={pulse} />
@@ -388,9 +392,10 @@ function MiniPill({
   const styles = useStyles();
   const waiting = !!session.waiting;
   const model = session.modelName || session.model;
+  const t = useT();
   const detail = waiting
-    ? statusLabel(session)
-    : [model, session.branch].filter(Boolean).join(" · ") || "Working";
+    ? statusLabel(session, t)
+    : [model, session.branch].filter(Boolean).join(" · ") || t("sessions.liveSessions.working");
 
   const rise = useSharedValue(0);
   useEffect(() => {
@@ -434,7 +439,7 @@ function MiniPill({
         innerStyle={styles.mini}
         onPress={onPress}
         pressedScale={1.03}
-        accessibilityLabel={`${session.title}, ${statusLabel(session)}. Open`}
+        accessibilityLabel={t("sessions.liveSessions.openSession", { title: session.title, status: statusLabel(session, t) })}
       >
         <View style={styles.miniArt}>
           <ProviderLogo
@@ -466,10 +471,10 @@ function MiniPill({
   );
 }
 
-function statusLabel(session: SessionSummary) {
-  if (session.waiting === "approval") return "Needs your approval";
-  if (session.waiting === "question") return "Has a question for you";
-  return "Working";
+function statusLabel(session: SessionSummary, t: TFunction = tNow) {
+  if (session.waiting === "approval") return t("sessions.liveSessions.needsApproval");
+  if (session.waiting === "question") return t("sessions.liveSessions.hasQuestion");
+  return t("sessions.liveSessions.working");
 }
 
 /**
@@ -576,11 +581,12 @@ function Subtitle({
   const styles = useStyles();
   const model = session.modelName || session.model;
   const waiting = !!session.waiting;
+  const t = useT();
   const detail = waiting
-    ? statusLabel(session)
-    : [arrived ? "From desktop" : null, model, session.branch]
+    ? statusLabel(session, t)
+    : [arrived ? t("sessions.liveSessions.fromDesktop") : null, model, session.branch]
         .filter(Boolean)
-        .join(" · ") || "Working";
+        .join(" · ") || t("sessions.liveSessions.working");
   return (
     <View style={styles.subtitle}>
       {waiting ? null : <TerminalSpinner style={styles.spinner} />}
@@ -596,7 +602,7 @@ function Subtitle({
       {count > 1 ? (
         <View
           style={styles.position}
-          accessibilityLabel={`${index + 1} of ${count}`}
+          accessibilityLabel={t("sessions.liveSessions.position", { current: index + 1, total: count })}
         >
           {/* The number rolls up as the next title comes in, as an odometer. */}
           <View style={styles.digit}>
@@ -609,7 +615,7 @@ function Subtitle({
               {index + 1}
             </Animated.Text>
           </View>
-          <Text style={styles.positionText}>{` of ${count}`}</Text>
+          <Text style={styles.positionText}>{t("sessions.liveSessions.ofCount", { count })}</Text>
         </View>
       ) : null}
     </View>
@@ -619,10 +625,11 @@ function Subtitle({
 /** The Music app's stop: a plain rounded square. */
 function StopButton({ onPress }: { onPress: () => void }) {
   const styles = useStyles();
+  const t = useT();
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel="Stop"
+      accessibilityLabel={t("sessions.liveSessions.stop")}
       hitSlop={6}
       onPress={onPress}
       style={({ pressed }) => [styles.control, pressed && styles.pressed]}
@@ -636,10 +643,11 @@ function StopButton({ onPress }: { onPress: () => void }) {
 function SkipButton({ onPress }: { onPress: () => void }) {
   const colors = useColors();
   const styles = useStyles();
+  const t = useT();
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel="Next working session"
+      accessibilityLabel={t("sessions.liveSessions.nextWorking")}
       hitSlop={6}
       onPress={onPress}
       style={({ pressed }) => [styles.control, pressed && styles.pressed]}

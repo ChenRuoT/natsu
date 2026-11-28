@@ -12,13 +12,14 @@ import { FadingBackground } from "@/features/background/FadingBackground";
 import type { EmptyBackground } from "@/features/background/useEmptyBackground";
 import { PixelMascot } from "@/features/mascots/PixelMascot";
 import type { Project } from "@/features/workspace/types";
+import { useT, type MessageKey } from "@/i18n/i18n";
 import { NATSU_MARK } from "@/ui/brand";
 import { themedStyles } from "@/ui/theme";
 
 import { COMPOSER_FADE, useSessionLayout } from "./SessionScreen";
 import type { TranscriptAgent } from "./TranscriptTurn";
 
-export const EMPTY_HEADLINE = "What should we work on?";
+export const EMPTY_HEADLINE_KEY = "sessions.emptySession.headline" satisfies MessageKey;
 
 const MARK_SIZE = 84;
 /** Dimmed, so it reads as part of the screen, including over a photo. */
@@ -52,6 +53,7 @@ export function EmptySession({
   accessory?: ReactNode;
 }) {
   const styles = useStyles();
+  const t = useT();
   // Held hidden until the insets it centres between are final, so it doesn't
   // jump up as the composer is first measured.
   const { top, bottom, settled, extraContentPadding } = useSessionLayout();
@@ -100,7 +102,9 @@ export function EmptySession({
           {mono ? (
             <>
               <PixelMascot name={mono.mascot} color={mono.color} size={MARK_SIZE} />
-              <Text style={styles.headline}>Say hi to {mono.name}</Text>
+              <Text style={styles.headline}>
+                {t("sessions.emptySession.sayHi", { name: mono.name })}
+              </Text>
             </>
           ) : (
             <>
@@ -109,7 +113,9 @@ export function EmptySession({
                 style={styles.mark}
                 accessibilityIgnoresInvertColors
               />
-              <Text style={styles.headline}>{EMPTY_HEADLINE}</Text>
+              <Text style={styles.headline}>
+                {t(EMPTY_HEADLINE_KEY)}
+              </Text>
             </>
           )}
           {project && !mono ? (

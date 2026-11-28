@@ -11,6 +11,7 @@ import {
   type NotificationCategory,
 } from "@/features/settings/notifications";
 import type { SessionSummary } from "@/features/workspace/types";
+import { t as tNow } from "@/i18n/i18n";
 
 // Only for when the app is out of view; one landing as it comes back stays
 // in the list.
@@ -84,7 +85,7 @@ export function SessionNotifications() {
       // Android needs a channel before its permission prompt can appear.
       if (Platform.OS === "android") {
         await Notifications.setNotificationChannelAsync(SESSION_CHANNEL, {
-          name: "Session alerts",
+          name: tNow("workspace.sessionNotifications.channelName"),
           importance: Notifications.AndroidImportance.DEFAULT,
         });
       }
@@ -183,14 +184,14 @@ export function SessionNotifications() {
       const project = projects.find((entry) => entry.id === session.projectId);
       void Notifications.scheduleNotificationAsync({
         content: {
-          title: session.title || "Session",
+          title: session.title || tNow("workspace.sessionNotifications.sessionFallback"),
           subtitle: project?.name,
           body:
             category === "agentFinished"
-              ? "Finished"
+              ? tNow("workspace.sessionNotifications.finished")
               : session.waiting === "approval"
-                ? "Needs your approval"
-                : "Has a question for you",
+                ? tNow("workspace.sessionNotifications.needsApproval")
+                : tNow("workspace.sessionNotifications.hasQuestion"),
           data: {
             projectId: session.projectId,
             sessionId: session.id,

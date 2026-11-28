@@ -9,6 +9,7 @@ import { useDefaultModels } from "@/features/settings/defaultModel";
 import { SettingsPage } from "@/features/settings/SettingsUI";
 import { projectForRoute } from "@/features/workspace/routing";
 import { useWorkspace } from "@/features/workspace/WorkspaceProvider";
+import { useT } from "@/i18n/i18n";
 import { Icon } from "@/ui/Icon";
 import { themedStyles, useColors } from "@/ui/theme";
 
@@ -17,13 +18,14 @@ import { themedStyles, useColors } from "@/ui/theme";
 export default function PermissionsScreen() {
   const colors = useColors();
   const styles = useStyles();
+  const t = useT();
   const { projectId } = useLocalSearchParams<{ projectId?: string }>();
   const { projects } = useWorkspace();
   const project = projectForRoute(projects, projectId) ?? projects[0];
   const { defaults, setRuntimeMode } = useDefaultModels();
   const chosen = defaults.runtimeMode;
   const desktopMode = project?.defaultRuntimeMode
-    ? accessMode(project.defaultRuntimeMode).label
+    ? t(accessMode(project.defaultRuntimeMode).labelKey)
     : undefined;
   const pick = (mode: RuntimeMode | null) => {
     if (mode === chosen) return;
@@ -33,7 +35,7 @@ export default function PermissionsScreen() {
 
   return (
     <SettingsPage>
-      <Text style={styles.heading}>New sessions start with</Text>
+      <Text style={styles.heading}>{t("app.settingsPermissions.heading")}</Text>
       <View style={styles.list}>
         {ACCESS_MODES.map((mode, index) => {
           const selected = mode.id === chosen;
@@ -46,8 +48,8 @@ export default function PermissionsScreen() {
               <Pressable
                 accessibilityRole="button"
                 accessibilityState={{ selected }}
-                accessibilityLabel={mode.label}
-                accessibilityHint={mode.hint}
+                accessibilityLabel={t(mode.labelKey)}
+                accessibilityHint={t(mode.hintKey)}
                 onPress={() => pick(mode.id)}
                 style={({ pressed }) => [styles.row, pressed && styles.pressed]}
               >
@@ -56,9 +58,9 @@ export default function PermissionsScreen() {
                 </View>
                 <View style={styles.text}>
                   <Text style={[styles.label, { color: tint }]}>
-                    {mode.label}
+                    {t(mode.labelKey)}
                   </Text>
-                  <Text style={styles.hint}>{mode.hint}</Text>
+                  <Text style={styles.hint}>{t(mode.hintKey)}</Text>
                 </View>
                 {selected ? (
                   <Icon name="check" size={18} color={colors.accent} />
@@ -71,8 +73,10 @@ export default function PermissionsScreen() {
 
       <Text style={styles.note}>
         {chosen
-          ? "Sessions you have already started keep their own permissions."
-          : `New sessions use the permissions set on the desktop${desktopMode ? `, ${desktopMode}` : ""}.`}
+          ? t("app.settingsPermissions.chosenNote")
+          : desktopMode
+            ? t("app.settingsPermissions.desktopNoteWithMode", { mode: desktopMode })
+            : t("app.settingsPermissions.desktopNote")}
       </Text>
 
       {/* Only once a mode is picked: until then the desktop's is in use. */}
@@ -83,7 +87,7 @@ export default function PermissionsScreen() {
           style={({ pressed }) => [styles.button, pressed && styles.pressed]}
         >
           <Icon name="computer" size={18} color={colors.content} />
-          <Text style={styles.buttonLabel}>Use desktop default</Text>
+          <Text style={styles.buttonLabel}>{t("app.settingsPermissions.useDesktopDefault")}</Text>
         </Pressable>
       ) : null}
     </SettingsPage>

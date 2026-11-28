@@ -37,6 +37,7 @@ import { StyleSheet, View } from "react-native";
 import { useFileSearch, type FileMatch } from "@/features/connection/useFileSearch";
 import { useFileTree, type TreeRow } from "@/features/connection/useFileTree";
 import { useSessionLayout } from "@/features/sessions/SessionScreen";
+import { useT } from "@/i18n/i18n";
 import { GradualBlur } from "@/ui/GradualBlur";
 import { useColors } from "@/ui/theme";
 
@@ -75,6 +76,7 @@ export function FilesView({
   /** Whether the page is showing, so folders are only read when looked at. */
   active: boolean;
 }) {
+  const t = useT();
   const colors = useColors();
   const { pageTop: top, dockBottom } = useSessionLayout();
   // Room for the search bar where the composer rests, and the blur under it.
@@ -118,7 +120,7 @@ export function FilesView({
               <MatchRow match={match} onPress={() => openFile(match.path)} />
             </Fragment>
           ))
-        : note(search.error ?? (search.searching ? "Searching…" : "No matching files."));
+        : note(search.error ?? (search.searching ? t("files.filesView.searching") : t("files.filesView.noMatches")));
   else
     rows =
       tree.rows.length > 0
@@ -128,7 +130,7 @@ export function FilesView({
               <Row row={row} onPress={() => press(row)} />
             </Fragment>
           ))
-        : note(tree.error ?? (tree.ready ? "This folder is empty." : "Reading from desktop…"));
+        : note(tree.error ?? (tree.ready ? t("files.filesView.folderEmpty") : t("files.filesView.reading")));
 
   return (
     <>

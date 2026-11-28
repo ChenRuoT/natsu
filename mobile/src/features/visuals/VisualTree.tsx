@@ -5,6 +5,7 @@ import { useState } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import Svg, { Circle, Line, Polyline, Rect, Text as SvgText } from "react-native-svg";
 
+import { useT } from "@/i18n/i18n";
 import { radii, themedStyles, useColors, withAlpha } from "@/ui/theme";
 
 import { Cartesian, Donut, Gauge, Heatmap, Progress, Trend, useVisualColor } from "./charts";
@@ -24,6 +25,7 @@ export function VisualTree({ node }: { node: VisualNode }) {
 }
 
 function Node({ node }: { node: VisualNode }) {
+  const t = useT();
   const styles = useStyles();
   const colors = useColors();
   const color = useVisualColor();
@@ -220,7 +222,7 @@ function Node({ node }: { node: VisualNode }) {
     case "scene":
       return (
         <View style={[styles.card, styles.scene, { aspectRatio: node.width / node.height || 16 / 9 }]}>
-          <Text style={styles.small}>Open this 3D scene on your desktop to see it.</Text>
+          <Text style={styles.small}>{t("workspace.visualTree.scene3d")}</Text>
         </View>
       );
     default:

@@ -15,6 +15,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import type { TurnMetrics } from "@/features/workspace/types";
 import { themedStyles, withAlpha, useColors } from "@/ui/theme";
 
+import { useT } from "@/i18n/i18n";
+
 import {
   formatClockTime,
   turnMetricsSheet,
@@ -46,7 +48,8 @@ export function TurnMetricsSheet({
   elapsedMs: number | null;
   completedAt?: number;
 }) {
-  const { highlights, tokens } = turnMetricsSheet(metrics, elapsedMs);
+  const t = useT();
+  const { highlights, tokens } = turnMetricsSheet(metrics, elapsedMs, t);
   // SwiftUI stacks have no Android view, so Android builds the same sheet
   // from React Native views.
   if (Platform.OS === "android") return (
@@ -67,17 +70,17 @@ export function TurnMetricsSheet({
       <VStack alignment="leading" spacing={20}>
         <VStack alignment="leading" spacing={2}>
           <Text modifiers={[font({ textStyle: "title3", weight: "semibold" })]}>
-            Turn metrics
+            {t("sessions.turnMetricsSheet.title")}
           </Text>
           {completedAt != null ? (
             <Text modifiers={[font({ textStyle: "subheadline" }), SECONDARY]}>
-              {`Finished at ${formatClockTime(completedAt)}`}
+              {t("sessions.turnMetricsSheet.finishedAt", { time: formatClockTime(completedAt) })}
             </Text>
           ) : null}
         </VStack>
 
         {highlights.length > 0 ? <StatGroup stats={highlights} /> : null}
-        {tokens.length > 0 ? <StatGroup title="Tokens" stats={tokens} /> : null}
+        {tokens.length > 0 ? <StatGroup title={t("sessions.turnMetricsSheet.tokens")} stats={tokens} /> : null}
       </VStack>
     </BottomSheet>
   );
@@ -141,6 +144,7 @@ function AndroidSheet({
 }) {
   const colors = useColors();
   const styles = useStyles();
+  const t = useT();
   const { width } = useWindowDimensions();
   const { bottom } = useSafeAreaInsets();
   return (
@@ -153,13 +157,13 @@ function AndroidSheet({
       <RNHostView matchContents={{ vertical: true }}>
         <View style={[styles.sheet, { width, paddingBottom: Math.max(bottom, 12) + 12 }]}>
           <View style={styles.header}>
-            <RNText accessibilityRole="header" style={styles.title}>Turn metrics</RNText>
+            <RNText accessibilityRole="header" style={styles.title}>{t("sessions.turnMetricsSheet.title")}</RNText>
             {completedAt != null ? (
-              <RNText style={styles.subtitle}>{`Finished at ${formatClockTime(completedAt)}`}</RNText>
+              <RNText style={styles.subtitle}>{t("sessions.turnMetricsSheet.finishedAt", { time: formatClockTime(completedAt) })}</RNText>
             ) : null}
           </View>
           {highlights.length > 0 ? <AndroidStatGroup stats={highlights} /> : null}
-          {tokens.length > 0 ? <AndroidStatGroup title="Tokens" stats={tokens} /> : null}
+          {tokens.length > 0 ? <AndroidStatGroup title={t("sessions.turnMetricsSheet.tokens")} stats={tokens} /> : null}
         </View>
       </RNHostView>
     </BottomSheet>

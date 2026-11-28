@@ -28,6 +28,7 @@ import {
   useSessionChoice,
 } from "@/features/models/sessionChoice";
 import { useModelCatalog } from "@/features/models/useModelCatalog";
+import { useT } from "@/i18n/i18n";
 import { useOpenSessionAfterStarting } from "@/features/settings/newSessions";
 import type { Attachment } from "@/features/sessions/attachments";
 import { Composer } from "@/features/sessions/Composer";
@@ -103,6 +104,7 @@ export function ProjectScreen({
 }) {
   const { startSession, sendMessage, stop } = useWorkspace();
   const [openAfterStarting] = useOpenSessionAfterStarting();
+  const t = useT();
   const colors = useColors();
   const drawer = useDrawerActions();
   // Read here: the native header's buttons render outside this tree.
@@ -181,7 +183,7 @@ export function ProjectScreen({
   const branch = sessionId
     ? changesState.result?.branch || sessionBranch
     : fresh
-      ? "new worktree"
+      ? t("workspace.projectScreen.newWorktreeBranch")
       : changesState.result?.branch ||
         (workspace.mode === "existing"
           ? workspace.worktree.name
@@ -285,7 +287,7 @@ export function ProjectScreen({
   );
   const menuButton = (
     <ProjectHeaderButton
-      label={unread ? "Projects and monos, new replies" : "Projects and monos"}
+      label={unread ? t("workspace.projectScreen.menuUnreadLabel") : t("workspace.projectScreen.menuLabel")}
       onPress={drawer.open}
     >
       {/* The drawer's button, as on every screen it opens from. */}
@@ -295,7 +297,7 @@ export function ProjectScreen({
   );
   const settingsButton = (
     <ProjectHeaderButton
-      label="Settings"
+      label={t("workspace.projectScreen.settingsLabel")}
       onPress={openSettings}
     >
       <Icon name="settings" size={22} color={colors.content} />
@@ -304,7 +306,7 @@ export function ProjectScreen({
 
   const sessionTitle = sessionId ? (
     <SessionTitle
-      title={session?.title ?? title ?? "Session"}
+      title={session?.title ?? title ?? t("workspace.projectScreen.sessionFallback")}
       subtitle={[project.name, branch].filter(Boolean).join(" · ")}
       onClose={sheet ? () => router.back() : undefined}
     />

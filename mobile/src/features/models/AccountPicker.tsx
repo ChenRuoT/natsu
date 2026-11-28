@@ -8,6 +8,7 @@ import {
   View,
 } from "react-native";
 
+import { useT } from "@/i18n/i18n";
 import { Icon } from "@/ui/Icon";
 import { themedStyles, useColors, withAlpha } from "@/ui/theme";
 
@@ -31,6 +32,7 @@ export function AccountPicker({
   const colors = useColors();
   const styles = useStyles();
   const [open, setOpen] = useState(false);
+  const t = useT();
   const selected = accounts.find((account) => account.id === value);
   const selectedUsage = selected ? usage.accounts[selected.id] : undefined;
 
@@ -39,13 +41,15 @@ export function AccountPicker({
       <View style={styles.header}>
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel={`Account: ${selected?.label ?? "Account unavailable"}`}
+          accessibilityLabel={t("app.accountPicker.accountA11y", {
+            name: selected?.label ?? t("app.accountPicker.accountUnavailable"),
+          })}
           accessibilityState={{ expanded: open }}
           onPress={() => setOpen((current) => !current)}
           style={({ pressed }) => [styles.toggle, pressed && styles.pressed]}
         >
           <Text style={styles.selectedName} numberOfLines={1}>
-            {selected?.label ?? "Unavailable"}
+            {selected?.label ?? t("app.accountPicker.unavailable")}
           </Text>
           <AccountWarning snapshot={selectedUsage} />
           <Icon
@@ -56,7 +60,7 @@ export function AccountPicker({
         </Pressable>
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="Refresh account usage"
+          accessibilityLabel={t("app.accountPicker.refreshAccountUsage")}
           accessibilityState={{
             disabled: usage.refreshing,
             busy: usage.refreshing,
@@ -122,8 +126,8 @@ export function AccountPicker({
           {existingSession || accounts.length < 2 ? (
             <Text style={styles.note}>
               {existingSession
-                ? "Switching accounts opens a new chat."
-                : "Add accounts in desktop Settings → Accounts."}
+                ? t("app.accountPicker.switchingOpensNewChat")
+                : t("app.accountPicker.addAccountsOnDesktop")}
             </Text>
           ) : null}
         </View>
@@ -174,15 +178,16 @@ function AccountUsage({
 }) {
   const colors = useColors();
   const styles = useStyles();
+  const t = useT();
   if (!snapshot || snapshot.meters.length === 0)
     return (
       <Text style={styles.meta}>
         {snapshot?.status.label ??
           (loading
-            ? "Checking usage…"
+            ? t("app.accountPicker.checkingUsage")
             : failed
-              ? "Usage unavailable"
-              : "No usage data")}
+              ? t("app.accountPicker.usageUnavailable")
+              : t("app.accountPicker.noUsageData"))}
       </Text>
     );
 
@@ -213,7 +218,7 @@ function AccountUsage({
             </View>
             <View
               accessibilityRole="progressbar"
-              accessibilityLabel={`${meter.title} usage`}
+              accessibilityLabel={t("app.accountPicker.meterUsageA11y", { title: meter.title })}
               accessibilityValue={{
                 min: 0,
                 max: 100,
@@ -233,7 +238,7 @@ function AccountUsage({
         );
       })}
       {snapshot.stale && !failed ? (
-        <Text style={styles.meta}>Last known usage</Text>
+        <Text style={styles.meta}>{t("app.accountPicker.lastKnownUsage")}</Text>
       ) : null}
     </View>
   );

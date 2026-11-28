@@ -12,6 +12,7 @@ import {
   View,
 } from "react-native";
 
+import { useT, type TFunction } from "@/i18n/i18n";
 import { Icon, type IconName } from "@/ui/Icon";
 
 import type { GitAction, GitStatus } from "@/features/connection/useProjectGit";
@@ -63,6 +64,7 @@ export function CommitSheet({
   /** After anything that changed the repository, to read it again. */
   onChanged: () => void;
 }) {
+  const t = useT();
   const scheme = useScheme();
   const colors = useColors();
   const styles = useStyles();
@@ -104,17 +106,17 @@ export function CommitSheet({
       : new Promise<boolean>((resolve) =>
           Alert.alert(
             kind === "pr"
-              ? `Create a pull request from default branch "${status?.branch}"?`
-              : `Push to default branch "${status?.branch}"?`,
+              ? t("changes.commitSheet.confirmPr", { branch: status?.branch ?? "" })
+              : t("changes.commitSheet.confirmPush", { branch: status?.branch ?? "" }),
             undefined,
             [
               {
-                text: "Cancel",
+                text: t("changes.commitSheet.cancel"),
                 style: "cancel",
                 onPress: () => resolve(false),
               },
               {
-                text: kind === "pr" ? "Create PR" : "Push",
+                text: kind === "pr" ? t("changes.commitSheet.createPr") : t("changes.commitSheet.push"),
                 onPress: () => resolve(true),
               },
             ],
@@ -139,7 +141,7 @@ export function CommitSheet({
       const result = await run({ action: "generate" });
       if (generation.current === mine && result.message) setText(result.message);
     } catch (reason) {
-      if (generation.current === mine) fail("Couldn't write a message", reason);
+      if (generation.current === mine) fail(t("changes.commitSheet.writeFailed"), reason);
     } finally {
       if (generation.current === mine) setBusy(null);
     }
@@ -152,7 +154,7 @@ export function CommitSheet({
       await run({ action: "commit", message });
       setText("");
     } catch (reason) {
-      fail("Commit failed", reason);
+      fail(t("changes.commitSheet.commitFailed"), reason);
     } finally {
       setBusy(null);
       onChanged();
@@ -165,7 +167,7 @@ export function CommitSheet({
     try {
       await run({ action: "sync" });
     } catch (reason) {
-      fail(canPublish ? "Publish failed" : "Sync failed", reason);
+      fail(canPublish ? t("changes.commitSheet.publishFailed") : t("changes.commitSheet.syncFailed"), reason);
     } finally {
       setBusy(null);
       onChanged();
@@ -178,7 +180,7 @@ export function CommitSheet({
     try {
       openPr((await run({ action: "pr" })).url);
     } catch (reason) {
-      fail("Couldn't create the pull request", reason);
+      fail(t("changes.commitSheet.createPrFailed"), reason);
     } finally {
       setBusy(null);
       onChanged();
@@ -192,7 +194,7 @@ export function CommitSheet({
       <Action
         key="sync"
         icon="send"
-        label={canPublish ? "Publish Branch" : syncLabel(status)}
+        label={canPublish ? t("changes.commitSheet.publishBranch") : syncLabel(status, t)}
         busy={busy === "sync"}
         disabled={!!busy}
         onPress={() => void sync()}
@@ -203,7 +205,7 @@ export function CommitSheet({
       <Action
         key="pr"
         icon="branch"
-        label={`View PR #${status.pr.number}`}
+        label={t("changes.commitSheet.viewPr", { number: status.pr.number })}
         onPress={() => openPr(status.pr?.url)}
       />,
     );
@@ -212,7 +214,7 @@ export function CommitSheet({
       <Action
         key="pr"
         icon="branch"
-        label="Create PR"
+        label={t("changes.commitSheet.createPr")}
         busy={busy === "pr"}
         disabled={!!busy}
         onPress={() => void createPr()}
@@ -252,17 +254,19 @@ export function CommitSheet({
             <Icon name="branch" size={18} color={colors.muted} />
             <View style={styles.headerText}>
               <Text style={styles.branch} numberOfLines={1}>
-                {status?.branch || "Changes"}
+                {status?.branch || t("changes.commitSheet.changesFallback")}
                 {status && (status.ahead > 0 || status.behind > 0) ? (
                   <Text style={styles.counts}>{"  " + counts(status)}</Text>
                 ) : null}
               </Text>
               <Text style={styles.summary} numberOfLines={1}>
                 {hasFiles
-                  ? `${formatCount(staged)} staged ${staged === 1 ? "file" : "files"}  `
+                  ? `${staged === 1
+                      ? t("changes.commitSheet.stagedFiles.one", { count: formatCount(staged) })
+                      : t("changes.commitSheet.stagedFiles.other", { count: formatCount(staged) })}  `
                   : changed > 0
-                    ? "Nothing staged"
-                    : "No uncommitted changes"}
+                    ? t("changes.commitSheet.nothingStaged")
+                    : t("changes.commitSheet.noUncommitted")}
                 {hasFiles ? (
                   <>
                     <Text style={{ color: colors.additions }}>+{formatCount(additions)}</Text>{" "}
@@ -277,7 +281,7 @@ export function CommitSheet({
             <View style={styles.loading}>
               {error ? null : <ActivityIndicator color={colors.muted} />}
               <Text style={styles.summary}>
-                {error ? updateHint(error) : "Reading the branch from desktop…"}
+                {error ? updateHint(error, t) : t("changes.commitSheet.readingBranch")}
               </Text>
             </View>
           ) : (
@@ -288,7 +292,7 @@ export function CommitSheet({
                   onChangeText={setMessage}
                   editable={hasFiles && !busy}
                   multiline
-                  placeholder={hasFiles ? "Commit message" : "Nothing to commit"}
+                  placeholder={hasFiles ? t("changes.commitSheet.messagePlaceholder") : t("changes.commitSheet.nothingToCommit")}
                   placeholderTextColor={colors.muted}
                   keyboardAppearance={scheme}
                   cursorColor={colors.accent}
@@ -298,7 +302,7 @@ export function CommitSheet({
                 {status.canGenerate ? (
                   <Pressable
                     accessibilityRole="button"
-                    accessibilityLabel={busy === "generate" ? "Stop writing" : "Write a message"}
+                    accessibilityLabel={busy === "generate" ? t("changes.commitSheet.stopWriting") : t("changes.commitSheet.writeMessage")}
                     disabled={!canGenerate}
                     onPress={() => void generate()}
                     style={({ pressed }) => [
@@ -335,7 +339,7 @@ export function CommitSheet({
                     ) : (
                       <Icon name="check" size={18} color={colors.inverse} />
                     )}
-                    <Text style={[styles.label, styles.primaryLabel]}>Commit</Text>
+                    <Text style={[styles.label, styles.primaryLabel]}>{t("changes.commitSheet.commit")}</Text>
                   </Pressable>
                 </View>
 
@@ -396,16 +400,22 @@ function counts(status: GitStatus) {
     .join(" ");
 }
 
-function syncLabel(status: GitStatus) {
-  if (status.ahead > 0 && status.behind > 0) return `Sync ↓${status.behind} ↑${status.ahead}`;
-  if (status.ahead > 0) return `Push ${status.ahead} ${status.ahead === 1 ? "commit" : "commits"}`;
-  return `Pull ${status.behind} ${status.behind === 1 ? "commit" : "commits"}`;
+function syncLabel(status: GitStatus, t: TFunction) {
+  if (status.ahead > 0 && status.behind > 0)
+    return t("changes.commitSheet.syncBoth", { behind: status.behind, ahead: status.ahead });
+  if (status.ahead > 0)
+    return status.ahead === 1
+      ? t("changes.commitSheet.push.one", { count: status.ahead })
+      : t("changes.commitSheet.push.other", { count: status.ahead });
+  return status.behind === 1
+    ? t("changes.commitSheet.pull.one", { count: status.behind })
+    : t("changes.commitSheet.pull.other", { count: status.behind });
 }
 
 /** An older desktop doesn't know the commit sheet's requests; say what fixes it. */
-function updateHint(error: string) {
+function updateHint(error: string, t: TFunction) {
   return /unsupported/i.test(error)
-    ? "Update Natsu on your desktop to commit from here."
+    ? t("changes.commitSheet.updateDesktop")
     : error;
 }
 

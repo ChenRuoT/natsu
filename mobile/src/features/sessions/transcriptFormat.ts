@@ -1,28 +1,49 @@
 // Labels as AgentTranscript writes them, so a turn reads the same on both.
+import { t as tNow, type TFunction } from "@/i18n/i18n";
 
 /** "Claude Opus worked for 2m 4s", or "Working…" while the clock starts. */
 export function formatWorkingDuration(
   elapsedMs: number | null,
   modelName?: string,
   done = false,
+  t: TFunction = tNow,
 ): string {
   const who = modelName?.trim();
-  const elapsed = formatElapsed(elapsedMs);
-  const verb = done ? (who ? "worked" : "Worked") : who ? "working" : "Working";
+  const elapsed = formatElapsed(elapsedMs, t);
   if (elapsed == null) {
-    if (done) return who ? `${who} ${verb}` : verb;
-    return who ? `${who} ${verb}…` : `${verb}…`;
+    if (done) {
+      return who
+        ? t("sessions.transcriptFormat.workedNamed", { who })
+        : t("sessions.transcriptFormat.worked");
+    }
+    return who
+      ? t("sessions.transcriptFormat.workingNamed", { who })
+      : t("sessions.transcriptFormat.working");
   }
-  return who ? `${who} ${verb} for ${elapsed}` : `${verb} for ${elapsed}`;
+  if (done) {
+    return who
+      ? t("sessions.transcriptFormat.workedNamedFor", { who, elapsed })
+      : t("sessions.transcriptFormat.workedFor", { elapsed });
+  }
+  return who
+    ? t("sessions.transcriptFormat.workingNamedFor", { who, elapsed })
+    : t("sessions.transcriptFormat.workingFor", { elapsed });
 }
 
-export function formatElapsed(elapsedMs: number | null): string | null {
+export function formatElapsed(
+  elapsedMs: number | null,
+  t: TFunction = tNow,
+): string | null {
   if (elapsedMs == null) return null;
   const totalSec = Math.max(1, Math.round(elapsedMs / 1000));
-  if (totalSec < 60) return `${totalSec}s`;
+  if (totalSec < 60) {
+    return t("sessions.transcriptFormat.elapsedSeconds", { count: totalSec });
+  }
   const minutes = Math.floor(totalSec / 60);
   const seconds = totalSec % 60;
-  return seconds ? `${minutes}m ${seconds}s` : `${minutes}m`;
+  return seconds
+    ? t("sessions.transcriptFormat.elapsedMinutesSeconds", { minutes, seconds })
+    : t("sessions.transcriptFormat.elapsedMinutes", { minutes });
 }
 
 /** Wall-clock stamp for a message or a finished turn. */
@@ -34,16 +55,20 @@ export function formatClockTime(epochMs: number): string {
 }
 
 /** A day separator's two halves: "Today" and "3:42 PM". */
-export function dayStamp(at: number, now = Date.now()): [string, string] {
+export function dayStamp(
+  at: number,
+  now = Date.now(),
+  t: TFunction = tNow,
+): [string, string] {
   const date = new Date(at);
   const today = new Date(now);
   const yesterday = new Date(now);
   yesterday.setDate(today.getDate() - 1);
   const day =
     date.toDateString() === today.toDateString()
-      ? "Today"
+      ? t("sessions.transcriptFormat.today")
       : date.toDateString() === yesterday.toDateString()
-        ? "Yesterday"
+        ? t("sessions.transcriptFormat.yesterday")
         : new Intl.DateTimeFormat(undefined, {
             weekday: "short",
             month: "short",
@@ -82,33 +107,43 @@ export type MetricStat = { label: string; value: string; unit?: string };
 export function turnMetricsSheet(
   metrics: Metrics,
   elapsedMs: number | null,
+  t: TFunction = tNow,
 ): { highlights: MetricStat[]; tokens: MetricStat[] } {
   const outputRate =
     metrics.outputTokens != null && elapsedMs != null && elapsedMs > 0
       ? metrics.outputTokens / (elapsedMs / 1000)
       : undefined;
-  const elapsed = formatElapsed(elapsedMs);
+  const elapsed = formatElapsed(elapsedMs, t);
   const highlights: MetricStat[] = [];
   if (metrics.cacheHitPercent != null) {
     highlights.push({
-      label: "Cache hit",
+      label: t("sessions.transcriptFormat.metricCacheHit"),
       value: String(Math.round(metrics.cacheHitPercent)),
       unit: "%",
     });
   }
   if (outputRate != null) {
-    highlights.push({ label: "Output speed", value: formatMetricCount(outputRate), unit: "tok/s" });
+    highlights.push({
+      label: t("sessions.transcriptFormat.metricOutputSpeed"),
+      value: formatMetricCount(outputRate),
+      unit: "tok/s",
+    });
   }
-  if (elapsed != null) highlights.push({ label: "Duration", value: elapsed });
+  if (elapsed != null) {
+    highlights.push({
+      label: t("sessions.transcriptFormat.metricDuration"),
+      value: elapsed,
+    });
+  }
 
   const tokens: MetricStat[] = [];
   const count = (label: string, value: number | undefined) => {
     if (value != null) tokens.push({ label, value: groupDigits(value) });
   };
-  count("Input", metrics.inputTokens);
-  count("Output", metrics.outputTokens);
-  count("Cache read", metrics.cacheReadTokens);
-  count("Cache write", metrics.cacheWriteTokens);
+  count(t("sessions.transcriptFormat.metricInput"), metrics.inputTokens);
+  count(t("sessions.transcriptFormat.metricOutput"), metrics.outputTokens);
+  count(t("sessions.transcriptFormat.metricCacheRead"), metrics.cacheReadTokens);
+  count(t("sessions.transcriptFormat.metricCacheWrite"), metrics.cacheWriteTokens);
   return { highlights, tokens };
 }
 
