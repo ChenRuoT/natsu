@@ -1,20 +1,21 @@
 use super::*;
+use natsu_core::i18n::tr;
 
 impl Automations {
     pub(super) fn render_gallery(&self, cx: &mut Context<Self>) -> AnyElement {
         let categories = [
-            ("popular", "Popular"),
-            ("review", "Code Review"),
-            ("security", "Security"),
-            ("incidents", "Incidents & Triage"),
-            ("research", "Data & Research"),
-            ("environment", "Environment"),
+            ("popular", tr("Popular")),
+            ("review", tr("Code Review")),
+            ("security", tr("Security")),
+            ("incidents", tr("Incidents & Triage")),
+            ("research", tr("Data & Research")),
+            ("environment", tr("Environment")),
         ];
         let mut cards = vec![
             div()
                 .id("automation-scratch")
                 .role(Role::Button)
-                .aria_label("Start from scratch")
+                .aria_label(tr("Start from scratch"))
                 .min_h(px(148.))
                 .p(px(16.))
                 .rounded(px(12.))
@@ -49,14 +50,11 @@ impl Automations {
                                     div()
                                         .text_size(px(13.))
                                         .font_weight(gpui::FontWeight::MEDIUM)
-                                        .child("Start from scratch"),
+                                        .child(tr("Start from scratch")),
                                 )
-                                .child(
-                                    div()
-                                        .text_size(px(12.))
-                                        .text_color(content(0.5))
-                                        .child("Write your own instructions and choose a trigger."),
-                                ),
+                                .child(div().text_size(px(12.)).text_color(content(0.5)).child(
+                                    tr("Write your own instructions and choose a trigger."),
+                                )),
                         ),
                 )
                 .on_click(cx.listener(|this, _, _, cx| this.begin(None, cx)))
@@ -182,14 +180,14 @@ impl Automations {
                         div()
                             .text_size(px(20.))
                             .font_weight(gpui::FontWeight::SEMIBOLD)
-                            .child("New automation"),
+                            .child(tr("New automation")),
                     )
                     .child(
                         div()
                             .mt(px(6.))
                             .text_size(px(13.))
                             .text_color(content(0.5))
-                            .child("Pick an example or start from scratch."),
+                            .child(tr("Pick an example or start from scratch.")),
                     )
                     .child(
                         div()

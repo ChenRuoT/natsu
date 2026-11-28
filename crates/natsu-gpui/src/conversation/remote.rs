@@ -1,5 +1,6 @@
 //! RemoteSession.tsx's host observation and composer restrictions.
 use super::*;
+use natsu_core::i18n::tr;
 use serde_json::{Value, json};
 
 #[derive(Default)]
@@ -17,7 +18,7 @@ pub(super) struct State {
 impl State {
     fn legacy_recovery_error(&self) -> Option<&str> {
         self.rejected.as_ref().filter(|rejected| rejected["legacyRecovery"] == true)
-            .map(|rejected| rejected["error"].as_str().unwrap_or("Older pending requests could not be linked to one conversation. Open the original desktop to recover them."))
+            .map(|rejected| rejected["error"].as_str().unwrap_or(tr("Older pending requests could not be linked to one conversation. Open the original desktop to recover them.")))
     }
 }
 impl Conversation {
@@ -77,11 +78,11 @@ impl Conversation {
                 (
                     store
                         .remote_session(id)?
-                        .ok_or("Remote session no longer exists")?,
+                        .ok_or(tr("Remote session no longer exists"))?,
                     store.agent_settings(id)?.unwrap_or_default(),
                 )
             };
-            let client = client.ok_or("Remote connections are unavailable")?;
+            let client = client.ok_or(tr("Remote connections are unavailable"))?;
             let machine = remote.machine(&client)?;
             let descriptor = if initial {
                 Some(client.request(&machine.id, "environment.describe", json!({}))?)
@@ -98,7 +99,7 @@ impl Conversation {
                 let summary = store.register_remote_summary(&remote.project, snapshot)?;
                 remote = store
                     .remote_session(summary.id)?
-                    .ok_or("Remote session identity is missing")?;
+                    .ok_or(tr("Remote session identity is missing"))?;
                 settings = store.agent_settings(summary.id)?.unwrap_or_default();
             }
             let changed = initial
@@ -227,15 +228,19 @@ impl Conversation {
     }
     pub(super) fn remote_send_guard(&mut self, cx: &mut Context<Self>) -> bool {
         let error = if !self.loaded {
-            Some("Wait for this remote conversation to load.")
+            Some(tr("Wait for this remote conversation to load."))
         } else if !self.remote_state.online {
-            Some("The machine is offline. Reconnect in Settings → Connections, then Retry.")
-        } else if self.remote_state.pending {
-            Some(self.remote_state.legacy_recovery_error().unwrap_or(
-                "A remote command needs confirmation. Choose Retry before sending another message.",
+            Some(tr(
+                "The machine is offline. Reconnect in Settings → Connections, then Retry.",
             ))
+        } else if self.remote_state.pending {
+            Some(self.remote_state.legacy_recovery_error().unwrap_or(tr(
+                "A remote command needs confirmation. Choose Retry before sending another message.",
+            )))
         } else if self.busy || self.stopping {
-            Some("Wait for this remote turn to finish before sending another message.")
+            Some(tr(
+                "Wait for this remote turn to finish before sending another message.",
+            ))
         } else {
             None
         };
@@ -256,17 +261,18 @@ impl Conversation {
                 .capabilities
                 .contains("attachments.upload")
         {
-            self.status = "Update Natsu Host in Connections settings to send attachments.".into();
+            self.status =
+                tr("Update Natsu Host in Connections settings to send attachments.").into();
             cx.notify();
             return true;
         }
         if self.settings.plan && !self.remote_state.capabilities.contains("sessions.plan") {
-            self.status = "Update Natsu Host in Connections settings to use Plan mode.".into();
+            self.status = tr("Update Natsu Host in Connections settings to use Plan mode.").into();
             cx.notify();
             return true;
         }
         if self.draft_active(cx) && !self.remote_state.capabilities.contains("sessions.draft") {
-            self.status = "Update Natsu Host in Connections settings to save drafts.".into();
+            self.status = tr("Update Natsu Host in Connections settings to save drafts.").into();
             cx.notify();
             return true;
         }
@@ -283,12 +289,14 @@ impl Conversation {
                 .any(|command| text == *command || text.starts_with(&format!("{command} ")))
         {
             self.status =
-                "Only /plan, /compact and saved drafts are supported by this remote host.".into();
+                tr("Only /plan, /compact and saved drafts are supported by this remote host.")
+                    .into();
             cx.notify();
             return true;
         }
         if self.settings.operator || self.settings.orchestrator {
-            self.status = "Operator and orchestration are not available on remote projects.".into();
+            self.status =
+                tr("Operator and orchestration are not available on remote projects.").into();
             cx.notify();
             return true;
         }
@@ -339,9 +347,9 @@ impl Conversation {
         }
         let legacy = self.remote_state.legacy_recovery_error();
         Some(div().mx_2().my_2().p_3().rounded_lg().bg(content(0.04)).flex().items_center().gap_2()
-            .child(div().flex_1().text_size(px(12.)).child(if let Some(error) = legacy {error.to_owned()} else if self.remote_state.pending {"A remote command needs confirmation. Retry uses its original command ID.".to_owned()} else {self.remote_state.error.clone().unwrap_or_default()}))
+            .child(div().flex_1().text_size(px(12.)).child(if let Some(error) = legacy {error.to_owned()} else if self.remote_state.pending {tr("A remote command needs confirmation. Retry uses its original command ID.").to_owned()} else {self.remote_state.error.clone().unwrap_or_default()}))
             .when(legacy.is_none(), |d| d
-            .child(crate::settings::widgets::secondary_button("remote-retry",if self.remote_state.rejected.is_some() {"Restore message"} else {"Retry"},true,false).debug_selector(|| "remote-retry".into()).child(if self.remote_state.rejected.is_some() {"Restore message"} else {"Retry"}).on_click(cx.listener(|this,_,_,cx| {
+            .child(crate::settings::widgets::secondary_button("remote-retry",if self.remote_state.rejected.is_some() {tr("Restore message")} else {"Retry"},true,false).debug_selector(|| "remote-retry".into()).child(if self.remote_state.rejected.is_some() {tr("Restore message")} else {"Retry"}).on_click(cx.listener(|this,_,_,cx| {
                 if this.remote_state.rejected.is_some() { this.restore_remote_message(cx); } else {this.retry_remote(cx);}
             })))).into_any_element())
     }
@@ -371,7 +379,7 @@ impl Conversation {
             return;
         }
         if !self.input.read(cx).content.trim().is_empty() || !self.attachments.is_empty() {
-            self.status = "Clear the composer before restoring the rejected message.".into();
+            self.status = tr("Clear the composer before restoring the rejected message.").into();
             cx.notify();
             return;
         }

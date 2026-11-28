@@ -9,6 +9,7 @@ use gpui::{
     AnyElement, Context, Div, ElementId, FontWeight, Hsla, MouseButton, MouseDownEvent, Role,
     SharedString, Stateful, div, prelude::*, px, relative, rgb,
 };
+use natsu_core::i18n::{tr, tr_fmt};
 
 pub(super) const RED: u32 = 0xf87171;
 /// `text-[12px] leading-relaxed` and `text-[13px]` line boxes.
@@ -595,7 +596,10 @@ impl SettingsView {
                     .id(SharedString::from(format!("select-{id}")))
                     .debug_selector(move || format!("settings-select-{id}"))
                     .role(Role::ComboBox)
-                    .aria_label(format!("{label}: {trigger_label}"))
+                    .aria_label(tr_fmt(
+                        "{label}: {value}",
+                        &[("label", &tr(label)), ("value", &trigger_label)],
+                    ))
                     .aria_expanded(open)
                     .relative()
                     .w_full()
@@ -791,7 +795,7 @@ impl SettingsView {
                                                 .text_size(px(12.))
                                                 .line_height(px(16.))
                                                 .text_color(content(0.5))
-                                                .child("No matches"),
+                                                .child(tr("No matches")),
                                         )
                                     }),
                             )

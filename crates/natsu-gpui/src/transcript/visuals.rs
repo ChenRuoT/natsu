@@ -1,6 +1,7 @@
 //! Visuals are persistent transcript messages with lazily created native views.
 use super::*;
 use crate::visuals::{VisualChanged, VisualView};
+use natsu_core::i18n::tr;
 use natsu_core::visual::VisualDocument;
 
 // Each view owns a bounded script interpreter. Long conversations must not
@@ -137,7 +138,7 @@ impl TranscriptView {
                 .text_color(content(0.5))
                 .child(
                     if caption.is_empty() {
-                        "Visual"
+                        tr("Visual")
                     } else {
                         caption
                     }

@@ -35,6 +35,7 @@ use gpui::{
     AnyElement, App, Context, Entity, EventEmitter, Focusable, MouseButton, Role, SharedString,
     Subscription, WeakEntity, Window, div, prelude::*, px, rgb,
 };
+use natsu_core::i18n::{tr, tr_fmt};
 use natsu_core::{
     agent::{AccessMode, Settings},
     mono::{
@@ -504,9 +505,9 @@ impl Monos {
             .map(|chat| chat.read(cx).mono_status())
             .unwrap_or("idle");
         let status = match state {
-            "working" => "Working",
-            "needs-you" => "Needs you",
-            _ => "Idle",
+            "working" => tr("Working"),
+            "needs-you" => tr("Needs you"),
+            _ => tr("Idle"),
         };
         div()
             .id("original-mono-title")
@@ -600,7 +601,7 @@ impl Monos {
         cx: &mut Context<Self>,
     ) -> Result<(), String> {
         if self.roster.get(id).is_none() {
-            return Err("Mono is no longer available".into());
+            return Err(tr("Mono is no longer available").into());
         }
         self.ensure_chat(id, cx);
         self.enqueue(id, text, attachments, false, cx);
@@ -683,11 +684,11 @@ impl Monos {
         let work = cx.background_executor().spawn(async move {
             let db = locked(&store)?;
             if let Some(missing) = &mono.unavailable_session {
-                return Err(format!("This Mono's saved conversation ({missing}) is unavailable. Its identity and history have been preserved."));
+                return Err(tr_fmt("This Mono's saved conversation ({missing}) is unavailable. Its identity and history have been preserved.", &[("missing", &missing)]));
             }
             if let Some(session) = mono.session_id {
                 let summary = db.mono_session(session)?
-                    .ok_or("This Mono's saved conversation is unavailable. Reset its conversation explicitly to start a new one.")?;
+                    .ok_or(tr("This Mono's saved conversation is unavailable. Reset its conversation explicitly to start a new one."))?;
                 let delivered = mono
                     .outbox
                     .iter()
@@ -1263,15 +1264,15 @@ impl Monos {
                             .text_size(px(12.))
                             .line_height(px(20.))
                             .text_color(content(0.5))
-                            .child("Monos"),
+                            .child(tr("Monos")),
                     )
                 })
         } else {
-            section_label("Monos")
+            section_label(tr("Monos"))
         }
         .when(has, |d| {
             d.child(
-                icon_button("new-mono", "New mono", "plus")
+                icon_button("new-mono", tr("New mono"), "plus")
                     .debug_selector(|| "sidebar-mono-button".into())
                     .size(px(20.))
                     // Centred on the sidebar's trailing column, with the
@@ -1295,7 +1296,7 @@ impl Monos {
                         .id("new-mono-row")
                         .debug_selector(|| "new-mono".into())
                         .role(Role::Button)
-                        .aria_label("New mono")
+                        .aria_label(tr("New mono"))
                         .h(px(32.))
                         .when(original, |d| {
                             d.ml(px(6.)).mr_2().font_weight(gpui::FontWeight::MEDIUM)
@@ -1309,7 +1310,7 @@ impl Monos {
                         .text_color(content(0.5))
                         .hover(|s| s.bg(content(0.1)).text_color(content(1.)))
                         .child(icon("plus", 16.))
-                        .child("New mono")
+                        .child(tr("New mono"))
                         .on_click(cx.listener(move |this, _, w, cx| {
                             this.create(project.clone().into_iter().collect(), w, cx)
                         })),
@@ -1341,13 +1342,30 @@ impl Monos {
                 // the end of every row.
                 let unread = if active { 0 } else { unread };
                 let label = if unread == 0 {
-                    format!("{}, {state}", mono.label())
-                } else {
-                    format!(
-                        "{}, {state}, {unread} new {}",
-                        mono.label(),
-                        if unread == 1 { "reply" } else { "replies" }
+                    tr_fmt(
+                        "{mono}, {state}",
+                        &[("mono", &mono.label()), ("state", &state)],
                     )
+                } else {
+                    if unread == 1 {
+                        tr_fmt(
+                            "{mono}, {state}, {unread} new reply",
+                            &[
+                                ("mono", &mono.label()),
+                                ("state", &state),
+                                ("unread", &unread),
+                            ],
+                        )
+                    } else {
+                        tr_fmt(
+                            "{mono}, {state}, {unread} new replies",
+                            &[
+                                ("mono", &mono.label()),
+                                ("state", &state),
+                                ("unread", &unread),
+                            ],
+                        )
+                    }
                 };
                 let id = mono.id.clone();
                 let options = id.clone();
@@ -1463,18 +1481,24 @@ impl Monos {
                                 .invisible()
                                 .group_hover("mono-rail-row", |s| s.visible())
                                 .child(
-                                    icon_button("mono-options", "Mono options", "more-horizontal")
-                                        .debug_selector({
-                                            let id = mono.id.clone();
-                                            move || format!("mono-rail-options-{id}")
-                                        })
-                                        .on_mouse_down(MouseButton::Left, |_, _, cx| {
-                                            cx.stop_propagation()
-                                        })
-                                        .on_click(cx.listener(move |this, _, w, cx| {
+                                    icon_button(
+                                        "mono-options",
+                                        tr("Mono options"),
+                                        "more-horizontal",
+                                    )
+                                    .debug_selector({
+                                        let id = mono.id.clone();
+                                        move || format!("mono-rail-options-{id}")
+                                    })
+                                    .on_mouse_down(MouseButton::Left, |_, _, cx| {
+                                        cx.stop_propagation()
+                                    })
+                                    .on_click(cx.listener(
+                                        move |this, _, w, cx| {
                                             cx.stop_propagation();
                                             this.open_options(&options, None, w, cx);
-                                        })),
+                                        },
+                                    )),
                                 ),
                         )
                     })
@@ -1557,7 +1581,7 @@ impl Monos {
                         .id("close-mono-tab")
                         .debug_selector(|| "close-mono-tab-button".into())
                         .role(Role::Button)
-                        .aria_label("Close Mono tab")
+                        .aria_label(tr("Close Mono tab"))
                         .absolute()
                         .right_1()
                         .top(px(10.))

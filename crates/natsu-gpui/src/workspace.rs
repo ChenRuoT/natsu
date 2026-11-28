@@ -15,9 +15,9 @@ pub(crate) enum AppView {
 impl AppView {
     pub fn label(self) -> &'static str {
         match self {
-            Self::Inbox => "Inbox",
-            Self::Notes => "Notes",
-            Self::Automations => "Automations",
+            Self::Inbox => natsu_core::i18n::tr("Inbox"),
+            Self::Notes => natsu_core::i18n::tr("Notes"),
+            Self::Automations => natsu_core::i18n::tr("Automations"),
         }
     }
     pub fn icon(self) -> &'static str {

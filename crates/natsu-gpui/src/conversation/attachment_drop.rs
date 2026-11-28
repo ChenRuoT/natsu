@@ -1,6 +1,7 @@
 use super::*;
 use crate::explorer::DraggedFile;
 use gpui::ExternalPaths;
+use natsu_core::i18n::tr;
 
 impl Conversation {
     /// Like the session drop region, accepts files over the transcript as well
@@ -45,7 +46,7 @@ impl Conversation {
                 this.set_file_drag(false, cx);
                 if paths.paths().is_empty() {
                     this.attachment_error = Some(
-                        "This drag did not provide a file. Save the image, then drag the saved file here."
+                        tr("This drag did not provide a file. Save the image, then drag the saved file here.")
                             .into(),
                     );
                     cx.notify();
@@ -80,7 +81,7 @@ impl Conversation {
                 .justify_center()
                 .text_size(px(12.))
                 .text_color(content(0.7))
-                .child("Drop files to attach")
+                .child(tr("Drop files to attach"))
                 .into_any_element()
         })
     }

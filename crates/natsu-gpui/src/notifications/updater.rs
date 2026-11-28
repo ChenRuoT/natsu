@@ -5,6 +5,7 @@ use crate::{
 };
 use gpui::{App, Context, Entity, EventEmitter, Global, Role, div, prelude::*, px};
 use natsu_core::app_update::{self, Config, Installation, Installed, Update};
+use natsu_core::i18n::{tr, tr_fmt};
 use std::{
     sync::{Arc, Mutex},
     time::Duration,
@@ -79,10 +80,10 @@ impl Updater {
         let setup = (|| {
             let endpoint = option_env!("NATSU_NATIVE_UPDATER_ENDPOINT")
                 .filter(|v| !v.is_empty())
-                .ok_or("Automatic updates aren’t configured for this build")?;
+                .ok_or(tr("Automatic updates aren’t configured for this build"))?;
             let key = option_env!("NATSU_NATIVE_UPDATER_PUBKEY")
                 .filter(|v| !v.is_empty())
-                .ok_or("This build has no update verification key")?;
+                .ok_or(tr("This build has no update verification key"))?;
             Config::new(endpoint, key, version())
         })();
         let (config, message) = match setup {
@@ -176,7 +177,10 @@ impl Updater {
                         };
                         this.message = Some(error.clone());
                         if manual {
-                            cx.emit(Event::Error(format!("Couldn’t check for updates: {error}")));
+                            cx.emit(Event::Error(tr_fmt(
+                                "Couldn’t check for updates: {error}",
+                                &[("error", &error)],
+                            )));
                         }
                     }
                 }
@@ -214,7 +218,7 @@ impl Updater {
                 })?;
                 {
                     let mut gate = gate.lock().unwrap_or_else(|e| e.into_inner());
-                    if gate.quitting { return Err("The app is closing; the update was not installed".into()); }
+                    if gate.quitting { return Err(tr("The app is closing; the update was not installed").into()); }
                     gate.installing = true;
                 }
                 let _ = tx.send_blocking(Progress::Installing);
@@ -257,8 +261,9 @@ impl Updater {
                     if let Err(error) = app_update::schedule_relaunch(&path) {
                         this.phase = Phase::Available;
                         this.message = Some(error.clone());
-                        cx.emit(Event::Error(format!(
-                            "The update was installed. Reopen Natsu Native to finish: {error}"
+                        cx.emit(Event::Error(tr_fmt(
+                            "The update was installed. Reopen Natsu Native to finish: {error}",
+                            &[("error", &error)],
                         )));
                         this.changed(cx);
                     } else {
@@ -269,8 +274,9 @@ impl Updater {
                 Err(error) => {
                     this.phase = Phase::Available;
                     this.message = Some(error.clone());
-                    cx.emit(Event::Error(format!(
-                        "Couldn’t install the update: {error}"
+                    cx.emit(Event::Error(tr_fmt(
+                        "Couldn’t install the update: {error}",
+                        &[("error", &error)],
                     )));
                     this.changed(cx);
                     if this.gate.lock().unwrap_or_else(|e| e.into_inner()).quitting {
@@ -292,7 +298,7 @@ pub(crate) fn action(entity: &Entity<Updater>, cx: &App) -> Action {
     let state = entity.read(cx);
     match state.phase {
         Phase::Available => Action::Install(state.pending_version()),
-        Phase::Checking => Action::Busy("Checking…".into()),
+        Phase::Checking => Action::Busy(tr("Checking…").into()),
         Phase::Downloading | Phase::Installing => Action::Busy(state.progress_label()),
         Phase::Disabled | Phase::Idle | Phase::Current => Action::Check,
     }
@@ -301,7 +307,7 @@ pub(crate) fn action(entity: &Entity<Updater>, cx: &App) -> Action {
 pub(crate) fn status(entity: &Entity<Updater>, cx: &App) -> Option<String> {
     let state = entity.read(cx);
     match state.phase {
-        Phase::Current => Some("You’re on the latest version.".into()),
+        Phase::Current => Some(tr("You’re on the latest version.").into()),
         Phase::Checking => None,
         _ => state.message.clone(),
     }
@@ -318,11 +324,11 @@ impl Updater {
     }
     fn progress_label(&self) -> String {
         match self.phase {
-            Phase::Installing => "Installing…".into(),
+            Phase::Installing => tr("Installing…").into(),
             _ => self
                 .progress
-                .map(|p| format!("Downloading {p}%"))
-                .unwrap_or_else(|| "Downloading…".into()),
+                .map(|p| tr_fmt("Downloading {percent}%", &[("percent", &p)]))
+                .unwrap_or_else(|| tr("Downloading…").into()),
         }
     }
 }
@@ -333,7 +339,10 @@ pub(crate) fn row(entity: Entity<Updater>, cx: &App) -> gpui::AnyElement {
     let available = state.phase == Phase::Available;
     // Matches the desktop footer: one line, accent-tinted until it starts.
     let label = if available {
-        format!("Update to v{}", state.pending_version())
+        tr_fmt(
+            "Update to v{version}",
+            &[("version", &state.pending_version())],
+        )
     } else {
         state.progress_label()
     };
@@ -404,7 +413,7 @@ pub(crate) fn row(entity: Entity<Updater>, cx: &App) -> gpui::AnyElement {
         );
     if available {
         button = button
-            .aria_label("Install the available Natsu Native update")
+            .aria_label(tr("Install the available Natsu Native update"))
             .cursor_pointer()
             .hover(|s| s.bg(accent_color().opacity(0.2)))
             .on_click(move |_, _, cx| action.update(cx, |updater, cx| updater.install(cx)));

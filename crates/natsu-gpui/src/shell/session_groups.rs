@@ -72,7 +72,7 @@ pub(super) fn reminder_caption(ms: u64) -> String {
     };
     let now = Local::now().naive_local();
     if at <= now {
-        "Now".into()
+        tr("Now").into()
     } else if at.date() == now.date() {
         at.format("%-H:%M").to_string()
     } else {
@@ -133,9 +133,9 @@ impl Render for FolderSwatches {
                     .debug_selector(move || format!("folder-color-{ix}"))
                     .role(Role::Button)
                     .aria_label(if ix == 0 {
-                        "Default color".to_string()
+                        tr("Default color").to_string()
                     } else {
-                        format!("Color {ix}")
+                        tr_fmt("Color {index}", &[("index", &ix)])
                     })
                     .size(px(18.))
                     .rounded_full()
@@ -436,33 +436,35 @@ impl Shell {
             .all(|id| self.session_metadata(*id, cx).summary.archived);
         let mut items = Vec::new();
         if self.reminders.iter().any(|r| ids.contains(&r.session_id)) {
-            items.push(MenuAction::new("reminder:cancel", "Cancel reminder").into());
+            items.push(MenuAction::new("reminder:cancel", tr("Cancel reminder")).into());
             items.push(MenuItem::Separator);
         }
-        items.push(MenuAction::new("pin", if all_pinned { "Unpin" } else { "Pin" }).into());
+        items.push(MenuAction::new("pin", if all_pinned { tr("Unpin") } else { tr("Pin") }).into());
         if !multiple {
             items.extend([
-                MenuAction::new("rename", "Rename").shortcut("F2").into(),
-                MenuAction::new("copy-session-id", "Copy session ID")
+                MenuAction::new("rename", tr("Rename"))
+                    .shortcut("F2")
+                    .into(),
+                MenuAction::new("copy-session-id", tr("Copy session ID"))
                     .submenu(vec![
-                        MenuAction::new("copy-harness-session-id", "Harness session ID")
+                        MenuAction::new("copy-harness-session-id", tr("Harness session ID"))
                             .disabled(summary.provider_id.is_none()),
-                        MenuAction::new("copy-natsu-session-id", "Natsu session ID"),
+                        MenuAction::new("copy-natsu-session-id", tr("Natsu session ID")),
                     ])
                     .into(),
                 MenuAction::new(
                     "link-work-item",
                     if summary.work_item.is_some() {
-                        "Edit GitHub issue or PR link…"
+                        tr("Edit GitHub issue or PR link…")
                     } else {
-                        "Link GitHub issue or PR…"
+                        tr("Link GitHub issue or PR…")
                     },
                 )
                 .into(),
             ]);
         }
         items.extend([
-            MenuAction::new("reminder", "Remind me")
+            MenuAction::new("reminder", tr("Remind me"))
                 .submenu(
                     reminder_presets(Local::now().naive_local())
                         .into_iter()
@@ -471,14 +473,14 @@ impl Shell {
                 )
                 .into(),
             MenuItem::Separator,
-            MenuAction::new("folder-new", "New folder").into(),
+            MenuAction::new("folder-new", tr("New folder")).into(),
         ]);
         if !groups.folders.is_empty() {
             items.push(MenuItem::Separator);
             items.extend(groups.folders.iter().map(|folder| {
                 MenuAction::new(
                     format!("folder-add:{}", folder.id),
-                    format!("Add to {}", folder.name),
+                    tr_fmt("Add to {folder}", &[("folder", &folder.name)]),
                 )
                 .checked(ids.iter().all(|id| folder.session_ids.contains(id)))
                 .into()
@@ -489,9 +491,9 @@ impl Shell {
                 MenuAction::new(
                     "folder-remove",
                     if multiple {
-                        "Remove from folders"
+                        tr("Remove from folders")
                     } else {
-                        "Remove from folder"
+                        tr("Remove from folder")
                     },
                 )
                 .into(),
@@ -501,10 +503,14 @@ impl Shell {
             MenuItem::Separator,
             MenuAction::new(
                 "archive",
-                if all_archived { "Unarchive" } else { "Archive" },
+                if all_archived {
+                    tr("Unarchive")
+                } else {
+                    tr("Archive")
+                },
             )
             .into(),
-            MenuAction::new("delete", "Delete")
+            MenuAction::new("delete", tr("Delete"))
                 .shortcut("⌫")
                 .danger()
                 .into(),
@@ -645,9 +651,11 @@ impl Shell {
         let focus = swatches.read(cx).focus.clone();
         vec![
             MenuItem::Custom(swatches.into(), focus),
-            MenuAction::new("rename", "Rename").shortcut("F2").into(),
+            MenuAction::new("rename", tr("Rename"))
+                .shortcut("F2")
+                .into(),
             MenuItem::Separator,
-            MenuAction::new("ungroup", "Ungroup").into(),
+            MenuAction::new("ungroup", tr("Ungroup")).into(),
         ]
     }
     pub(super) fn run_folder_menu(
@@ -736,8 +744,10 @@ impl Shell {
                                 reminder.fired_at = None;
                             }
                         }
-                        this.notification_state.reminder_error =
-                            Some(format!("Could not deliver reminders: {error}"));
+                        this.notification_state.reminder_error = Some(tr_fmt(
+                            "Could not deliver reminders: {error}",
+                            &[("error", &error)],
+                        ));
                     }
                 }
                 this.invalidate_chrome(cx);
@@ -756,7 +766,8 @@ impl Shell {
                         .get(pane)
                         .is_some_and(|r| r.read(cx).unsaved_files(cx)))
         }) {
-            self.error = Some("Close this session's detached file panes before deleting it".into());
+            self.error =
+                Some(tr("Close this session's detached file panes before deleting it").into());
             cx.notify();
             return;
         }
@@ -766,7 +777,7 @@ impl Shell {
             .iter()
             .any(|(pane, t)| t.owner == id && self.workspace.tab_of(*pane).is_some())
         {
-            self.error = Some("Close this session's terminal panes before deleting it".into());
+            self.error = Some(tr("Close this session's terminal panes before deleting it").into());
             cx.notify();
             return;
         }
@@ -782,7 +793,7 @@ impl Shell {
         }
         if self.workspace.tab_of(id).is_some() {
             self.deleting.remove(&id);
-            self.error = Some("Could not delete a session that is still open".into());
+            self.error = Some(tr("Could not delete a session that is still open").into());
             cx.notify();
             return;
         }
@@ -807,7 +818,10 @@ impl Shell {
                 match result {
                     Ok(()) => this.forget_session(id, cx),
                     Err(error) => {
-                        this.error = Some(format!("Could not delete the session: {error}"))
+                        this.error = Some(tr_fmt(
+                            "Could not delete the session: {error}",
+                            &[("error", &error)],
+                        ))
                     }
                 }
                 this.invalidate_chrome(cx);
@@ -882,7 +896,7 @@ impl Shell {
         };
         let input = cx.new(|cx| {
             let mut input = input::Input::field(
-                "Rename. Press Enter to confirm or Escape to cancel.",
+                tr("Rename. Press Enter to confirm or Escape to cancel."),
                 "",
                 content(0.35),
                 cx,
@@ -1090,13 +1104,17 @@ impl Shell {
         cx: &mut Context<Self>,
     ) -> Option<AnyElement> {
         let item = self.session_metadata(id, cx).summary.work_item.clone()?;
-        let noun = if item.kind == "pr" { "PR" } else { "issue" };
+        let is_pr = item.kind == "pr";
         let url = item.url.clone();
         Some(
             div()
                 .id(("work-item", id as usize))
                 .role(Role::Link)
-                .aria_label(format!("Open {noun} #{}", item.number))
+                .aria_label(if is_pr {
+                    tr_fmt("Open PR #{number}", &[("number", &item.number)])
+                } else {
+                    tr_fmt("Open issue #{number}", &[("number", &item.number)])
+                })
                 .flex_shrink_0()
                 .flex()
                 .items_center()
@@ -1158,7 +1176,7 @@ impl Shell {
                 sessions,
             } => (
                 "reminders".into(),
-                "Reminders".into(),
+                tr("Reminders").into(),
                 "clock",
                 Some(rgb(REMINDERS_COLOR).into()),
                 *collapsed,
@@ -1185,7 +1203,7 @@ impl Shell {
             }
             Entry::Pinned { sessions } if self.workspace.classic_layout => (
                 "pinned".into(),
-                "Pinned".into(),
+                tr("Pinned").into(),
                 "pin",
                 None,
                 folders.pinned_collapsed,
@@ -1620,7 +1638,7 @@ impl Shell {
                     div()
                         .id(SharedString::from(format!("new-session-in-folder-{id}")))
                         .role(Role::Button)
-                        .aria_label("New session")
+                        .aria_label(tr("New session"))
                         .cursor_pointer()
                         .border_1()
                         .border_color(content(0.))
@@ -1636,7 +1654,7 @@ impl Shell {
                         .text_color(content(0.45))
                         .hover(|s| s.bg(content(0.1)).text_color(content(1.)))
                         .child(icon("plus", 12.))
-                        .child("New session")
+                        .child(tr("New session"))
                         .on_click(cx.listener(move |this, _, _, cx| {
                             this.create_in_folder(folder.clone(), cx);
                         })),
@@ -1650,7 +1668,7 @@ impl Shell {
         let initial = self.session_metadata(id, cx).summary.work_item.clone();
         let input = cx.new(|cx| {
             input::Input::field(
-                "GitHub issue or pull request URL",
+                tr("GitHub issue or pull request URL"),
                 "https://github.com/owner/repo/pull/123",
                 content(0.3),
                 cx,
@@ -1700,7 +1718,8 @@ impl Shell {
             match parse_github_work_item(dialog.input.read(cx).content.trim()) {
                 Some(item) => Some(item),
                 None => {
-                    dialog.error = Some("Enter a valid GitHub issue or pull request URL.".into());
+                    dialog.error =
+                        Some(tr("Enter a valid GitHub issue or pull request URL.").into());
                     cx.notify();
                     return;
                 }
@@ -1775,9 +1794,9 @@ impl Shell {
                                 .debug_selector(|| "link-work-item-dialog".into())
                                 .role(Role::Dialog)
                                 .aria_label(if dialog.editing {
-                                    "Edit GitHub link"
+                                    tr("Edit GitHub link")
                                 } else {
-                                    "Link GitHub issue or PR"
+                                    tr("Link GitHub issue or PR")
                                 })
                                 .flex()
                                 .flex_col()
@@ -1794,9 +1813,9 @@ impl Shell {
                                                 .font_weight(FontWeight::SEMIBOLD)
                                                 .text_color(content(1.))
                                                 .child(if dialog.editing {
-                                                    "Edit GitHub link"
+                                                    tr("Edit GitHub link")
                                                 } else {
-                                                    "Link GitHub issue or PR"
+                                                    tr("Link GitHub issue or PR")
                                                 }),
                                         )
                                         .child(
@@ -1823,7 +1842,7 @@ impl Shell {
                                                     div()
                                                         .font_weight(FontWeight::MEDIUM)
                                                         .text_color(content(0.8))
-                                                        .child("Issue or pull request URL"),
+                                                        .child(tr("Issue or pull request URL")),
                                                 )
                                                 .child(field)
                                                 .child(match &dialog.error {
@@ -1838,7 +1857,7 @@ impl Shell {
                                                         .text_size(px(11.))
                                                         .text_color(content(0.45))
                                                         .child(
-                                                            "Paste the full github.com URL. The linked item will appear on the session card.",
+                                                            tr("Paste the full github.com URL. The linked item will appear on the session card."),
                                                         ),
                                                 }),
                                         )
@@ -1850,7 +1869,7 @@ impl Shell {
                                                 .gap_2()
                                                 .when(dialog.editing, |d| {
                                                     d.child(
-                                                        button("link-remove", "Remove link")
+                                                        button("link-remove", tr("Remove link"))
                                                             .text_color(rgb(0xf87171))
                                                             .hover(|s| s.bg(rgba(0xf871711a)))
                                                             .on_click(cx.listener(|this, _, window, cx| {
@@ -1860,7 +1879,7 @@ impl Shell {
                                                     .child(div().flex_1())
                                                 })
                                                 .child(
-                                                    crate::modal::ghost_button("link-cancel", "Cancel")
+                                                    crate::modal::ghost_button("link-cancel", tr("Cancel"))
                                                         .cursor_pointer()
                                                         .on_click(cx.listener(|this, _, window, cx| {
                                                             this.close_link_dialog(window, cx)
@@ -1869,7 +1888,7 @@ impl Shell {
                                                 .child(
                                                     crate::modal::primary_button(
                                                         "link-save",
-                                                        if dialog.editing { "Update link" } else { "Link" },
+                                                        if dialog.editing { tr("Update link") } else { tr("Link") },
                                                     )
                                                     .debug_selector(|| "link-save".into())
                                                     .cursor_pointer()

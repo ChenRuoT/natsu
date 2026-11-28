@@ -6,15 +6,19 @@ impl Shell {
     pub(super) fn filter_menu_items(&self, cx: &App) -> Vec<MenuItem> {
         let filters = &self.workspace.session_filters;
         let mut items = vec![
-            MenuAction::new("archived", "Archived")
+            MenuAction::new("archived", tr("Archived"))
                 .checked(self.workspace.preferences.show_archived)
                 .into(),
-            MenuItem::Header("Status".into()),
+            MenuItem::Header(tr("Status").into()),
         ];
         for (id, label, checked) in [
-            ("working", "Working", filters.status.working),
-            ("approval", "Needs approval", filters.status.needs_approval),
-            ("done", "Done", filters.status.done),
+            ("working", tr("Working"), filters.status.working),
+            (
+                "approval",
+                tr("Needs approval"),
+                filters.status.needs_approval,
+            ),
+            ("done", tr("Done"), filters.status.done),
         ] {
             items.push(
                 MenuAction::new(id, label)
@@ -23,7 +27,7 @@ impl Shell {
                     .into(),
             );
         }
-        items.push(MenuItem::Header("Time".into()));
+        items.push(MenuItem::Header(tr("Time").into()));
         for (time, id, label) in TimeFilter::OPTIONS {
             items.push(
                 MenuAction::new(format!("time:{id}"), label)
@@ -45,7 +49,7 @@ impl Shell {
             })
             .collect();
         if !providers.is_empty() {
-            items.push(MenuItem::Header("Provider".into()));
+            items.push(MenuItem::Header(tr("Provider").into()));
             for kind in providers {
                 items.push(
                     MenuAction::new(format!("provider:{}", kind.id()), kind.label())
@@ -58,7 +62,11 @@ impl Shell {
         }
         if filters.active(self.workspace.preferences.show_archived) {
             items.push(MenuItem::Separator);
-            items.push(MenuAction::new("clear", "Clear filters").keep_open().into());
+            items.push(
+                MenuAction::new("clear", tr("Clear filters"))
+                    .keep_open()
+                    .into(),
+            );
         }
         items
     }

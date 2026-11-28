@@ -9,6 +9,7 @@ use gpui::{
     AnyElement, Context, Focusable, Role, SharedString, Window, div, linear_color_stop,
     linear_gradient, prelude::*, px, rgb,
 };
+use natsu_core::i18n::{tr, tr_fmt};
 
 /// ACCENT_COLOR_PRESETS, after the Default swatch.
 pub(crate) const ACCENTS: [(u32, &str); 6] = [
@@ -29,14 +30,14 @@ const EFFECTS: [(&str, &str); 6] = [
     ("gradient-blur", "Haze"),
 ];
 fn effect_description(effect: &str) -> &'static str {
-    match effect {
+    tr(match effect {
         "dither" => "Rebuilds the artwork with a dithered color palette.",
         "ascii" => "Recreates the artwork with colored characters on black.",
         "halftone" => "Recreates the artwork with colored print dots on black.",
         "scanlines" => "Adds a pronounced horizontal display-line texture.",
         "gradient-blur" => "Blurs and fades the artwork into the background below.",
         _ => "Shows the original artwork.",
-    }
+    })
 }
 
 pub(crate) fn parse_hex(text: &str) -> Option<u32> {
@@ -97,13 +98,17 @@ impl SettingsView {
         let mut theme = vec![self.row(
             Some("theme"),
             true,
-            "Theme",
-            Some("System follows the OS appearance.".into()),
+            tr("Theme"),
+            Some(tr("System follows the OS appearance.").into()),
             vec![self.segmented(
                 "theme",
-                "Theme",
+                tr("Theme"),
                 &p.theme,
-                &[("system", "System"), ("dark", "Dark"), ("light", "Light")],
+                &[
+                    ("system", tr("System")),
+                    ("dark", tr("Dark")),
+                    ("light", tr("Light")),
+                ],
                 cx,
                 |this, v, cx| this.update(cx, |p| p.theme = v.into()),
             )],
@@ -114,7 +119,7 @@ impl SettingsView {
                 let palette = if light { pale } else { dark };
                 (
                     id.to_owned(),
-                    SharedString::from(label),
+                    SharedString::from(tr(label)),
                     Some(swatch(
                         palette.surface,
                         palette.panel,
@@ -127,8 +132,8 @@ impl SettingsView {
         theme.push(self.row(
             Some("workspace-theme"),
             false,
-            "Workspace theme",
-            Some("Choose a color preset.".into()),
+            tr("Workspace theme"),
+            Some(tr("Choose a color preset.").into()),
             vec![self.select(
                 "workspace-theme",
                 "Workspace theme",
@@ -144,11 +149,11 @@ impl SettingsView {
             theme.push(self.row(
                 Some("wayland-window-decorations"),
                 false,
-                "Wayland window decorations",
-                Some("Show compositor decorations. Natsu's title bar stays visible.".into()),
+                tr("Wayland window decorations"),
+                Some(tr("Show compositor decorations. Natsu's title bar stays visible.").into()),
                 vec![self.toggle(
                     "wayland-window-decorations",
-                    "Wayland window decorations",
+                    tr("Wayland window decorations"),
                     p.wayland_window_decorations,
                     false,
                     cx,
@@ -160,42 +165,64 @@ impl SettingsView {
         theme.push(self.row(
             Some("accent-color"),
             false,
-            "Accent color",
-            Some("Used for the composer send button and your message bubbles.".into()),
+            tr("Accent color"),
+            Some(tr("Used for the composer send button and your message bubbles.").into()),
             vec![accent_picker],
         ));
         theme.push(self.row(
             Some("diff-colors"),
             false,
-            "Diff colors",
-            Some("Colorblind and High contrast use blue and orange for changes.".into()),
+            tr("Diff colors"),
+            Some(tr("Colorblind and High contrast use blue and orange for changes.").into()),
             vec![self.segmented(
                 "diff-colors",
-                "Diff colors",
+                tr("Diff colors"),
                 &p.diff_palette,
                 &[
-                    ("default", "Default"),
-                    ("colorblind", "Colorblind"),
-                    ("high-contrast", "High contrast"),
+                    ("default", tr("Default")),
+                    ("colorblind", tr("Colorblind")),
+                    ("high-contrast", tr("High contrast")),
                 ],
                 cx,
                 |this, v, cx| this.update(cx, |p| p.diff_palette = v.into()),
             )],
         ));
-        let mut page = vec![self.group(None, true, "Theme", None, None, theme)];
+        let language =
+            vec![self.row(
+            Some("language"),
+            true,
+            tr("Interface language"),
+            Some(
+                tr("Applies immediately. Screens that are not translated yet stay in English.")
+                    .into(),
+            ),
+            vec![self.segmented(
+                "language",
+                tr("Interface language"),
+                &p.language,
+                // Language names stay in their own language so they can always be found.
+                &[("system", tr("System")), ("en", "English"), ("zh-CN", "简体中文")],
+                cx,
+                |this, v, cx| this.update(cx, |p| p.language = v.into()),
+            )],
+        )];
+        let mut page = vec![
+            self.group(None, true, tr("Language"), None, None, language),
+            self.group(None, false, tr("Theme"), None, None, theme),
+        ];
         let color = vec![
                 self.row(
                     Some("hue"),
                     true,
-                    "Hue",
-                    Some("Base hue for the window and main-pane surfaces.".into()),
+                    tr("Hue"),
+                    Some(tr("Base hue for the window and main-pane surfaces.").into()),
                     vec![self.slider(SliderKind::Hue, format!("{}°", p.theme_hue), false, cx)],
                 ),
                 self.row(
                     Some("saturation"),
                     false,
-                    "Saturation",
-                    Some("How strongly the hue tints the interface. Zero keeps it neutral.".into()),
+                    tr("Saturation"),
+                    Some(tr("How strongly the hue tints the interface. Zero keeps it neutral.").into()),
                     vec![self.slider(
                         SliderKind::Saturation,
                         format!("{}%", p.theme_saturation),
@@ -206,11 +233,11 @@ impl SettingsView {
                 self.row(
                     Some("dark-lightness"),
                     false,
-                    "Dark-mode lightness",
+                    tr("Dark-mode lightness"),
                     Some(if light {
-                        "This only affects dark mode. Your dark-mode value is preserved.".into()
+                        tr("This only affects dark mode. Your dark-mode value is preserved.").into()
                     } else {
-                        "Base brightness of the dark theme. Lower values are darker; zero is true black.".into()
+                        tr("Base brightness of the dark theme. Lower values are darker; zero is true black.").into()
                     }),
                     vec![self.slider(
                         SliderKind::DarkLightness,
@@ -220,13 +247,13 @@ impl SettingsView {
                     )],
                 ),
             ];
-        page.push(self.group(None, false, "Color", None, None, color));
+        page.push(self.group(None, false, tr("Color"), None, None, color));
         let translucency = vec![
                 self.row(
                     Some("sidebar-opacity"),
                     true,
-                    "Sidebar opacity",
-                    Some("Applies to the project rail and the other glass panes.".into()),
+                    tr("Sidebar opacity"),
+                    Some(tr("Applies to the project rail and the other glass panes.").into()),
                     vec![self.slider(
                         SliderKind::SidebarOpacity,
                         format!("{}%", p.sidebar_opacity),
@@ -237,11 +264,11 @@ impl SettingsView {
                 self.row(
                     Some("main-pane-glass"),
                     false,
-                    "Main pane glass",
-                    Some("Extend the translucent treatment to the main pane behind sessions and editors.".into()),
+                    tr("Main pane glass"),
+                    Some(tr("Extend the translucent treatment to the main pane behind sessions and editors.").into()),
                     vec![self.toggle(
                         "main-pane-glass",
-                        "Main pane glass",
+                        tr("Main pane glass"),
                         p.body_glass,
                         light,
                         cx,
@@ -252,11 +279,11 @@ impl SettingsView {
         page.push(self.group(
             None,
             false,
-            "Translucency",
+            tr("Translucency"),
             Some(if light {
-                "Translucency is available in dark mode.".into()
+                tr("Translucency is available in dark mode.").into()
             } else {
-                "How much of the desktop shows through Natsu.".into()
+                tr("How much of the desktop shows through Natsu.").into()
             }),
             None,
             translucency,
@@ -276,13 +303,13 @@ impl SettingsView {
             self.row(
                 Some("inset-layout"),
                 true,
-                "Layout",
-                Some("Classic keeps everything in one sidebar. Focused adds a project switcher, workspace tabs and a right panel.".into()),
+                tr("Layout"),
+                Some(tr("Classic keeps everything in one sidebar. Focused adds a project switcher, workspace tabs and a right panel.").into()),
                 vec![self.segmented(
                     "inset-layout",
-                    "Layout",
+                    tr("Layout"),
                     if inset { "focused" } else { "classic" },
-                    &[("classic", "Classic"), ("focused", "Focused")],
+                    &[("classic", tr("Classic")), ("focused", tr("Focused"))],
                     cx,
                     |_, value, cx| cx.emit(SettingsEvent::NewLayout(value == "focused")),
                 )],
@@ -290,8 +317,8 @@ impl SettingsView {
             self.row(
                 Some("interface-scale"),
                 false,
-                "Interface scale",
-                Some("Zoom the whole interface. You can also use Ctrl+=, Ctrl+-, and Ctrl+0 (Cmd on macOS).".into()),
+                tr("Interface scale"),
+                Some(tr("Zoom the whole interface. You can also use Ctrl+=, Ctrl+-, and Ctrl+0 (Cmd on macOS).").into()),
                 vec![self.select(
                     "interface-scale",
                     "Interface scale",
@@ -309,11 +336,11 @@ impl SettingsView {
             self.row(
                 Some("show-excluded-files"),
                 false,
-                "Show excluded files",
-                Some("Show files and folders Git excludes, such as build output and dependencies, in the explorer.".into()),
+                tr("Show excluded files"),
+                Some(tr("Show files and folders Git excludes, such as build output and dependencies, in the explorer.").into()),
                 vec![self.toggle(
                     "show-excluded-files",
-                    "Show excluded files",
+                    tr("Show excluded files"),
                     p.show_excluded_files,
                     false,
                     cx,
@@ -327,28 +354,28 @@ impl SettingsView {
                 self.row(
                     Some("new-layout-style"),
                     false,
-                    "Workspace style",
+                    tr("Workspace style"),
                     Some(if cfg!(target_os = "macos") {
-                        "Choose a rounded card or a full-height boxy workspace. ⌘⌥L switches between them.".into()
+                        tr("Choose a rounded card or a full-height boxy workspace. ⌘⌥L switches between them.").into()
                     } else {
-                        "Choose a rounded card or a full-height boxy workspace. Ctrl+Alt+L switches between them.".into()
+                        tr("Choose a rounded card or a full-height boxy workspace. Ctrl+Alt+L switches between them.").into()
                     }),
                     vec![self.segmented(
                         "new-layout-style",
-                        "Workspace style",
+                        tr("Workspace style"),
                         if self.ctx.new_layout_boxy {
                             "boxy"
                         } else {
                             "rounded"
                         },
-                        &[("rounded", "Rounded"), ("boxy", "Boxy")],
+                        &[("rounded", tr("Rounded")), ("boxy", tr("Boxy"))],
                         cx,
                         |_, value, cx| cx.emit(SettingsEvent::NewLayoutBoxy(value == "boxy")),
                     )],
                 ),
             );
         }
-        page.push(self.group(None, false, "Layout", None, None, layout));
+        page.push(self.group(None, false, tr("Layout"), None, None, layout));
         page
     }
 
@@ -375,11 +402,11 @@ impl SettingsView {
                 .when(selected, |d| d.border_2().border_color(content(0.8)))
         };
         let colors: Vec<(gpui::Hsla, &'static str, Option<String>)> =
-            std::iter::once((content(1.), "Default", None))
+            std::iter::once((content(1.), tr("Default"), None))
                 .chain(
                     ACCENTS
                         .iter()
-                        .map(|&(c, label)| (rgb(c).into(), label, Some(format!("#{c:06x}")))),
+                        .map(|&(c, label)| (rgb(c).into(), tr(label), Some(format!("#{c:06x}")))),
                 )
                 .collect();
         div()
@@ -422,7 +449,7 @@ impl SettingsView {
                         div()
                             .id("accent-custom")
                             .role(Role::Button)
-                            .aria_label("Custom color")
+                            .aria_label(tr("Custom color"))
                             .aria_expanded(self.accent_custom_open)
                             .size(px(20.))
                             .flex()
@@ -540,14 +567,17 @@ impl SettingsView {
                                         .left_2()
                                         .text_size(px(11.))
                                         .text_color(content(0.4))
-                                        .child(format!("Empty chat preview at {empty}%")),
+                                        .child(tr_fmt(
+                                            "Empty chat preview at {empty}%",
+                                            &[("empty", &empty)],
+                                        )),
                                 ),
                         ),
                         None => d.child(
                             div()
                                 .id("choose-chat-background")
                                 .role(Role::Button)
-                                .aria_label("Choose an image")
+                                .aria_label(tr("Choose an image"))
                                 .h(px(144.))
                                 .w_full()
                                 .flex()
@@ -559,7 +589,7 @@ impl SettingsView {
                                 .cursor_pointer()
                                 .hover(|s| s.bg(content(0.05)).text_color(content(0.7)))
                                 .child(icon("image-add", 20.).text_color(content(0.4)))
-                                .child(div().text_size(px(12.)).child("Choose an image"))
+                                .child(div().text_size(px(12.)).child(tr("Choose an image")))
                                 .on_click(cx.listener(|_, _, _, cx| {
                                     cx.emit(SettingsEvent::ChooseBackground)
                                 })),
@@ -575,15 +605,15 @@ impl SettingsView {
                         .justify_end()
                         .gap_2()
                         .child(
-                            secondary_button("change-chat-background", "Change", false, false)
-                                .child("Change")
+                            secondary_button("change-chat-background", tr("Change"), false, false)
+                                .child(tr("Change"))
                                 .on_click(cx.listener(|_, _, _, cx| {
                                     cx.emit(SettingsEvent::ChooseBackground)
                                 })),
                         )
                         .child(
-                            secondary_button("remove-chat-background", "Remove", true, false)
-                                .child("Remove")
+                            secondary_button("remove-chat-background", tr("Remove"), true, false)
+                                .child(tr("Remove"))
                                 .on_click(cx.listener(|this, _, _, cx| {
                                     this.update(cx, |p| p.chat_background = None)
                                 })),
@@ -596,13 +626,13 @@ impl SettingsView {
             rows.push(self.row(
                 None,
                 false,
-                "Background effect",
+                tr("Background effect"),
                 Some(effect_description(&p.chat_background_effect).into()),
                 vec![self.segmented(
                     "background-effect",
-                    "Background effect",
+                    tr("Background effect"),
                     &p.chat_background_effect,
-                    &EFFECTS,
+                    &EFFECTS.map(|(value, label)| (value, tr(label))),
                     cx,
                     |this, v, cx| this.update(cx, |p| p.chat_background_effect = v.into()),
                 )],
@@ -610,13 +640,13 @@ impl SettingsView {
             rows.push(self.row(
                 None,
                 false,
-                "Show on",
-                Some("Empty sessions only, or every conversation.".into()),
+                tr("Show on"),
+                Some(tr("Empty sessions only, or every conversation.").into()),
                 vec![self.segmented(
                     "background-scope",
-                    "Show background on",
+                    tr("Show background on"),
                     &p.chat_background_scope,
-                    &[("empty", "Empty only"), ("all", "All sessions")],
+                    &[("empty", tr("Empty only")), ("all", tr("All sessions"))],
                     cx,
                     |this, v, cx| this.update(cx, |p| p.chat_background_scope = v.into()),
                 )],
@@ -624,15 +654,15 @@ impl SettingsView {
             rows.push(self.row(
                 None,
                 false,
-                "Empty chat visibility",
-                Some("Background strength before a chat has messages.".into()),
+                tr("Empty chat visibility"),
+                Some(tr("Background strength before a chat has messages.").into()),
                 vec![self.slider(SliderKind::BackgroundEmpty, format!("{empty}%"), false, cx)],
             ));
             rows.push(self.row(
                 None,
                 false,
-                "Session visibility",
-                Some("Background strength once the conversation has messages.".into()),
+                tr("Session visibility"),
+                Some(tr("Background strength once the conversation has messages.").into()),
                 vec![self.slider(
                     SliderKind::BackgroundSession,
                     format!("{session}%"),
@@ -644,8 +674,8 @@ impl SettingsView {
         self.group(
             Some("chat-background"),
             false,
-            "Chat background",
-            Some("An image behind your chat panes. It stays on this device.".into()),
+            tr("Chat background"),
+            Some(tr("An image behind your chat panes. It stays on this device.").into()),
             None,
             rows,
         )

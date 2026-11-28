@@ -10,6 +10,7 @@ use crate::{
 use gpui::{
     App, Context, Entity, EventEmitter, Focusable, Global, Subscription, Task, Window, prelude::*,
 };
+use natsu_core::i18n::{tr, tr_fmt};
 use natsu_core::{
     accounts::{self, Account, AuthAction, Book, Profile},
     provider::Kind,
@@ -321,7 +322,7 @@ impl Accounts {
         let key = Key::new(kind, self.profile(id), None);
         let checking = Status {
             tone: Tone::Checking,
-            label: "Checking…".into(),
+            label: tr("Checking…").into(),
             detail: None,
         };
         let Some(state) = self.usage.get(&key) else {
@@ -334,23 +335,28 @@ impl Accounts {
             if headroom <= 0. {
                 return Status {
                     tone: Tone::Exhausted,
-                    label: "Exhausted".into(),
-                    detail: snapshot
-                        .exhausted_reset()
-                        .filter(|at| *at > now)
-                        .map(|at| format!("back in {}", usage::duration(at - now))),
+                    label: tr("Exhausted").into(),
+                    detail: snapshot.exhausted_reset().filter(|at| *at > now).map(|at| {
+                        tr_fmt(
+                            "back in {duration}",
+                            &[("duration", &usage::duration(at - now))],
+                        )
+                    }),
                 };
             }
             if headroom <= 20. {
                 return Status {
                     tone: Tone::Low,
-                    label: "Running low".into(),
-                    detail: Some(format!("{headroom:.0}% left")),
+                    label: tr("Running low").into(),
+                    detail: Some(tr_fmt(
+                        "{percent}% left",
+                        &[("percent", &format!("{headroom:.0}"))],
+                    )),
                 };
             }
             return Status {
                 tone: Tone::Ready,
-                label: "Ready".into(),
+                label: tr("Ready").into(),
                 detail: None,
             };
         }
@@ -363,7 +369,7 @@ impl Accounts {
                 .error
                 .as_ref()
                 .map(|e| e.message.clone())
-                .unwrap_or_else(|| "Usage unavailable".into()),
+                .unwrap_or_else(|| tr("Usage unavailable").into()),
             detail: None,
         }
     }
@@ -566,12 +572,12 @@ impl Accounts {
             .unwrap_or_default();
         let input = cx.new(|cx| {
             let mut input = Input::field(
-                format!(
-                    "{} {} account",
-                    if id.is_some() { "Rename" } else { "New" },
-                    kind.label()
-                ),
-                "Work or Personal",
+                if id.is_some() {
+                    tr_fmt("Rename {provider} account", &[("provider", &kind.label())])
+                } else {
+                    tr_fmt("New {provider} account", &[("provider", &kind.label())])
+                },
+                tr("Work or Personal"),
                 crate::theme::content(0.25),
                 cx,
             );
@@ -784,7 +790,7 @@ impl Accounts {
         if self.working || account.is_default() {
             return;
         }
-        let answer=window.prompt(gpui::PromptLevel::Warning,&format!("Remove “{}”?",account.label),Some("Its stored credentials will be deleted and any running turns for this account will stop. Existing conversations stay in history, but cannot continue until you switch accounts."),&["Remove account","Cancel"],cx);
+        let answer=window.prompt(gpui::PromptLevel::Warning,&tr_fmt("Remove “{label}”?", &[("label", &account.label)]),Some(tr("Its stored credentials will be deleted and any running turns for this account will stop. Existing conversations stay in history, but cannot continue until you switch accounts.")),&[tr("Remove account"),tr("Cancel")],cx);
         cx.spawn_in(window, async move |this, cx| {
             if !matches!(answer.await, Ok(0)) {
                 return;

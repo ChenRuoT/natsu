@@ -40,7 +40,9 @@ impl Shell {
                 })
                 .detach();
             }
-            Err(error) => self.error = Some(format!("Operator app access: {error}")),
+            Err(error) => {
+                self.error = Some(tr_fmt("Operator app access: {error}", &[("error", &error)]))
+            }
         }
     }
     fn finish_app_call(

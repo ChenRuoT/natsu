@@ -9,6 +9,7 @@ use gpui::{
     Image, ImageCacheError, ImageFormat, InspectorElementId, LayoutId, Pixels, RenderImage, Role,
     SharedString, Style, TextStyle, Window, div, img, point, prelude::*, px, size,
 };
+use natsu_core::i18n::tr;
 use pulldown_cmark::{Event, Options, Parser, Tag, TagEnd};
 use std::{path::PathBuf, sync::Arc, time::Instant};
 
@@ -162,7 +163,12 @@ impl InboxDocument {
         match row {
             Row::Image { url, alt } => {
                 let source = attachment(url, window, cx);
-                let label = if alt.trim().is_empty() { "Image" } else { alt }.to_string();
+                let label = if alt.trim().is_empty() {
+                    tr("Image")
+                } else {
+                    alt
+                }
+                .to_string();
                 let url = url.clone();
                 let media = match source {
                     Some(Ok(image)) => img(image)

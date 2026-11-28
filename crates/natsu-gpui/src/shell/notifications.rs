@@ -427,7 +427,7 @@ impl Shell {
             {
                 let summary = view.read(cx).summary.clone();
                 let body = if input.kind == approvals::InputKind::Approval {
-                    format!("Approve: {}", input.label)
+                    tr_fmt("Approve: {label}", &[("label", &input.label)])
                 } else {
                     input.label
                 };
@@ -682,7 +682,7 @@ impl Shell {
         let receiver = platform::show(platform::Notification {
             tag: target.tag(self.notification_state.sequence),
             subtitle: if category == "reminders" {
-                "Session reminder".into()
+                tr("Session reminder").into()
             } else {
                 summary.title.clone()
             },
@@ -961,7 +961,7 @@ impl Shell {
                 stack.child(errors::card(
                     "app-error",
                     message,
-                    icon_button("dismiss-error", "Dismiss error", "close")
+                    icon_button("dismiss-error", tr("Dismiss error"), "close")
                         .debug_selector(|| "dismiss-error".into())
                         .on_click(cx.listener(|this, _, _, cx| {
                             this.error = None;
@@ -973,7 +973,7 @@ impl Shell {
                 stack.child(errors::card(
                     "mono-error",
                     message,
-                    icon_button("mono-error-close", "Dismiss Mono error", "close")
+                    icon_button("mono-error-close", tr("Dismiss Mono error"), "close")
                         .debug_selector(|| "mono-error-close".into())
                         .on_click(cx.listener(move |_, _, _, cx| {
                             monos.update(cx, |monos, cx| monos.dismiss_error(cx));
@@ -1332,9 +1332,9 @@ impl Shell {
                     let prompt = this.update_in(cx, |_, window, cx| {
                         window.prompt(
                             gpui::PromptLevel::Warning,
-                            "Delete this conversation permanently?",
-                            Some("Its messages and saved settings will be removed."),
-                            &["Delete", "Cancel"],
+                            tr("Delete this conversation permanently?"),
+                            Some(tr("Its messages and saved settings will be removed.")),
+                            &[tr("Delete"), tr("Cancel")],
                             cx,
                         )
                     });

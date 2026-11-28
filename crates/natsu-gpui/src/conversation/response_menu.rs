@@ -1,6 +1,7 @@
 use super::*;
 use crate::popover::MenuOpened;
 use gpui::App;
+use natsu_core::i18n::{tr, tr_fmt};
 use natsu_core::{
     accounts::Profile,
     response::{Target, TransferKind},
@@ -96,20 +97,20 @@ impl Conversation {
     ) {
         let from = self.response_provider(turn, cx);
         let label = if kind == TransferKind::Handoff {
-            "Hand this session to another agent"
+            tr("Hand this session to another agent")
         } else {
-            "Send this turn to another agent"
+            tr("Send this turn to another agent")
         };
         let mut items = vec![MenuItem::Note(
             if kind == TransferKind::Handoff {
-                "Hand this session to another agent to continue the work."
+                tr("Hand this session to another agent to continue the work.")
             } else {
-                "Send this turn to another agent to review the work."
+                tr("Send this turn to another agent to review the work.")
             }
             .into(),
         )];
         if catalogs.is_none() {
-            items.push(MenuItem::Note("Loading providers…".into()));
+            items.push(MenuItem::Note(tr("Loading providers…").into()));
         }
         let mut events = Vec::new();
         let mut regions = Vec::new();
@@ -138,7 +139,7 @@ impl Conversation {
             });
             let options = cached
                 .map(|result| self.response_model_items(turn, kind, provider, result, cx))
-                .unwrap_or_else(|| vec![MenuItem::Note("Loading models…".into())]);
+                .unwrap_or_else(|| vec![MenuItem::Note(tr("Loading models…").into())]);
             let models = cx.new(|cx| {
                 Menu::embedded(provider.label(), options, cx)
                     .width(240.)
@@ -176,7 +177,9 @@ impl Conversation {
             );
         }
         if items.len() == 1 {
-            items.push(MenuItem::Note("No other providers are available.".into()));
+            items.push(MenuItem::Note(
+                tr("No other providers are available.").into(),
+            ));
         }
         let menu = cx.new(|cx| {
             Menu::new(label, items, window, cx)
@@ -280,7 +283,7 @@ impl Conversation {
             Ok(models) => models,
             Err(error) => {
                 return vec![MenuItem::Note(
-                    format!("Couldn't load models: {error}").into(),
+                    tr_fmt("Couldn't load models: {error}", &[("error", &error)]).into(),
                 )];
             }
         };
@@ -330,7 +333,7 @@ impl Conversation {
                 model_display_name(provider, &model.id, &model.name),
             );
             if !model.efforts.is_empty() {
-                let mut efforts = vec![MenuAction::new(target(None), "Default")];
+                let mut efforts = vec![MenuAction::new(target(None), tr("Default"))];
                 efforts.extend(model.efforts.iter().map(|effort| {
                     MenuAction::new(target(Some(effort.clone())), effort_name(effort))
                 }));
@@ -339,7 +342,9 @@ impl Conversation {
             options.push(option.into());
         }
         if options.is_empty() {
-            options.push(MenuItem::Note("No different models are available.".into()));
+            options.push(MenuItem::Note(
+                tr("No different models are available.").into(),
+            ));
         }
         options
     }

@@ -6,6 +6,7 @@ use crate::{
     theme::*,
 };
 use gpui::{AnyElement, Context, SharedString, div, prelude::*, px};
+use natsu_core::i18n::{tr, tr_fmt};
 use natsu_core::provider::Kind;
 impl SettingsView {
     pub(super) fn providers_page(&mut self, cx: &mut Context<Self>) -> Vec<AnyElement> {
@@ -20,17 +21,17 @@ impl SettingsView {
                 center.settings_rows(cx)
             })
         } else {
-            vec![note("Provider accounts load with the workspace.")]
+            vec![note(tr("Provider accounts load with the workspace."))]
         };
         let usage = vec![
             self.row(
                 Some("show-remaining-usage"),
                 true,
-                "Show remaining usage",
-                Some("Show remaining capacity in usage meters.".into()),
+                tr("Show remaining usage"),
+                Some(tr("Show remaining capacity in usage meters.").into()),
                 vec![self.toggle(
                     "show-remaining-usage",
-                    "Show remaining usage",
+                    tr("Show remaining usage"),
                     p.show_remaining_usage,
                     false,
                     cx,
@@ -40,11 +41,11 @@ impl SettingsView {
             self.row(
                 Some("mask-emails"),
                 false,
-                "Mask account emails",
-                Some("Hide email addresses until clicked.".into()),
+                tr("Mask account emails"),
+                Some(tr("Hide email addresses until clicked.").into()),
                 vec![self.toggle(
                     "mask-emails",
-                    "Mask account emails",
+                    tr("Mask account emails"),
                     p.mask_emails,
                     false,
                     cx,
@@ -54,7 +55,7 @@ impl SettingsView {
         ];
         let mut options = vec![(
             "global".into(),
-            SharedString::from("Global"),
+            SharedString::from(tr("Global")),
             Some(icon("globe", 14.).into_any_element()),
         )];
         options.extend(self.ctx.projects.iter().map(|(path, label)| {
@@ -123,7 +124,10 @@ impl SettingsView {
                         .clone();
                     secondary_button(
                         SharedString::from(format!("binary-{}", kind.id())),
-                        format!("Show {} CLI details", kind.label()),
+                        tr_fmt(
+                            "Show {provider} CLI details",
+                            &[("provider", &kind.label())],
+                        ),
                         false,
                         false,
                     )
@@ -150,26 +154,26 @@ impl SettingsView {
                         .text_size(px(10.))
                         .text_color(content(0.6))
                         .child(if installed.is_some() {
-                            "INSTALLED"
+                            tr("INSTALLED")
                         } else {
-                            "NOT INSTALLED"
+                            tr("NOT INSTALLED")
                         }),
                 );
             let mut controls = vec![
                 secondary_button(
                     SharedString::from(format!("default-provider-{}", kind.id())),
                     if selected {
-                        "Default"
+                        tr("Default")
                     } else {
-                        "Use by default"
+                        tr("Use by default")
                     },
                     false,
                     selected || selected_model.is_none() || installed.is_none(),
                 )
                 .child(if selected {
-                    "Default"
+                    tr("Default")
                 } else {
-                    "Use by default"
+                    tr("Use by default")
                 })
                 .when(
                     !selected && selected_model.is_some() && installed.is_some(),
@@ -230,14 +234,14 @@ impl SettingsView {
                                 .text_size(px(12.))
                                 .text_color(content(0.5))
                                 .child(if locked {
-                                    "Hidden globally"
+                                    tr("Hidden globally")
                                 } else {
-                                    "Show in picker"
+                                    tr("Show in picker")
                                 }),
                         )
                         .child(self.toggle(
                             kind.id(),
-                            "Show provider in the model picker",
+                            tr("Show provider in the model picker"),
                             visible,
                             locked,
                             cx,
@@ -261,23 +265,23 @@ impl SettingsView {
             }
             let description = installed
                 .map(|_| {
-                    format!(
-                        "{} {} available.",
-                        models.len(),
-                        if models.len() == 1 { "model" } else { "models" }
-                    )
+                    if models.len() == 1 {
+                        tr_fmt("{count} model available.", &[("count", &models.len())])
+                    } else {
+                        tr_fmt("{count} models available.", &[("count", &models.len())])
+                    }
                 })
                 .unwrap_or_else(|| kind.unavailable_hint());
             clis.push(self.row(None, index == 0, label, Some(description.into()), controls));
         }
         if self.discovery_loading {
-            clis.insert(0, note("Checking installed CLIs…"));
+            clis.insert(0, note(tr("Checking installed CLIs…")));
         }
         // Any installed harness that can write one-off text, with the models
         // its sessions have listed; the harness default when none are loaded.
         let mut background = vec![(
             "auto".to_owned(),
-            SharedString::from("Automatic"),
+            SharedString::from(tr("Automatic")),
             None::<AnyElement>,
         )];
         for kind in Kind::ALL {
@@ -295,7 +299,10 @@ impl SettingsView {
                 })),
                 None => background.push((
                     format!("{}:", kind.id()),
-                    SharedString::from(format!("{} · Default model", kind.label())),
+                    SharedString::from(tr_fmt(
+                        "{provider} · Default model",
+                        &[("provider", &kind.label())],
+                    )),
                     Some(provider_icon(kind.id(), 14.).into_any_element()),
                 )),
             }
@@ -316,7 +323,7 @@ impl SettingsView {
                 SharedString::from(format!(
                     "{} · {}",
                     Kind::from_id(&choice.provider).label(),
-                    choice.model.as_deref().unwrap_or("Default model")
+                    choice.model.as_deref().unwrap_or(tr("Default model"))
                 )),
                 Some(provider_icon(&choice.provider, 14.).into_any_element()),
             ));
@@ -324,8 +331,8 @@ impl SettingsView {
         let background = vec![self.row(
             Some("background-model"),
             true,
-            "Background model",
-            Some("Writes session titles, worktree branch names, commit messages and pull requests. Automatic uses each session's provider and its quick model.".into()),
+            tr("Background model"),
+            Some(tr("Writes session titles, worktree branch names, commit messages and pull requests. Automatic uses each session's provider and its quick model.").into()),
             vec![self.select(
                 "background-model",
                 "Background model",
@@ -346,36 +353,38 @@ impl SettingsView {
             )],
         )];
         let advanced=vec![
-            self.row(Some("idle-agents"),true,"Keep idle agents ready",Some("Keep up to this many idle agents running for faster follow-ups. Uses additional memory.".into()),vec![self.segmented("idle-agents","Keep idle agents ready",&p.idle_agents.to_string(),&[("0","None"),("1","1"),("2","2"),("3","3"),("5","5")],cx,|this,value,cx|if let Ok(value)=value.parse(){this.update(cx,|p|p.idle_agents=value)})]),
-            self.row(Some("claude-hooks"),false,"Claude Code hooks",Some("Run your configured Claude Code hooks. Changes apply on the next turn.".into()),vec![self.toggle("claude-hooks","Claude Code hooks",p.claude_hooks,false,cx,|this,on,cx|this.update(cx,|p|p.claude_hooks=on))]),
-            self.row(Some("claude-entrypoint"),false,"Identify as Natsu to Claude (experimental)",Some("Report Natsu as the client instead of the default sdk-cli, which community tests show uses the 5-hour limit up to ~2x faster. Anthropic hasn't confirmed this or whether relabeling is allowed. Applies to new sessions.".into()),vec![self.toggle("claude-entrypoint","Identify as Natsu to Claude",p.claude_entrypoint,false,cx,|this,on,cx|this.update(cx,|p|p.claude_entrypoint=on))])];
+            self.row(Some("idle-agents"),true,tr("Keep idle agents ready"),Some(tr("Keep up to this many idle agents running for faster follow-ups. Uses additional memory.").into()),vec![self.segmented("idle-agents",tr("Keep idle agents ready"),&p.idle_agents.to_string(),&[("0",tr("None")),("1","1"),("2","2"),("3","3"),("5","5")],cx,|this,value,cx|if let Ok(value)=value.parse(){this.update(cx,|p|p.idle_agents=value)})]),
+            self.row(Some("claude-hooks"),false,tr("Claude Code hooks"),Some(tr("Run your configured Claude Code hooks. Changes apply on the next turn.").into()),vec![self.toggle("claude-hooks",tr("Claude Code hooks"),p.claude_hooks,false,cx,|this,on,cx|this.update(cx,|p|p.claude_hooks=on))]),
+            self.row(Some("claude-entrypoint"),false,tr("Identify as Natsu to Claude (experimental)"),Some(tr("Report Natsu as the client instead of the default sdk-cli, which community tests show uses the 5-hour limit up to ~2x faster. Anthropic hasn't confirmed this or whether relabeling is allowed. Applies to new sessions.").into()),vec![self.toggle("claude-entrypoint",tr("Identify as Natsu to Claude"),p.claude_entrypoint,false,cx,|this,on,cx|this.update(cx,|p|p.claude_entrypoint=on))])];
         vec![
             self.group(
                 Some("provider-accounts"),
                 true,
-                "Accounts",
-                Some("Manage sign-ins and choose accounts for each project.".into()),
-                Some(self.refresh_button("refresh-provider-accounts", "Refresh", cx)),
+                tr("Accounts"),
+                Some(tr("Manage sign-ins and choose accounts for each project.").into()),
+                Some(self.refresh_button("refresh-provider-accounts", tr("Refresh"), cx)),
                 accounts,
             ),
-            self.group(None, false, "Usage and privacy", None, None, usage),
+            self.group(None, false, tr("Usage and privacy"), None, None, usage),
             self.group(
                 Some("agent-clis"),
                 false,
-                "Agent CLIs",
-                Some("Choose available agents and default models for new conversations.".into()),
+                tr("Agent CLIs"),
+                Some(
+                    tr("Choose available agents and default models for new conversations.").into(),
+                ),
                 Some(action),
                 clis,
             ),
             self.group(
                 None,
                 false,
-                "Background tasks",
-                Some("Small jobs Natsu runs with a model on your behalf.".into()),
+                tr("Background tasks"),
+                Some(tr("Small jobs Natsu runs with a model on your behalf.").into()),
                 None,
                 background,
             ),
-            self.group(None, false, "Advanced", None, None, advanced),
+            self.group(None, false, tr("Advanced"), None, None, advanced),
         ]
     }
 }

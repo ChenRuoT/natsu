@@ -2,6 +2,7 @@
 use super::{TranscriptView, tasks};
 use crate::theme::*;
 use gpui::{AnyElement, Context, Div, Role, div, prelude::*, px, rgb};
+use natsu_core::i18n::{tr, tr_fmt};
 use natsu_core::tool::{CommandStep, ToolCall, ToolState};
 
 /// Shell plumbing that says nothing about what a chained command was for.
@@ -175,10 +176,10 @@ impl TranscriptView {
             _ => format!("{action} {}", shown.target),
         };
         let state_label = match tool.state {
-            ToolState::Running => "Running",
-            ToolState::Completed => "Completed",
-            ToolState::Failed => "Failed",
-            ToolState::Cancelled => "Cancelled",
+            ToolState::Running => tr("Running"),
+            ToolState::Completed => tr("Completed"),
+            ToolState::Failed => tr("Failed"),
+            ToolState::Cancelled => tr("Cancelled"),
         };
         // Chained commands and failures share one disclosure: steps, then error.
         let error_key = format!("tool-detail:{start}:{}", tool.id);
@@ -234,7 +235,10 @@ impl TranscriptView {
             .id(gpui::SharedString::from(format!("tool:{identity}")))
             .debug_selector(move || format!("tool-{start}"))
             .role(Role::Group)
-            .aria_label(format!("{state_label} tool call: {caption}"))
+            .aria_label(tr_fmt(
+                "{state_label} tool call: {caption}",
+                &[("state_label", &state_label), ("caption", &caption)],
+            ))
             .flex()
             .w_full()
             .min_w_0()
@@ -307,9 +311,12 @@ impl TranscriptView {
                                         } else {
                                             content(0.5)
                                         })
-                                        .aria_label(format!(
-                                            "{hidden} more patterns: {}",
-                                            patterns[2..].join(", ")
+                                        .aria_label(tr_fmt(
+                                            "{hidden} more patterns: {patterns}",
+                                            &[
+                                                ("hidden", &hidden),
+                                                ("patterns", &patterns[2..].join(", ")),
+                                            ],
                                         ))
                                         .child(format!("+{hidden}")),
                                 )
@@ -326,7 +333,7 @@ impl TranscriptView {
                         })
                         .when_some(target_path, |d, path| {
                             d.role(Role::Button)
-                                .aria_label(format!("Open {path}"))
+                                .aria_label(tr_fmt("Open {path}", &[("path", &path)]))
                                 .cursor_pointer()
                                 .hover(|style| style.text_color(rgb(0x7dd3fc)))
                                 .on_click(move |_, window, cx| {
@@ -389,7 +396,10 @@ impl TranscriptView {
                                             .child(div().min_w_0().truncate().child(label.clone()))
                                             .when_some(path, |d, path| {
                                                 d.role(Role::Button)
-                                                    .aria_label(format!("Open {path}"))
+                                                    .aria_label(tr_fmt(
+                                                        "Open {path}",
+                                                        &[("path", &path)],
+                                                    ))
                                                     .cursor_pointer()
                                                     .hover(|style| style.text_color(rgb(0x7dd3fc)))
                                                     .on_click(move |_, window, cx| {
@@ -423,9 +433,9 @@ impl TranscriptView {
                                             } else {
                                                 content(0.5)
                                             })
-                                            .aria_label(format!(
-                                                "{hidden} more steps: {}",
-                                                rest.join(", ")
+                                            .aria_label(tr_fmt(
+                                                "{hidden} more steps: {steps}",
+                                                &[("hidden", &hidden), ("steps", &rest.join(", "))],
                                             ))
                                             .child(format!("+{hidden}")),
                                     )
@@ -444,10 +454,20 @@ impl TranscriptView {
                             .id("error-toggle")
                             .role(Role::Button)
                             .aria_expanded(error_open)
-                            .aria_label(format!(
-                                "{} {} for {caption}",
-                                if error_open { "Hide" } else { "Show" },
-                                if has_error { "error details" } else { "steps" }
+                            .aria_label(tr_fmt(
+                                "{action} {kind} for {caption}",
+                                &[
+                                    ("action", &if error_open { tr("Hide") } else { tr("Show") }),
+                                    (
+                                        "kind",
+                                        &if has_error {
+                                            tr("error details")
+                                        } else {
+                                            tr("steps")
+                                        },
+                                    ),
+                                    ("caption", &caption),
+                                ],
                             ))
                             .p_1()
                             .child(
@@ -514,7 +534,7 @@ impl TranscriptView {
                                     )
                                     .when_some(path, |d, path| {
                                         d.role(Role::Button)
-                                            .aria_label(format!("Open {path}"))
+                                            .aria_label(tr_fmt("Open {path}", &[("path", &path)]))
                                             .cursor_pointer()
                                             .hover(|style| style.text_color(rgb(0x7dd3fc)))
                                             .on_click(move |_, window, cx| {

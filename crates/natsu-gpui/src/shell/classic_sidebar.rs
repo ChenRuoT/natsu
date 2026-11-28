@@ -39,9 +39,9 @@ impl ClassicSidebarTab {
 
     fn label(self) -> &'static str {
         match self {
-            Self::Sessions => "Sessions",
-            Self::Files => "Explorer",
-            Self::Changes => "Changes",
+            Self::Sessions => tr("Sessions"),
+            Self::Files => tr("Explorer"),
+            Self::Changes => tr("Changes"),
         }
     }
 
@@ -116,8 +116,8 @@ impl WorkspaceTabs {
 pub(super) fn session_search(cx: &mut Context<Shell>) -> Entity<input::Input> {
     cx.new(|cx| {
         let mut input = input::Input::field(
-            "Search conversations",
-            "Search conversations...",
+            tr("Search conversations"),
+            tr("Search conversations..."),
             content(0.35),
             cx,
         );
@@ -336,9 +336,9 @@ impl Shell {
                                         icon_button(
                                             "classic-new-session",
                                             if cfg!(target_os = "macos") {
-                                                "New session (⌘T)"
+                                                tr("New session (⌘T)")
                                             } else {
-                                                "New session (Ctrl+T)"
+                                                tr("New session (Ctrl+T)")
                                             },
                                             "plus",
                                         )
@@ -394,13 +394,13 @@ impl Shell {
                 .text_size(px(14.))
                 .font_weight(FontWeight::MEDIUM)
                 .text_color(content(1.))
-                .child("Workspace")
+                .child(tr("Workspace"))
                 .into_any();
         }
         let focus = self.worktree_focus.get(&self.workspace.project);
         let title = focus
-            .map(|focus| focus.branch.as_deref().unwrap_or("Detached worktree"))
-            .unwrap_or("Workspace")
+            .map(|focus| focus.branch.as_deref().unwrap_or(tr("Detached worktree")))
+            .unwrap_or(tr("Workspace"))
             .to_owned();
         div()
             .flex_1()
@@ -412,7 +412,7 @@ impl Shell {
                     .id("classic-workspace-picker")
                     .debug_selector(|| "classic-workspace-picker".into())
                     .role(Role::Button)
-                    .aria_label("Switch working copy")
+                    .aria_label(tr("Switch working copy"))
                     .aria_description(self.working_copy().to_owned())
                     .aria_expanded(self.classic_worktree_picker.is_some())
                     .cursor_pointer()
@@ -481,7 +481,7 @@ impl Shell {
             .id("classic-workspace-tabs")
             .debug_selector(|| "classic-workspace-tabs".into())
             .role(Role::TabList)
-            .aria_label("Workspace")
+            .aria_label(tr("Workspace"))
             .h(px(36.))
             .flex_shrink_0()
             .flex()
@@ -520,7 +520,10 @@ impl Shell {
                                     })
                                     .role(Role::Tab)
                                     .aria_label(if tab == ClassicSidebarTab::Changes && changes {
-                                        format!("Changes +{additions} -{deletions}")
+                                        tr_fmt(
+                                            "Changes +{additions} -{deletions}",
+                                            &[("additions", &additions), ("deletions", &deletions)],
+                                        )
                                     } else {
                                         tab.label().to_owned()
                                     })

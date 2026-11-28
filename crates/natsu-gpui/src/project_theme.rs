@@ -10,6 +10,7 @@ use gpui::{
     AnyElement, App, Context, EventEmitter, FocusHandle, Focusable, MouseButton, MouseDownEvent,
     MouseMoveEvent, Role, Window, div, prelude::*, px, rgb,
 };
+use natsu_core::i18n::{tr, tr_fmt};
 use natsu_core::project_appearance::{ProjectAppearance, ProjectTheme};
 
 #[derive(Clone, Copy, PartialEq)]
@@ -152,12 +153,12 @@ impl ThemeDialog {
             .flex()
             .flex_col()
             .gap_2()
-            .child(Self::heading("Workspace theme"))
+            .child(Self::heading(tr("Workspace theme")))
             .child(
                 div()
                     .id("project-theme-palette-group")
                     .role(Role::RadioGroup)
-                    .aria_label("Workspace theme")
+                    .aria_label(tr("Workspace theme"))
                     .flex()
                     .flex_wrap()
                     .gap(px(6.))
@@ -217,7 +218,7 @@ impl ThemeDialog {
             .accent_color
             .as_deref()
             .and_then(|hex| u32::from_str_radix(hex.trim_start_matches('#'), 16).ok());
-        let choices = std::iter::once((None, "Default"))
+        let choices = std::iter::once((None, tr("Default")))
             .chain(ACCENTS.iter().map(|&(c, label)| (Some(c), label)));
         Self::section()
             .debug_selector(|| "project-theme-accent".into())
@@ -227,12 +228,12 @@ impl ThemeDialog {
                     .items_center()
                     .justify_between()
                     .gap_4()
-                    .child(Self::heading("Accent color"))
+                    .child(Self::heading(tr("Accent color")))
                     .child(
                         div()
                             .id("project-theme-accent-group")
                             .role(Role::RadioGroup)
-                            .aria_label("Accent color")
+                            .aria_label(tr("Accent color"))
                             .flex()
                             .items_center()
                             .gap_1()
@@ -387,7 +388,7 @@ impl Render for ThemeDialog {
             .id("project-theme-dialog")
             .debug_selector(|| "project-theme-dialog".into())
             .role(Role::Dialog)
-            .aria_label("Theme Colors")
+            .aria_label(tr("Theme Colors"))
             .track_focus(&self.focus)
             .relative()
             .min_h_0()
@@ -427,7 +428,7 @@ impl Render for ThemeDialog {
                                     .text_size(px(16.))
                                     .line_height(px(20.))
                                     .font_weight(gpui::FontWeight::SEMIBOLD)
-                                    .child("Theme Colors"),
+                                    .child(tr("Theme Colors")),
                             )
                             .child(
                                 div()
@@ -438,14 +439,14 @@ impl Render for ThemeDialog {
                                     .line_height(px(16.5))
                                     .text_color(content(0.5))
                                     .child(if custom {
-                                        format!("Used while {label} is open")
+                                        tr_fmt("Used while {label} is open", &[("label", &label)])
                                     } else {
-                                        format!("{label} uses the app colors")
+                                        tr_fmt("{label} uses the app colors", &[("label", &label)])
                                     }),
                             ),
                     )
                     .child(
-                        icon_button("close-project-theme", "Close theme colors", "close")
+                        icon_button("close-project-theme", tr("Close theme colors"), "close")
                             .size(px(28.))
                             .on_click(cx.listener(|_, _, _, cx| cx.emit(Event::Close))),
                     ),
@@ -469,7 +470,7 @@ impl Render for ThemeDialog {
                     .child(
                         Self::section()
                             .child(
-                                button("project-theme-use-app-colors", "Use app colors")
+                                button("project-theme-use-app-colors", tr("Use app colors"))
                                     .flex_shrink_0()
                                     .when(!custom, |d| d.opacity(0.4))
                                     .when(custom, |d| {
@@ -483,9 +484,9 @@ impl Render for ThemeDialog {
                                     .text_size(px(11.))
                                     .line_height(px(17.875))
                                     .text_color(content(0.45))
-                                    .child(
+                                    .child(tr(
                                         "Light or dark mode, translucency and diff colors follow Settings › Appearance.",
-                                    ),
+                                    )),
                             ),
                     ),
             )

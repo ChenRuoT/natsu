@@ -3,6 +3,7 @@
 use super::*;
 use crate::notifications::approvals::InputKind;
 use natsu_core::agent::{Question, QuestionItem, QuestionOption};
+use natsu_core::i18n::tr;
 use serde_json::{Value, json};
 
 /// The phone's own "Other" choice, as the desktop's question form names it.
@@ -43,11 +44,13 @@ impl Conversation {
         cx: &mut Context<Self>,
     ) -> Result<(), String> {
         if self.settings.worktree_removed {
-            return Err("This session’s working copy was removed. Select a branch or worktree on desktop to continue.".into());
+            return Err(tr("This session’s working copy was removed. Select a branch or worktree on desktop to continue.").into());
         }
         if self.needs_history_restore() {
             self.load(cx);
-            return Err("This session is still opening on desktop. Try again in a moment.".into());
+            return Err(
+                tr("This session is still opening on desktop. Try again in a moment.").into(),
+            );
         }
         let kind = Kind::from_id(&self.summary.provider);
         if automatic != Some(false)
@@ -55,17 +58,17 @@ impl Conversation {
             && crate::accounts::get(cx)
                 .is_some_and(|center| !center.read(cx).book.exists(kind, &self.settings.account.id))
         {
-            return Err(
-                "This provider account was removed. Choose an account on desktop and try again."
-                    .into(),
-            );
+            return Err(tr(
+                "This provider account was removed. Choose an account on desktop and try again.",
+            )
+            .into());
         }
         let state = self.mobile_usage_limit(cx);
         if state.is_null() {
-            return Err("This session is no longer paused by a usage limit".into());
+            return Err(tr("This session is no longer paused by a usage limit").into());
         }
         if &state["token"] != token {
-            return Err("This session changed. Wait for it to refresh and try again.".into());
+            return Err(tr("This session changed. Wait for it to refresh and try again.").into());
         }
         let eligible = if automatic.is_some() {
             "canAutoResume"
@@ -77,7 +80,7 @@ impl Conversation {
                 "{}. Check the session on desktop or try again after the allowance resets.",
                 state["resetLabel"]
                     .as_str()
-                    .unwrap_or("Cannot continue right now")
+                    .unwrap_or(tr("Cannot continue right now"))
             ));
         }
         if let Some(enabled) = automatic {
@@ -240,7 +243,7 @@ impl Conversation {
             .front()
             .map(|(card, _)| card.clone())
             .filter(|card| question_request_id(card.read(cx).id()) == request_id)
-            .ok_or("This question was already answered")?;
+            .ok_or(tr("This question was already answered"))?;
         match reply {
             None => card.update(cx, |card, cx| card.keep_open(cx)),
             Some(reply) => {
@@ -342,7 +345,7 @@ fn question_answers(request: &Question, reply: &Value) -> Result<Option<Vec<Vec<
     match reply["kind"].as_str() {
         Some("skipped") => return Ok(None),
         Some("answered") => {}
-        _ => return Err("Choose an answer or skip the question".into()),
+        _ => return Err(tr("Choose an answer or skip the question").into()),
     }
     let answers: Vec<Vec<String>> = request
         .items
@@ -395,7 +398,7 @@ fn question_answers(request: &Question, reply: &Value) -> Result<Option<Vec<Vec<
         })
         .collect();
     if answers.iter().all(Vec::is_empty) {
-        return Err("Choose an answer or skip the question".into());
+        return Err(tr("Choose an answer or skip the question").into());
     }
     Ok(Some(answers))
 }
@@ -437,13 +440,13 @@ pub(crate) fn usage_state(
         "resumeAtReset": limit.resume_at_reset,
         "canResume": supported && !busy && !waiting,
         "canAutoResume": supported && !busy && waiting,
-        "resetLabel": super::accounts::usage_reset_label(limit, now).unwrap_or_else(|| "Reset time unknown".into()),
+        "resetLabel": super::accounts::usage_reset_label(limit, now).unwrap_or_else(|| tr("Reset time unknown").into()),
         "limitation": if settings.worktree_removed {
-            "This session’s working copy was removed. Select a branch or worktree on desktop to continue."
+            tr("This session’s working copy was removed. Select a branch or worktree on desktop to continue.")
         } else if remote {
-            "Continue this session on its remote desktop. Mobile usage-limit recovery is unavailable for this session."
+            tr("Continue this session on its remote desktop. Mobile usage-limit recovery is unavailable for this session.")
         } else {
-            "Automatic continuation requires Natsu running with this session loaded. Your preference is saved, but scheduling resumes only when the session loads again."
+            tr("Automatic continuation requires Natsu running with this session loaded. Your preference is saved, but scheduling resumes only when the session loads again.")
         },
     })
 }

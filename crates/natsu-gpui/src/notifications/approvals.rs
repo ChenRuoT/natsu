@@ -2,6 +2,7 @@
 use crate::theme::*;
 use gpui::{Context, EventEmitter, Role, div, prelude::*, px};
 use natsu_core::agent::Decision;
+use natsu_core::i18n::tr;
 use std::{
     collections::{HashMap, HashSet},
     time::SystemTime,
@@ -221,9 +222,9 @@ impl Render for ApprovalNotices {
                                                             .text_color(gpui::rgb(0xffb900)),
                                                     )
                                                     .child(if input.kind == InputKind::Question {
-                                                        "Question"
+                                                        tr("Question")
                                                     } else {
-                                                        "Approval"
+                                                        tr("Approval")
                                                     }),
                                             ),
                                     )
@@ -255,7 +256,7 @@ impl Render for ApprovalNotices {
                                             div()
                                                 .id(("approval-toast-allow", ix))
                                                 .role(Role::Button)
-                                                .aria_label("Allow")
+                                                .aria_label(tr("Allow"))
                                                 .cursor_pointer()
                                                 .flex_1()
                                                 .rounded_md()
@@ -270,7 +271,7 @@ impl Render for ApprovalNotices {
                                                     color
                                                 })
                                                 .hover(|s| s.bg(content(0.8)))
-                                                .child("Allow")
+                                                .child(tr("Allow"))
                                                 .on_click(cx.listener(move |_, _, _, cx| {
                                                     cx.emit(Action::Decide {
                                                         session_id: allow_session.clone(),
@@ -283,7 +284,7 @@ impl Render for ApprovalNotices {
                                             div()
                                                 .id(("approval-toast-deny", ix))
                                                 .role(Role::Button)
-                                                .aria_label("Deny")
+                                                .aria_label(tr("Deny"))
                                                 .cursor_pointer()
                                                 .flex_1()
                                                 .rounded_md()
@@ -294,7 +295,7 @@ impl Render for ApprovalNotices {
                                                 .bg(content(0.1))
                                                 .text_color(content(0.7))
                                                 .hover(|s| s.bg(content(0.2)))
-                                                .child("Deny")
+                                                .child(tr("Deny"))
                                                 .on_click(cx.listener(move |_, _, _, cx| {
                                                     cx.emit(Action::Decide {
                                                         session_id: deny_session.clone(),

@@ -1,4 +1,5 @@
 //! GPUI port of AgentMarkdown.tsx and its .agent-markdown CSS.
+use natsu_core::i18n::tr;
 mod cache;
 pub(crate) mod mermaid;
 mod search;
@@ -787,7 +788,7 @@ pub(crate) fn body_selected(
         Part::Visual { caption, .. } => body
             .text_color(content(0.5))
             .child(if caption.is_empty() {
-                "Visual".to_owned()
+                tr("Visual").to_owned()
             } else {
                 caption.clone()
             })

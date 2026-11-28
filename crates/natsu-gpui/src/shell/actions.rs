@@ -36,7 +36,7 @@ impl Shell {
     pub(super) fn run_action(&mut self, id: &str, window: &mut Window, cx: &mut Context<Self>) {
         let project = self.workspace.project.clone();
         if project.starts_with("remote://") {
-            self.error = Some("Actions are not available on remote projects.".into());
+            self.error = Some(tr("Actions are not available on remote projects.").into());
             cx.notify();
             return;
         }
@@ -118,7 +118,7 @@ impl Shell {
         if !actions.is_empty() {
             items.push(MenuItem::Separator);
             items.push(
-                MenuAction::new("edit", "Edit action")
+                MenuAction::new("edit", tr("Edit action"))
                     .icon("pencil-edit-02")
                     .submenu(
                         actions
@@ -135,7 +135,11 @@ impl Shell {
                     .into(),
             );
         }
-        items.push(MenuAction::new("add", "Add action").icon("add-01").into());
+        items.push(
+            MenuAction::new("add", tr("Add action"))
+                .icon("add-01")
+                .into(),
+        );
         items
     }
     pub(super) fn run_actions_menu(
@@ -182,7 +186,10 @@ impl Shell {
             Some(action) => {
                 let id = action.id.clone();
                 segment("footer-action-run")
-                    .aria_label(SharedString::from(format!("Run {}", action.name)))
+                    .aria_label(SharedString::from(tr_fmt(
+                        "Run {name}",
+                        &[("name", &action.name)],
+                    )))
                     .aria_description(SharedString::from(action.command.clone()))
                     .px(pad)
                     .gap(px(6.))
@@ -195,17 +202,17 @@ impl Shell {
                     )
             }
             None => segment("footer-action-add")
-                .aria_label("Add action")
+                .aria_label(tr("Add action"))
                 .px(pad)
                 .gap(px(6.))
                 .child(icon("play", 12.).text_color(content(0.55)))
-                .child("Actions")
+                .child(tr("Actions"))
                 .on_click(
                     cx.listener(|this, _, window, cx| this.open_action_dialog(None, window, cx)),
                 ),
         };
         let chevron = segment("footer-action-menu")
-            .aria_label("Actions")
+            .aria_label(tr("Actions"))
             .aria_expanded(menu_open)
             .relative()
             .px(px(3.))
@@ -225,7 +232,7 @@ impl Shell {
                 .id("footer-actions")
                 .group("footer-actions")
                 .role(Role::Group)
-                .aria_label("Actions")
+                .aria_label(tr("Actions"))
                 .h(px(20.))
                 .p(px(2.))
                 .gap(px(1.))
@@ -253,7 +260,7 @@ impl Shell {
             .as_ref()
             .and_then(|id| self.project_actions().iter().find(|a| a.id == *id))
             .cloned();
-        let name = cx.new(|cx| input::Input::field("Action name", "Test", content(0.3), cx));
+        let name = cx.new(|cx| input::Input::field(tr("Action name"), "Test", content(0.3), cx));
         let command = cx.new(input::Input::action_command);
         if let Some(action) = &existing {
             name.update(cx, |i, cx| i.set_text(action.name.clone(), cx));
@@ -310,7 +317,7 @@ impl Shell {
         let name = dialog.name.read(cx).content.trim().to_owned();
         let command = dialog.command.read(cx).content.trim().to_owned();
         if name.is_empty() || command.is_empty() {
-            dialog.error = Some("Give the action a name and a command.".into());
+            dialog.error = Some(tr("Give the action a name and a command.").into());
             cx.notify();
             return;
         }
@@ -423,7 +430,11 @@ impl Shell {
                         }
                     }))
             }));
-        let title = if editing { "Edit action" } else { "Add action" };
+        let title = if editing {
+            tr("Edit action")
+        } else {
+            tr("Add action")
+        };
         Some(
             div()
                 .absolute()
@@ -466,7 +477,7 @@ impl Shell {
                                                 div()
                                                     .line_height(px(18.))
                                                     .text_color(content(0.6))
-                                                    .child("Save a project command to run with one click."),
+                                                    .child(tr("Save a project command to run with one click.")),
                                             )
                                         }),
                                 )
@@ -475,7 +486,7 @@ impl Shell {
                                         .flex()
                                         .flex_col()
                                         .gap_1p5()
-                                        .child(label("Icon"))
+                                        .child(label(tr("Icon")))
                                         .child(icons),
                                 )
                                 .child(
@@ -483,7 +494,7 @@ impl Shell {
                                         .flex()
                                         .flex_col()
                                         .gap_1p5()
-                                        .child(label("Name"))
+                                        .child(label(tr("Name")))
                                         .child(field(dialog.name.clone(), false)),
                                 )
                                 .child(
@@ -491,7 +502,7 @@ impl Shell {
                                         .flex()
                                         .flex_col()
                                         .gap_1p5()
-                                        .child(label("Command"))
+                                        .child(label(tr("Command")))
                                         .child(field(dialog.command.clone(), true))
                                         .child(match &dialog.error {
                                             Some(error) => div()
@@ -504,7 +515,7 @@ impl Shell {
                                                 .id("action-help")
                                                 .text_size(px(11.))
                                                 .text_color(content(0.45))
-                                                .child("Runs in a terminal at the project root."),
+                                                .child(tr("Runs in a terminal at the project root.")),
                                         }),
                                 )
                                 // Full-width buttons, the confirming one first.
@@ -516,7 +527,7 @@ impl Shell {
                                         .child(
                                             crate::modal::primary_button(
                                                 "action-save",
-                                                if editing { "Save" } else { "Add action" },
+                                                if editing { tr("Save") } else { tr("Add action") },
                                             )
                                             .w_full()
                                             .cursor_pointer()
@@ -530,7 +541,7 @@ impl Shell {
                                             d.child(
                                                 crate::modal::danger_ghost_button(
                                                     "action-delete",
-                                                    "Delete action",
+                                                    tr("Delete action"),
                                                 )
                                                 .debug_selector(|| "action-delete".into())
                                                 .w_full()
@@ -542,7 +553,7 @@ impl Shell {
                                             )
                                         })
                                         .child(
-                                            crate::modal::ghost_button("action-cancel", "Cancel")
+                                            crate::modal::ghost_button("action-cancel", tr("Cancel"))
                                                 .w_full()
                                                 .cursor_pointer()
                                                 .on_click(cx.listener(|this, _, window, cx| {

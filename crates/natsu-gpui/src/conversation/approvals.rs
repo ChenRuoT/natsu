@@ -1,5 +1,6 @@
 //! Permission requests use the queued-message shelf and its upward reveal.
 use super::*;
+use natsu_core::i18n::tr;
 use std::cell::RefCell;
 
 #[derive(Default)]
@@ -42,7 +43,7 @@ impl Conversation {
             .items_center()
             .gap(px(6.))
             .child(
-                approval_button("approval-deny", "Deny")
+                approval_button("approval-deny", tr("Deny"))
                     .text_color(content(0.5))
                     .hover(|s| s.bg(content(0.08)).text_color(content(0.9)))
                     .on_click(cx.listener(move |this, _, _, cx| {
@@ -51,7 +52,7 @@ impl Conversation {
             )
             .when(approval.can_remember, |d| {
                 d.child(
-                    approval_button("approval-session", "Allow for this session")
+                    approval_button("approval-session", tr("Allow for this session"))
                         .bg(content(0.06))
                         .hover(|s| s.bg(content(0.1)))
                         .on_click(cx.listener(move |this, _, _, cx| {
@@ -60,7 +61,7 @@ impl Conversation {
                 )
             })
             .child(
-                approval_button("approval-allow", "Allow once")
+                approval_button("approval-allow", tr("Allow once"))
                     .bg(content(1.))
                     .text_color(ink)
                     .font_weight(gpui::FontWeight::MEDIUM)

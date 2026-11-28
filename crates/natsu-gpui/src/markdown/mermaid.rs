@@ -2,6 +2,7 @@
 use super::*;
 use gpui::{ClipboardItem, Context, IntoElement, RenderImage, RenderOnce, Subscription, Task};
 use mermaid_rs_renderer::{LayoutConfig, Theme, compute_layout, parse_mermaid_strict, render_svg};
+use natsu_core::i18n::{tr, tr_fmt};
 use std::{collections::VecDeque, time::Duration};
 #[path = "mermaid_curves.rs"]
 mod curves;
@@ -174,13 +175,13 @@ impl Preview {
 
 fn diagram_svg(source: &str, dark: bool) -> Result<(String, f32, f32), String> {
     if source.len() > MAX_SOURCE_BYTES || source.lines().count() > MAX_SOURCE_LINES {
-        return Err("Diagram is too large to preview. You can still copy its source.".into());
+        return Err(tr("Diagram is too large to preview. You can still copy its source.").into());
     }
     input::expansion_budget(source)?;
     let mut parsed = parse_mermaid_strict(source).map_err(|error| error.to_string())?;
     input::validate_styles(&parsed.graph)?;
     if parsed.graph.nodes.len() + parsed.graph.edges.len() > MAX_GRAPH_ITEMS {
-        return Err("Diagram has too many nodes or connections to preview.".into());
+        return Err(tr("Diagram has too many nodes or connections to preview.").into());
     }
     if parsed.graph.kind == mermaid_rs_renderer::ir::DiagramKind::Sequence {
         for node in parsed.graph.nodes.values_mut() {
@@ -199,7 +200,7 @@ fn diagram_svg(source: &str, dark: bool) -> Result<(String, f32, f32), String> {
     let width = dimensions.width;
     let height = dimensions.height;
     if !width.is_finite() || !height.is_finite() || width <= 0. || height <= 0. {
-        return Err("Diagram has invalid dimensions.".into());
+        return Err(tr("Diagram has invalid dimensions.").into());
     }
     let mut svg = render_svg(&layout, &theme, &config);
     if layout.kind == mermaid_rs_renderer::ir::DiagramKind::Flowchart {
@@ -267,15 +268,19 @@ impl RenderOnce for Diagram {
                 size.width.0 as f32 / size.height.0 as f32
             });
         let mut status = match &preview.result {
-            None => Some("Rendering diagram…".to_owned()),
-            Some(Err(error)) => Some(format!("Unable to preview Mermaid: {error}")),
+            None => Some(tr("Rendering diagram…").to_owned()),
+            Some(Err(error)) => Some(tr_fmt(
+                "Unable to preview Mermaid: {error}",
+                &[("error", &error)],
+            )),
             Some(Ok(_)) => None,
         };
         let media = if show_source {
             let fence = source_preview(&self.fence);
             if !Arc::ptr_eq(&fence, &self.fence) {
-                status =
-                    Some("Source preview is truncated. Copy includes the complete source.".into());
+                status = Some(
+                    tr("Source preview is truncated. Copy includes the complete source.").into(),
+                );
             }
             div()
                 .id("mermaid-source")
@@ -342,13 +347,17 @@ impl RenderOnce for Diagram {
                                 .debug_selector(|| "mermaid-toggle".into())
                                 .role(Role::Button)
                                 .aria_label(if show_source {
-                                    "Show diagram"
+                                    tr("Show diagram")
                                 } else {
-                                    "Show source"
+                                    tr("Show source")
                                 })
                                 .cursor_pointer()
                                 .hover(|s| s.text_color(content(1.)))
-                                .child(if show_source { "Diagram" } else { "Source" })
+                                .child(if show_source {
+                                    tr("Diagram")
+                                } else {
+                                    tr("Source")
+                                })
                                 .on_click(move |_, _, cx| {
                                     state.update(cx, |state, cx| {
                                         state.source = !state.source;
@@ -361,7 +370,11 @@ impl RenderOnce for Diagram {
                     .child(
                         icon_button(
                             "mermaid-copy",
-                            if is_copied { "Copied" } else { "Copy code" },
+                            if is_copied {
+                                tr("Copied")
+                            } else {
+                                tr("Copy code")
+                            },
                             if is_copied { "check" } else { "copy" },
                         )
                         .debug_selector(|| "mermaid-copy".into())

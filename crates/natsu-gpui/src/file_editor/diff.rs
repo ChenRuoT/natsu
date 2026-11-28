@@ -26,7 +26,7 @@ impl FileEditor {
             .border_b_1()
             .border_color(stroke())
             .role(Role::Toolbar)
-            .aria_label("Jump between changes")
+            .aria_label(tr("Jump between changes"))
             .text_size(px(11.))
             .when(additions > 0, |d| {
                 d.child(
@@ -46,7 +46,7 @@ impl FileEditor {
             .child(
                 icon_action(
                     "previous-change",
-                    "Previous change",
+                    tr("Previous change"),
                     "chevron-up",
                     total > 0 && self.change_index > 0,
                 )
@@ -69,7 +69,7 @@ impl FileEditor {
             .child(
                 icon_action(
                     "next-change",
-                    "Next change",
+                    tr("Next change"),
                     "chevron-down",
                     self.change_index + 1 < total,
                 )

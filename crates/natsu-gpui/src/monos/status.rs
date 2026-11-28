@@ -1,4 +1,5 @@
 //! AppKit owns menu navigation and accessibility; actions return to GPUI.
+use natsu_core::i18n::tr;
 use objc2::runtime::AnyObject;
 use objc2::{
     AnyThread, DefinedClass, MainThreadMarker, MainThreadOnly, define_class, msg_send,
@@ -79,7 +80,7 @@ impl Status {
         menu.setAutoenablesItems(false);
         if monos.is_empty() {
             let title = NSMenuItem::new(mtm);
-            title.setTitle(&NSString::from_str("No monos yet"));
+            title.setTitle(&NSString::from_str(tr("No monos yet")));
             title.setEnabled(false);
             menu.addItem(&title);
         }
@@ -90,12 +91,12 @@ impl Status {
         menu.addItem(&NSMenuItem::separatorItem(mtm));
         menu.addItem(&Item::new(
             mtm,
-            "Quick Composer",
+            tr("Quick Composer"),
             "composer".into(),
             run.clone(),
         ));
         menu.addItem(&NSMenuItem::separatorItem(mtm));
-        menu.addItem(&Item::new(mtm, "Quit Natsu", "quit".into(), run));
+        menu.addItem(&Item::new(mtm, tr("Quit Natsu"), "quit".into(), run));
         self.item.setMenu(Some(&menu));
     }
 }

@@ -2,6 +2,7 @@ use gpui::{
     AnyElement, Bounds, CursorStyle, MouseButton, Pixels, ResizeEdge, Size, Window,
     WindowControlArea, div, point, prelude::*, px, size,
 };
+use natsu_core::i18n::tr;
 
 pub(super) const CONTROLS_WIDTH: f32 = 106.;
 
@@ -39,7 +40,7 @@ pub(super) fn controls(
         .items_center()
         .occlude()
         .child(caption_button(
-            crate::theme::icon_button("window-minimize", "Minimize window", MINIMIZE_ICON)
+            crate::theme::icon_button("window-minimize", tr("Minimize window"), MINIMIZE_ICON)
                 .debug_selector(|| "window-minimize".into()),
             WindowControlArea::Min,
             |_, window, _| window.minimize_window(),
@@ -48,9 +49,9 @@ pub(super) fn controls(
             crate::theme::icon_button(
                 "window-maximize",
                 if maximized {
-                    "Restore window"
+                    tr("Restore window")
                 } else {
-                    "Maximize window"
+                    tr("Maximize window")
                 },
                 if maximized {
                     RESTORE_ICON
@@ -63,7 +64,7 @@ pub(super) fn controls(
             |_, window, _| window.zoom_window(),
         ))
         .child(caption_button(
-            crate::theme::icon_button("window-close", "Close window", CLOSE_ICON)
+            crate::theme::icon_button("window-close", tr("Close window"), CLOSE_ICON)
                 .debug_selector(|| "window-close".into()),
             WindowControlArea::Close,
             on_close,

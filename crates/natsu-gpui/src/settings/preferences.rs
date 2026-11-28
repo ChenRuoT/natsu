@@ -32,6 +32,8 @@ pub(crate) struct Preferences {
     /// to `terminal_in_panel`.
     pub terminal_placement: String,
     // Appearance
+    /// `system`, `en` or `zh-CN`; `system` follows the desktop app, then the OS.
+    pub language: String,
     pub theme: String,
     pub wayland_window_decorations: bool,
     pub workspace_theme: String,
@@ -130,6 +132,7 @@ impl Default for Preferences {
             action_opens_terminal: true,
             terminal_in_panel: false,
             terminal_placement: String::new(),
+            language: "system".into(),
             theme: "dark".into(),
             wayland_window_decorations: true,
             workspace_theme: "default".into(),

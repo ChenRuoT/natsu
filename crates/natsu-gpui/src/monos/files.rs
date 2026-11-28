@@ -1,4 +1,5 @@
 use super::*;
+use natsu_core::i18n::{tr, tr_fmt};
 use natsu_core::mono::files;
 
 impl Monos {
@@ -75,7 +76,7 @@ impl Monos {
                 cx,
             );
             editor.update(cx, |v, cx| {
-                v.set_placeholder("Who it is, and what it should always keep in mind", cx)
+                v.set_placeholder(tr("Who it is, and what it should always keep in mind"), cx)
             });
             let focus = editor.focus_handle(cx);
             div()
@@ -100,7 +101,7 @@ impl Monos {
                 .text_center()
                 .text_size(px(12.))
                 .text_color(content(0.45))
-                .child("Loading…")
+                .child(tr("Loading…"))
                 .into_any_element()
         };
         let _ = mono;
@@ -111,7 +112,7 @@ impl Monos {
             .min_h_0()
             .flex()
             .flex_col()
-            .child(Self::settings_page_header("Soul"))
+            .child(Self::settings_page_header(tr("Soul")))
             .child(body)
             .into_any_element()
     }
@@ -180,8 +181,9 @@ impl Monos {
                             this.reload_files(&id, cx);
                         }
                         Err(e) => {
-                            this.error = Some(format!(
-                                "Could not save: {e}. Your edits are still in the editor."
+                            this.error = Some(tr_fmt(
+                                "Could not save: {e}. Your edits are still in the editor.",
+                                &[("e", &e)],
                             ))
                         }
                     }
@@ -221,9 +223,11 @@ impl Monos {
     ) {
         let prompt = window.prompt(
             gpui::PromptLevel::Warning,
-            "Reset conversation?",
-            Some("The chat will be cleared. Its soul, memory and habits stay."),
-            &["Cancel", "Reset"],
+            tr("Reset conversation?"),
+            Some(tr(
+                "The chat will be cleared. Its soul, memory and habits stay.",
+            )),
+            &[tr("Cancel"), tr("Reset")],
             cx,
         );
         let id = id.to_string();
@@ -252,9 +256,11 @@ impl Monos {
     pub(super) fn delete_mono(&mut self, id: &str, window: &mut Window, cx: &mut Context<Self>) {
         let prompt = window.prompt(
             gpui::PromptLevel::Warning,
-            "Delete mono?",
-            Some("Its scheduled habits stop. Sessions and notes it created stay saved."),
-            &["Cancel", "Delete"],
+            tr("Delete mono?"),
+            Some(tr(
+                "Its scheduled habits stop. Sessions and notes it created stay saved.",
+            )),
+            &[tr("Cancel"), tr("Delete")],
             cx,
         );
         let id = id.to_string();

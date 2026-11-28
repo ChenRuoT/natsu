@@ -18,6 +18,7 @@ use gpui::{
     App, AppContext, Context, Entity, EventEmitter, FocusHandle, Focusable, ListAlignment,
     ListState, Pixels, Subscription, px,
 };
+use natsu_core::i18n::tr;
 use natsu_core::{
     inbox::{self as model, Checks, Details, Diff, Item, Service, Snapshot, Thread, ViewState},
     store::Session,
@@ -179,12 +180,21 @@ impl Inbox {
             })
             .unwrap_or_else(|_| (ViewState::default(), cwd.clone()));
         state.filters.hidden_projects = other_projects(&projects, &cwd);
-        let search = cx.new(|cx| Input::field("Filter inbox", "Filter inbox", content(0.4), cx));
+        let search =
+            cx.new(|cx| Input::field(tr("Filter inbox"), tr("Filter inbox"), content(0.4), cx));
         let comment = cx.new(Input::inbox_comment);
-        let connect_url = cx.new(|cx| Input::field("Instance URL", "https://", content(0.4), cx));
-        let connect_email = cx.new(|cx| Input::field("Email", "you@example.com", content(0.4), cx));
-        let connect_token =
-            cx.new(|cx| Input::field("API token", "Personal access token", content(0.4), cx));
+        let connect_url =
+            cx.new(|cx| Input::field(tr("Instance URL"), "https://", content(0.4), cx));
+        let connect_email =
+            cx.new(|cx| Input::field(tr("Email"), "you@example.com", content(0.4), cx));
+        let connect_token = cx.new(|cx| {
+            Input::field(
+                tr("API token"),
+                tr("Personal access token"),
+                content(0.4),
+                cx,
+            )
+        });
         let diff_view = cx.new(DiffView::new);
         let subscriptions = vec![
             cx.subscribe(&search, |_, _, _: &input::Changed, cx| cx.notify()),
@@ -400,7 +410,7 @@ impl Inbox {
             .iter()
             .map(|(provider, status)| {
                 let description = if !status.connected {
-                    "Not connected".into()
+                    tr("Not connected").into()
                 } else if !status.site.is_empty() {
                     status.site.clone()
                 } else if !status.url.is_empty() {
@@ -408,7 +418,7 @@ impl Inbox {
                 } else if !status.organization.is_empty() {
                     status.organization.clone()
                 } else {
-                    "Connected".into()
+                    tr("Connected").into()
                 };
                 (provider.clone(), (status.connected, description))
             })
@@ -887,7 +897,7 @@ impl Inbox {
             self.connect_token.read(cx).content.to_string()
         };
         if provider != "github" && !disconnect && token.trim().is_empty() {
-            self.connect_error = Some("Enter an API token".into());
+            self.connect_error = Some(tr("Enter an API token").into());
             cx.notify();
             return;
         }
@@ -911,7 +921,7 @@ impl Inbox {
                             this.connect_provider = None;
                             if connected { this.change_source(provider, cx); }
                             this.refresh(cx);
-                        } else { this.connect_error = Some("GitHub is not connected. Run gh auth login in a terminal, then check again.".into()); }
+                        } else { this.connect_error = Some(tr("GitHub is not connected. Run gh auth login in a terminal, then check again.").into()); }
                     }
                     Err(error) => this.connect_error = Some(error),
                 }
@@ -943,7 +953,7 @@ impl Inbox {
                     Ok(item) => {
                         this.action_notice = (merging
                             && !item.state.eq_ignore_ascii_case("merged"))
-                        .then(|| "Merge queued or auto-merge enabled.".into());
+                        .then(|| tr("Merge queued or auto-merge enabled.").into());
                         if let Some(old) = this.snapshot.items.iter_mut().find(|i| i.key() == key) {
                             *old = item;
                         }

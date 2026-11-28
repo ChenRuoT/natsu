@@ -1,5 +1,6 @@
 //! Last-turn editing recalls first, and rewinds only when the user resubmits.
 use super::*;
+use natsu_core::i18n::{tr, tr_fmt};
 use natsu_core::{provider, store::EditSnapshot, transcript::Row};
 use std::path::PathBuf;
 
@@ -51,7 +52,7 @@ impl Conversation {
                 this.install_transfer(settings, None, cx);
             }
         }));
-        self.status = "Finish or cancel the current message edit to continue".into();
+        self.status = tr("Finish or cancel the current message edit to continue").into();
         cx.notify();
     }
     fn can_prepare_edit(&self, cx: &gpui::App) -> bool {
@@ -87,7 +88,8 @@ impl Conversation {
         cx: &mut Context<Self>,
     ) {
         if self.is_remote() {
-            self.status = "Editing the last message is not supported by this remote host.".into();
+            self.status =
+                tr("Editing the last message is not supported by this remote host.").into();
             cx.notify();
             return;
         }
@@ -107,7 +109,7 @@ impl Conversation {
             .max_by_key(|(row, _)| **row)
             .and_then(|(_, info)| info.provider_turn_id.clone());
         self.editing_last_turn.active = true;
-        self.status = "Preparing edit…".into();
+        self.status = tr("Preparing edit…").into();
         self.response_menu = None;
         let store = self.store.clone();
         let id = self.summary.id;
@@ -133,12 +135,15 @@ impl Conversation {
                             .update(cx, |input, cx| input.set_text(edit.prompt.clone(), cx));
                         this.attachments = edit.attachments.clone();
                         this.editing_last_turn.prepared = Some(edit);
-                        this.status = "Editing last message — send to replace its turn".into();
+                        this.status = tr("Editing last message — send to replace its turn").into();
                     }
                     Ok(_) => {
-                        this.status = "Composer or conversation changed; edit cancelled".into()
+                        this.status = tr("Composer or conversation changed; edit cancelled").into()
                     }
-                    Err(error) => this.status = format!("Could not edit last message: {error}"),
+                    Err(error) => {
+                        this.status =
+                            tr_fmt("Could not edit last message: {error}", &[("error", &error)])
+                    }
                 }
                 if !this.editing_last_turn.pending() {
                     this.run_history_actions(cx);
@@ -167,8 +172,9 @@ impl Conversation {
                 return true;
             }
             Err(error) => {
-                self.status = format!(
-                    "Could not verify conversation history: {error}. Your draft is preserved."
+                self.status = tr_fmt(
+                    "Could not verify conversation history: {error}. Your draft is preserved.",
+                    &[("error", &error)],
                 );
                 cx.notify();
                 return true;
@@ -195,7 +201,7 @@ impl Conversation {
                 .any(|command| natsu_core::composer::consume_command(text, command).is_some())
             || self.draft_active(cx)
         {
-            self.status = "Cancel message editing before running a local command".into();
+            self.status = tr("Cancel message editing before running a local command").into();
             cx.notify();
             return true;
         }
@@ -220,15 +226,15 @@ impl Conversation {
             || self.settings.account.id != edit.account_id
             || self.execution_cwd() != edit.cwd
         {
-            self.status = "Conversation changed; cancel the edit before sending".into();
+            self.status = tr("Conversation changed; cancel the edit before sending").into();
             cx.notify();
             return true;
         }
         let kind = Kind::from_id(&self.summary.provider);
         let Some(binary) = provider::resolve(kind) else {
-            self.status = format!(
-                "{} executable was not found; edited prompt preserved",
-                kind.label()
+            self.status = tr_fmt(
+                "{provider} executable was not found; edited prompt preserved",
+                &[("provider", &kind.label())],
             );
             cx.notify();
             return true;
@@ -252,7 +258,7 @@ impl Conversation {
         // Keep the visible draft in place until confirmation, including on a
         // rejected RPC. IME composition was checked before making it read-only.
         self.input.update(cx, |input, _| input.set_read_only(true));
-        self.status = "Rewinding last turn…".into();
+        self.status = tr("Rewinding last turn…").into();
         let store = self.store.clone();
         let id = self.summary.id;
         let work = cx.background_executor().spawn(async move {
@@ -306,7 +312,7 @@ impl Conversation {
                             this.editing_last_turn.prepared = None;
                             this.status = format!("{error}. Start a new conversation; your edited draft is preserved here.");
                         } else {
-                            this.status = format!("Could not rewind last turn: {error}. Your edited prompt is preserved.");
+                            this.status = tr_fmt("Could not rewind last turn: {error}. Your edited prompt is preserved.", &[("error", &error)]);
                         }
                     }
                 }
@@ -337,7 +343,7 @@ impl Conversation {
             self.follow_ups.state.messages.push(message);
         }
         self.save_follow_ups(cx);
-        self.status = "Last turn rewound; the edited prompt was saved as a draft because the composer changed".into();
+        self.status = tr("Last turn rewound; the edited prompt was saved as a draft because the composer changed").into();
     }
 }
 

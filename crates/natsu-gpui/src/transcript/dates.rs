@@ -2,6 +2,7 @@
 //! Like a messaging app, a badge marks each new day; times stay on messages.
 use super::*;
 use chrono::{DateTime, Datelike, Local, NaiveDate};
+use natsu_core::i18n::tr;
 
 pub(super) fn full_stamp(at: u64) -> String {
     i64::try_from(at)
@@ -25,9 +26,9 @@ pub(crate) fn opens_stretch(at: Option<u64>, previous: Option<u64>) -> bool {
 
 fn day_label(date: NaiveDate, today: NaiveDate) -> String {
     if date == today {
-        "Today".into()
+        tr("Today").into()
     } else if Some(date) == today.pred_opt() {
-        "Yesterday".into()
+        tr("Yesterday").into()
     } else if date.year() == today.year() {
         date.format("%a, %b %-d").to_string()
     } else {

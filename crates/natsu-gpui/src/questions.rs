@@ -6,6 +6,7 @@ use gpui::{
     Focusable, Hsla, MouseButton, Role, Subscription, Window, canvas, div, prelude::*, px,
 };
 use natsu_core::agent::Question;
+use natsu_core::i18n::{tr, tr_fmt};
 use std::time::{Duration, Instant};
 
 /// Crossfade between the composer and the card.
@@ -55,9 +56,9 @@ impl QuestionCard {
             .iter()
             .map(|item| {
                 let placeholder = if item.options.is_empty() {
-                    "Type your answer"
+                    tr("Type your answer")
                 } else {
-                    "Something else"
+                    tr("Something else")
                 };
                 cx.new(|cx| input::Input::field(&item.prompt, placeholder, content(0.35), cx))
             })
@@ -151,7 +152,7 @@ impl QuestionCard {
                 .items
                 .first()
                 .map(|item| item.prompt.as_str())
-                .unwrap_or("Question")
+                .unwrap_or(tr("Question"))
         }
     }
     fn answers(&self, cx: &App) -> Vec<Vec<String>> {
@@ -386,7 +387,7 @@ impl QuestionCard {
                             div()
                                 .text_size(px(11.))
                                 .text_color(content(0.45))
-                                .child("Select all that apply"),
+                                .child(tr("Select all that apply")),
                         )
                     }),
             )
@@ -410,9 +411,12 @@ impl QuestionCard {
         let countdown = self.request.auto_resolve_at.map(|deadline| {
             let remaining = deadline.saturating_sub(natsu_core::time::now_ms());
             if remaining > 60_000 {
-                "Optional".to_owned()
+                tr("Optional").to_owned()
             } else {
-                format!("Continues in {}s", remaining.div_ceil(1000))
+                tr_fmt(
+                    "Continues in {seconds}s",
+                    &[("seconds", &remaining.div_ceil(1000))],
+                )
             }
         });
         div()
@@ -431,7 +435,7 @@ impl QuestionCard {
                 d.child(
                     icon_button_enabled(
                         "question-prev",
-                        "Previous question",
+                        tr("Previous question"),
                         "chevron-left",
                         step > 0,
                     )
@@ -440,15 +444,14 @@ impl QuestionCard {
                         b.on_click(cx.listener(|this, _, _, cx| this.go(this.step - 1, cx)))
                     }),
                 )
-                .child(div().min_w(px(40.)).flex().justify_center().child(format!(
-                    "{} of {}",
-                    step + 1,
-                    total
+                .child(div().min_w(px(40.)).flex().justify_center().child(tr_fmt(
+                    "{current} of {total}",
+                    &[("current", &(step + 1)), ("total", &total)],
                 )))
                 .child(
                     icon_button_enabled(
                         "question-next",
-                        "Next question",
+                        tr("Next question"),
                         "chevron-right",
                         step < self.reached,
                     )
@@ -459,7 +462,7 @@ impl QuestionCard {
                 )
             })
             .child(
-                icon_button("question-dismiss", "Dismiss question", "close")
+                icon_button("question-dismiss", tr("Dismiss question"), "close")
                     .ml(px(4.))
                     .on_click(cx.listener(|this, _, _, cx| this.dismiss(cx))),
             )
@@ -500,16 +503,19 @@ impl QuestionCard {
                         .text_size(px(12.))
                         .text_color(content(0.4))
                         .child(if item.options.len() > 1 {
-                            format!("Press 1–{} to choose", item.options.len().min(9))
+                            tr_fmt(
+                                "Press 1–{count} to choose",
+                                &[("count", &item.options.len().min(9))],
+                            )
                         } else {
-                            "Choose an option".to_owned()
+                            tr("Choose an option").to_owned()
                         }),
                 )
             })
             .child(
-                footer_button("question-skip", "Skip question", false)
+                footer_button("question-skip", tr("Skip question"), false)
                     .debug_selector(|| "question-skip".into())
-                    .child("Skip")
+                    .child(tr("Skip"))
                     .on_click(cx.listener(|this, _, _, cx| this.skip(cx))),
             )
             .when(proceed, |d| {
@@ -517,14 +523,14 @@ impl QuestionCard {
                     footer_button(
                         "question-continue",
                         if last {
-                            "Submit answers"
+                            tr("Submit answers")
                         } else {
-                            "Next question"
+                            tr("Next question")
                         },
                         true,
                     )
                     .debug_selector(|| "question-continue".into())
-                    .child(if last { "Submit" } else { "Next" })
+                    .child(if last { tr("Submit") } else { tr("Next") })
                     .on_click(cx.listener(|this, _, _, cx| this.advance(cx))),
                 )
             })

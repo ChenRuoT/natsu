@@ -107,19 +107,19 @@ impl Render for SessionMark {
                 .id("session-working")
                 .child(spinner("session-working-spinner", Rate::Smooth))
                 .role(Role::Image)
-                .aria_label("Working")
+                .aria_label(natsu_core::i18n::tr("Working"))
                 .into_any_element(),
             // Tailwind teal-400 and amber-400, as TitleBar.tsx.
             State::Done => div()
                 .id("session-done")
                 .role(Role::Image)
-                .aria_label("Done")
+                .aria_label(natsu_core::i18n::tr("Done"))
                 .child(icon("check-circle-2", 14.).text_color(rgb(0x2dd4bf)))
                 .into_any_element(),
             State::Attention => div()
                 .id("session-attention")
                 .role(Role::Image)
-                .aria_label("Needs approval")
+                .aria_label(natsu_core::i18n::tr("Needs approval"))
                 .child(icon("alert-circle", 14.).text_color(rgb(0xfbbf24)))
                 .into_any_element(),
         };

@@ -1,4 +1,5 @@
 use natsu_core::agent::{Approval, Control, Settings};
+use natsu_core::i18n::{tr, tr_fmt};
 use natsu_core::{
     provider::{self, Event, Kind, Request},
     store::{Session, Store},
@@ -67,7 +68,7 @@ fn publish(
         }
         match tx.try_send(update) {
             Ok(()) => return Ok(()),
-            Err(async_channel::TrySendError::Closed(_)) => return Err("Window closed".into()),
+            Err(async_channel::TrySendError::Closed(_)) => return Err(tr("Window closed").into()),
             Err(async_channel::TrySendError::Full(value)) => update = value,
         }
         std::thread::sleep(Duration::from_millis(4));
@@ -76,7 +77,7 @@ fn publish(
 pub(crate) fn locked(store: &Database) -> Result<std::sync::MutexGuard<'_, Store>, String> {
     store
         .lock()
-        .map_err(|_| "Native session store unavailable".into())
+        .map_err(|_| tr("Native session store unavailable").into())
 }
 
 pub(crate) fn run_turn(
@@ -155,16 +156,17 @@ fn run_turn_using(
             return Err(reason);
         }
         if settings.worktree_removed {
-            return Err("Select a branch or worktree to continue this conversation.".into());
+            return Err(tr("Select a branch or worktree to continue this conversation.").into());
         }
         if settings.account.id != natsu_core::accounts::DEFAULT
             && !locked(&store)?
                 .provider_accounts()?
                 .exists(Kind::from_id(&summary.provider), &settings.account.id)
         {
-            return Err(
-                "This provider account was removed. Choose another account to continue.".into(),
-            );
+            return Err(tr(
+                "This provider account was removed. Choose another account to continue.",
+            )
+            .into());
         }
         transcript = locked(&store)?.load(summary.id)?;
         history_loaded = true;
@@ -419,8 +421,12 @@ fn run_turn_using(
                 },
             )?;
         }
-        let kind = Kind::parse(&summary.provider)
-            .ok_or_else(|| format!("Unknown provider: {}", summary.provider))?;
+        let kind = Kind::parse(&summary.provider).ok_or_else(|| {
+            tr_fmt(
+                "Unknown provider: {provider}",
+                &[("provider", &summary.provider)],
+            )
+        })?;
         let binary = resolve_binary(kind).ok_or_else(|| {
             format!(
                 "{} Set NATSU_{}_BINARY to choose a different path.",
@@ -1006,7 +1012,7 @@ fn run_turn_using(
             } else {
                 result
                     .err()
-                    .unwrap_or_else(|| "Conversation was not loaded".into())
+                    .unwrap_or_else(|| tr("Conversation was not loaded").into())
             },
         )
     } else if let Err(error) = result
@@ -1023,7 +1029,10 @@ fn run_turn_using(
             std::time::Instant::now(),
         ) {
             Ok(()) => error,
-            Err(storage) => format!("{error} · Saving failed: {storage}"),
+            Err(storage) => tr_fmt(
+                "{error} · Saving failed: {storage}",
+                &[("error", &error), ("storage", &storage)],
+            ),
         };
         (start, transcript.rows[start..].to_vec(), error)
     } else {
@@ -1039,7 +1048,7 @@ fn run_turn_using(
                 std::time::Instant::now(),
             )
             .map(|_| "Ready".into())
-            .unwrap_or_else(|error| format!("Saving failed: {error}"));
+            .unwrap_or_else(|error| tr_fmt("Saving failed: {error}", &[("error", &error)]));
         (final_start, transcript.rows[final_start..].to_vec(), status)
     };
     // Settle provenance in storage before notifying the view, including when
@@ -1051,11 +1060,17 @@ fn run_turn_using(
         info.completed_at = info.started_at.map(|_| completed);
         info.stopped = cancelled;
         if let Err(error) = persistence::save_turn_receipt(&store, summary.id, turn, info) {
-            status = format!("{status} · Saving turn metadata failed: {error}");
+            status = tr_fmt(
+                "{status} · Saving turn metadata failed: {error}",
+                &[("status", &status), ("error", &error)],
+            );
         }
     }
     if let Err(error) = handoff_save {
-        status = format!("{status} · Saving handoff failed: {error}");
+        status = tr_fmt(
+            "{status} · Saving handoff failed: {error}",
+            &[("status", &status), ("error", &error)],
+        );
     }
     // Final status must still arrive after cancellation. Dropping a window closes
     // the receiver, so the worker never keeps a closed viewport alive.

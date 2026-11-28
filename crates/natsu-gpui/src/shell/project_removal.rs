@@ -17,17 +17,21 @@ impl Shell {
         .detach();
     }
     pub(super) fn external_editor_menu(&self, path: &str) -> MenuAction {
-        let item = MenuAction::new("external-editor", "Open in editor").icon("app-window");
+        let item = MenuAction::new("external-editor", tr("Open in editor")).icon("app-window");
         let none =
             |label: &str| vec![MenuAction::new("external-editor:none", label).disabled(true)];
         if path.starts_with("remote://") {
             return item
                 .disabled(true)
-                .submenu(none("Remote folders stay on their host"));
+                .submenu(none(tr("Remote folders stay on their host")));
         }
         match &self.external_editors {
-            None => item.disabled(true).submenu(none("Looking for editors…")),
-            Some(editors) if editors.is_empty() => item.submenu(none("No supported editors found")),
+            None => item
+                .disabled(true)
+                .submenu(none(tr("Looking for editors…"))),
+            Some(editors) if editors.is_empty() => {
+                item.submenu(none(tr("No supported editors found")))
+            }
             Some(editors) => item.submenu(
                 editors
                     .iter()
@@ -90,15 +94,24 @@ impl Shell {
     ) {
         let count = self.project_sessions(&path).len();
         let detail = match count {
-            0 => String::new(),
-            1 => "Its 1 saved conversation will be deleted. ".into(),
-            n => format!("Its {n} saved conversations will be deleted. "),
-        } + "The folder on disk stays put, and opening it again brings the project back empty.";
+            0 => tr(
+                "The folder on disk stays put, and opening it again brings the project back empty.",
+            )
+            .to_owned(),
+            1 => tr_fmt(
+                "Its {count} saved conversation will be deleted. The folder on disk stays put, and opening it again brings the project back empty.",
+                &[("count", &count)],
+            ),
+            n => tr_fmt(
+                "Its {count} saved conversations will be deleted. The folder on disk stays put, and opening it again brings the project back empty.",
+                &[("count", &n)],
+            ),
+        };
         let prompt = window.prompt(
             gpui::PromptLevel::Warning,
-            &format!("Delete “{}”?", self.project_label(&path)),
+            &tr_fmt("Delete “{name}”?", &[("name", &self.project_label(&path))]),
             Some(&detail),
-            &["Delete", "Cancel"],
+            &[tr("Delete"), tr("Cancel")],
             cx,
         );
         cx.spawn(async move |this, cx| {
@@ -136,9 +149,11 @@ impl Shell {
         let title = self.session_metadata(id, cx).display_title();
         let prompt = window.prompt(
             gpui::PromptLevel::Warning,
-            &format!("Delete “{title}”?"),
-            Some("This conversation and its saved settings will be removed permanently."),
-            &["Delete", "Cancel"],
+            &tr_fmt("Delete “{title}”?", &[("title", &title)]),
+            Some(tr(
+                "This conversation and its saved settings will be removed permanently.",
+            )),
+            &[tr("Delete"), tr("Cancel")],
             cx,
         );
         cx.spawn(async move |this, cx| {

@@ -53,22 +53,27 @@ impl Shell {
                 close(self, window, cx);
                 return;
             }
-            [(label, process)] => {
-                format!("\"{process}\" is still running in {label}. Close this terminal anyway?")
-            }
-            many => format!(
-                "These terminals are still running:\n{}\n\nClose them anyway?",
-                many.iter()
-                    .map(|(label, process)| format!("• {label} ({process})"))
-                    .collect::<Vec<_>>()
-                    .join("\n")
+            [(label, process)] => tr_fmt(
+                "\"{process}\" is still running in {label}. Close this terminal anyway?",
+                &[("process", process), ("label", label)],
+            ),
+            many => tr_fmt(
+                "These terminals are still running:\n{list}\n\nClose them anyway?",
+                &[(
+                    "list",
+                    &many
+                        .iter()
+                        .map(|(label, process)| format!("• {label} ({process})"))
+                        .collect::<Vec<_>>()
+                        .join("\n"),
+                )],
             ),
         };
         let answer = window.prompt(
             gpui::PromptLevel::Warning,
             &message,
             None,
-            &["Close", "Cancel"],
+            &[tr("Close"), tr("Cancel")],
             cx,
         );
         cx.spawn_in(window, async move |this, cx| {
@@ -326,7 +331,7 @@ impl Shell {
             .id(("terminal-pane", pane.unsigned_abs() as usize))
             .debug_selector(move || format!("terminal-pane-{pane}"))
             .role(Role::Region)
-            .aria_label("Terminal")
+            .aria_label(tr("Terminal"))
             .size_full()
             .flex()
             .flex_col()

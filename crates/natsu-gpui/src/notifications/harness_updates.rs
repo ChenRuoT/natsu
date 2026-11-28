@@ -2,6 +2,7 @@
 //! entity in the shared top-right notification stack.
 use crate::theme::*;
 use gpui::{Context, EventEmitter, Render, Role, Window, div, prelude::*, px};
+use natsu_core::i18n::{tr, tr_fmt};
 use natsu_core::{
     harness_updates::{self, Update},
     provider::Kind,
@@ -149,9 +150,9 @@ impl Render for HarnessUpdates {
                     .text_size(px(12.))
                     .font_weight(gpui::FontWeight::SEMIBOLD)
                     .child(if self.updates.len() == 1 {
-                        "Harness update available"
+                        tr("Harness update available")
                     } else {
-                        "Harness updates available"
+                        tr("Harness updates available")
                     }),
             );
         if pending.len() > 1 {
@@ -159,7 +160,7 @@ impl Render for HarnessUpdates {
                 div()
                     .id("update-all-harnesses")
                     .role(Role::Button)
-                    .aria_label("Update all")
+                    .aria_label(tr("Update all"))
                     .cursor_pointer()
                     .px(px(8.))
                     .py(px(4.))
@@ -168,14 +169,14 @@ impl Render for HarnessUpdates {
                     .text_color(content(0.7))
                     .hover(|s| s.bg(content(0.1)))
                     .on_click(cx.listener(move |this, _, _, cx| this.start(pending.clone(), cx)))
-                    .child("Update all"),
+                    .child(tr("Update all")),
             );
         }
         header = header.child(
             div()
                 .id("dismiss-harness-updates")
                 .role(Role::Button)
-                .aria_label("Dismiss harness updates")
+                .aria_label(tr("Dismiss harness updates"))
                 .size(px(24.))
                 .flex()
                 .items_center()
@@ -209,7 +210,7 @@ impl Render for HarnessUpdates {
                     div()
                         .text_size(px(11.))
                         .text_color(gpui::rgb(0x34d399))
-                        .child(format!("✓ Updated to {version}")),
+                        .child(tr_fmt("✓ Updated to {version}", &[("version", &version)])),
                 );
             } else {
                 let updating = matches!(state, Some(RowState::Updating));
@@ -257,11 +258,11 @@ impl Render for HarnessUpdates {
                                 ))
                             })
                             .child(if updating {
-                                "Updating"
+                                tr("Updating")
                             } else if matches!(state, Some(RowState::Failed(_))) {
-                                "Retry"
+                                tr("Retry")
                             } else {
-                                "Update"
+                                tr("Update")
                             }),
                     );
             }
@@ -285,7 +286,7 @@ impl Render for HarnessUpdates {
         super::surface::glass_frame()
             .id("harness-update-notice")
             .role(Role::Status)
-            .aria_label("Harness updates")
+            .aria_label(tr("Harness updates"))
             .child(
                 panel.child(
                     div()
@@ -294,9 +295,9 @@ impl Render for HarnessUpdates {
                         .text_size(px(11.))
                         .text_color(content(0.5))
                         .child(if updated {
-                            "Model picker refreshed with the new version’s models."
+                            tr("Model picker refreshed with the new version’s models.")
                         } else {
-                            "New models often need the latest version."
+                            tr("New models often need the latest version.")
                         }),
                 ),
             )

@@ -556,20 +556,20 @@ fn diagnostics(tree: &Tree, text: &str) -> Vec<Diagnostic> {
         let (mut from, mut to) = (node.start_byte(), node.end_byte());
         let message = if node.is_missing() {
             if node.is_named() {
-                format!("Expected {}", node.kind())
+                natsu_core::i18n::tr_fmt("Expected {what}", &[("what", &node.kind())])
             } else {
-                format!("Expected {}", quote(node.kind()))
+                natsu_core::i18n::tr_fmt("Expected {what}", &[("what", &quote(node.kind()))])
             }
         } else {
             let skipped = text[from..to].trim();
             if !skipped.is_empty() {
-                format!("Unexpected {}", quote(skipped))
+                natsu_core::i18n::tr_fmt("Unexpected {what}", &[("what", &quote(skipped))])
             } else if let Some(token) = token_at(text, from) {
-                format!("Unexpected {}", quote(token))
+                natsu_core::i18n::tr_fmt("Unexpected {what}", &[("what", &quote(token))])
             } else if from >= text.len() {
-                "Unexpected end of file".into()
+                natsu_core::i18n::tr("Unexpected end of file").into()
             } else {
-                "Unexpected end of line".into()
+                natsu_core::i18n::tr("Unexpected end of line").into()
             }
         };
         // Zero-width points widen to one character, never across a line break.

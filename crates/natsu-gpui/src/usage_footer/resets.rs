@@ -3,6 +3,7 @@ use crate::{
     accounts::resets::{ResetRow, rows},
     settings::widgets::{primary_button, secondary_button},
 };
+use natsu_core::i18n::{tr, tr_fmt};
 
 #[derive(Clone)]
 enum Command {
@@ -54,12 +55,12 @@ impl UsageFooter {
                         .items_center()
                         .justify_between()
                         .font_weight(FontWeight::MEDIUM)
-                        .child("Banked resets")
+                        .child(tr("Banked resets"))
                         .child(
                             div()
                                 .text_size(px(10.))
                                 .text_color(content(0.5))
-                                .child(format!("{count} available")),
+                                .child(tr_fmt("{count} available", &[("count", &count)])),
                         ),
                 )
                 .child(
@@ -115,9 +116,12 @@ impl UsageFooter {
         let confirming = self.confirm_reset.as_ref() == Some(&row.key) && !disabled;
         let now = usage::now_ms();
         let expiry = match row.credit.as_ref().and_then(|c| c.expires_at) {
-            None => "Expiry not provided".into(),
-            Some(at) if at <= now => "Expires now".into(),
-            Some(at) => format!("Expires in {}", usage::duration(at - now)),
+            None => tr("Expiry not provided").into(),
+            Some(at) if at <= now => tr("Expires now").into(),
+            Some(at) => tr_fmt(
+                "Expires in {duration}",
+                &[("duration", &usage::duration(at - now))],
+            ),
         };
         div()
             .id(gpui::SharedString::from(format!(
@@ -170,7 +174,7 @@ impl UsageFooter {
                                 div()
                                     .text_size(px(10.))
                                     .text_color(content(0.45))
-                                    .child("Applying…"),
+                                    .child(tr("Applying…")),
                             )
                         } else {
                             d.child(self.reset_button(
@@ -194,7 +198,7 @@ impl UsageFooter {
                             div()
                                 .text_size(px(10.))
                                 .text_color(content(0.5))
-                                .child("Spend this reset now?"),
+                                .child(tr("Spend this reset now?")),
                         )
                         .child(
                             div()
@@ -233,10 +237,12 @@ impl UsageFooter {
         let id =
             gpui::SharedString::from(format!("banked-reset-{}-{row}", label.replace(' ', "-")));
         let selector = id.clone();
+        // `label` is the English key: it names the element and picks the style,
+        // and the translation is only what the button shows.
         let button = if label == "Confirm" {
-            primary_button(id, label, disabled)
+            primary_button(id, tr(label), disabled)
         } else {
-            secondary_button(id, label, false, disabled)
+            secondary_button(id, tr(label), false, disabled)
         };
         button
             .debug_selector(move || selector.to_string())
@@ -244,7 +250,7 @@ impl UsageFooter {
             .py_0()
             .px_2()
             .text_size(px(10.))
-            .child(label)
+            .child(tr(label))
             .when(!disabled, |d| {
                 let click = command.clone();
                 d.focusable()

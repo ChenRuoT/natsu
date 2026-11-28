@@ -4,6 +4,7 @@ use gpui::{
     AnyElement, App, Element, ElementId, GlobalElementId, InspectorElementId, LayoutId,
     MouseButton, Point, TextLayout, WeakEntity,
 };
+use natsu_core::i18n::{tr, tr_fmt};
 use std::{cell::RefCell, ops::Range, rc::Rc};
 use unicode_segmentation::UnicodeSegmentation;
 
@@ -575,14 +576,14 @@ impl TranscriptView {
         let panel = div()
             .id("transcript-selection-actions")
             .role(Role::Toolbar)
-            .aria_label("Selected text actions")
+            .aria_label(tr("Selected text actions"))
             .p_1()
             .min_w(px(144.))
             .flex()
             .flex_col()
             .gap(px(2.))
             .child(
-                button("selection-copy", "Copy", "copy").on_click(cx.listener(
+                button("selection-copy", tr("Copy"), "copy").on_click(cx.listener(
                     move |_, _, _, cx| {
                         cx.write_to_clipboard(ClipboardItem::new_string(copy.clone()))
                     },
@@ -590,8 +591,8 @@ impl TranscriptView {
             )
             .when(quote, |d| {
                 d.child(
-                    button("selection-chat", "Add to chat", "comment-add").on_click(cx.listener(
-                        move |this, _, window, cx| {
+                    button("selection-chat", tr("Add to chat"), "comment-add").on_click(
+                        cx.listener(move |this, _, window, cx| {
                             if this.mono {
                                 cx.emit(MonoResponseAction::Quote {
                                     text: text.clone(),
@@ -602,13 +603,13 @@ impl TranscriptView {
                             }
                             this.selection.clear();
                             cx.notify();
-                        },
-                    )),
+                        }),
+                    ),
                 )
             })
             .when(quote, |d| {
                 d.child(
-                    button("selection-note", "Add to notes", "response-note").on_click(
+                    button("selection-note", tr("Add to notes"), "response-note").on_click(
                         cx.listener(move |this, _, _, cx| {
                             if this.note_pending.insert(turn) {
                                 cx.emit(ResponseRequest::SaveNote {
@@ -636,7 +637,7 @@ impl TranscriptView {
                             .py_1()
                             .text_size(px(11.))
                             .text_color(rgb(0xf87171))
-                            .child(format!("Could not save note: {error}")),
+                            .child(tr_fmt("Could not save note: {error}", &[("error", &error)])),
                     )
                 },
             );

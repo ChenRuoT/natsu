@@ -1,6 +1,7 @@
 //! Mono details content inside the shell's shared right sidebar.
 use super::panel_stack::{PanelStack, Pose};
 use super::*;
+use natsu_core::i18n::tr;
 use std::time::Instant;
 
 impl Monos {
@@ -149,7 +150,7 @@ impl Render for Overview {
             .id("mono-overview-panel")
             .debug_selector(|| "mono-overview-panel".into())
             .role(Role::Complementary)
-            .aria_label("Mono details")
+            .aria_label(tr("Mono details"))
             .track_focus(&self.focus)
             .size_full()
             .min_w_0()

@@ -1,6 +1,7 @@
 //! Hover cards for unopened sessions do not construct conversation entities.
 use crate::{pickers::cached_model_name, theme::*};
 use gpui::{AnyElement, FontWeight, div, prelude::*, px};
+use natsu_core::i18n::tr;
 use natsu_core::{
     provider::Kind,
     store::{Session, SessionPreviewData},
@@ -61,7 +62,7 @@ pub(super) fn render(
                             content(0.45)
                         })
                         .child(if done {
-                            "Done".to_owned()
+                            tr("Done").to_owned()
                         } else {
                             natsu_core::time::relative(
                                 summary.updated_at,
@@ -98,9 +99,9 @@ pub(super) fn render(
                         .flex_shrink_0()
                         .text_color(content(0.45))
                         .child(if worktree.is_some() {
-                            "Worktree"
+                            tr("Worktree")
                         } else {
-                            "Directory"
+                            tr("Directory")
                         }),
                 )
                 .child(

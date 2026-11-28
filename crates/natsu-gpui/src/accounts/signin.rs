@@ -1,6 +1,7 @@
 use super::*;
 use crate::theme::*;
 use gpui::{AnyElement, FontWeight, Role, SharedString, div, px};
+use natsu_core::i18n::{tr, tr_fmt};
 
 impl Accounts {
     pub(crate) fn has_modal_auth(&self) -> bool {
@@ -37,11 +38,11 @@ impl Accounts {
             .is_some_and(|s| !s.complete && s.error.is_none());
         let disabled = auth_running || complete || self.working;
         let label: SharedString = if running {
-            "Waiting for browser…".into()
+            tr("Waiting for browser…").into()
         } else if complete {
-            "Signed in".into()
+            tr("Signed in").into()
         } else {
-            format!("Sign in to {}", kind.label()).into()
+            tr_fmt("Sign in to {provider}", &[("provider", &kind.label())]).into()
         };
         let click_id = id.to_owned();
         let keyboard_id = id.to_owned();
@@ -51,9 +52,9 @@ impl Accounts {
             .id("footer-provider-signin-panel")
             .role(Role::Status)
             .aria_label(if complete {
-                "Signed in"
+                tr("Signed in")
             } else {
-                "Authentication required"
+                tr("Authentication required")
             })
             .min_h(px(272.))
             .px(px(20.))
@@ -84,9 +85,9 @@ impl Accounts {
                     .font_weight(FontWeight::MEDIUM)
                     .text_center()
                     .child(if complete {
-                        format!("Signed in to {}", kind.label())
+                        tr_fmt("Signed in to {provider}", &[("provider", &kind.label())])
                     } else {
-                        "Authentication required".into()
+                        tr("Authentication required").into()
                     }),
             )
             .child(
@@ -98,9 +99,12 @@ impl Accounts {
                     .text_color(content(0.45))
                     .text_center()
                     .child(if complete {
-                        "You can retry your last message now.".into()
+                        tr("You can retry your last message now.").into()
                     } else {
-                        format!("Sign in to continue using {}.", kind.label())
+                        tr_fmt(
+                            "Sign in to continue using {provider}.",
+                            &[("provider", &kind.label())],
+                        )
                     }),
             )
             .child(
@@ -166,7 +170,7 @@ impl Accounts {
                     div()
                         .id("footer-provider-auth-cancel")
                         .role(Role::Button)
-                        .aria_label("Cancel sign-in")
+                        .aria_label(tr("Cancel sign-in"))
                         .mt(px(8.))
                         .px(px(8.))
                         .py(px(2.))
@@ -176,7 +180,7 @@ impl Accounts {
                         .text_color(content(0.5))
                         .cursor_pointer()
                         .hover(|s| s.text_color(content(0.8)))
-                        .child("Cancel")
+                        .child(tr("Cancel"))
                         .on_click(cx.listener(|this, _, _, cx| this.cancel_auth(cx))),
                 )
             })

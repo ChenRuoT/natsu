@@ -12,6 +12,7 @@ use gpui::{
     AnyElement, Context, Pixels, Role, SharedString, Transformation, div, percentage, prelude::*,
     px, rgb,
 };
+use natsu_core::i18n::{tr, tr_fmt};
 use natsu_core::tool::{
     ToolCall, ToolState,
     tasks::{AgentRun, AgentStep, Panel, TaskList, TaskStatus},
@@ -39,7 +40,10 @@ fn task_list(list: &TaskList, start: usize) -> AnyElement {
     div()
         .id(("task-progress", start))
         .role(Role::Group)
-        .aria_label(format!("Task progress: {}", list.progress()))
+        .aria_label(tr_fmt(
+            "Task progress: {progress}",
+            &[("progress", &list.progress())],
+        ))
         .w_full()
         .min_w_0()
         .my_1()
@@ -64,7 +68,7 @@ fn task_list(list: &TaskList, start: usize) -> AnyElement {
                                 .flex_1()
                                 .text_size(px(12.))
                                 .text_color(content(0.85))
-                                .child("Tasks"),
+                                .child(tr("Tasks")),
                         )
                         .child(
                             div()
@@ -100,7 +104,7 @@ fn task_list(list: &TaskList, start: usize) -> AnyElement {
                             .py_1()
                             .text_size(px(12.))
                             .text_color(content(0.5))
-                            .child("No tasks"),
+                            .child(tr("No tasks")),
                     )
                 })
                 .children(
@@ -159,7 +163,10 @@ fn task_list(list: &TaskList, start: usize) -> AnyElement {
                             .py_1()
                             .text_size(px(11.))
                             .text_color(content(0.45))
-                            .child(format!("Showing 100 of {} tasks", list.items.len())),
+                            .child(tr_fmt(
+                                "Showing 100 of {total} tasks",
+                                &[("total", &list.items.len())],
+                            )),
                     )
                 }),
         )
@@ -404,9 +411,15 @@ fn agent(
             Role::Label
         })
         .aria_label(if has_detail {
-            format!("{} {name}'s work", if open { "Hide" } else { "Show" })
+            tr_fmt(
+                "{action} {name}'s work",
+                &[
+                    ("action", &if open { tr("Hide") } else { tr("Show") }),
+                    ("name", &name),
+                ],
+            )
         } else {
-            format!("Subagent: {name}")
+            tr_fmt("Subagent: {name}", &[("name", &name)])
         })
         .when(has_detail, |d| d.aria_expanded(open))
         .tooltip({
@@ -693,9 +706,12 @@ fn agent_trail(
             .count();
         let title = if failed_agents > 0 {
             if failed_agents == 1 {
-                "Subagent failed".to_owned()
+                tr("Subagent failed").to_owned()
             } else {
-                format!("{failed_agents} subagents failed")
+                tr_fmt(
+                    "{failed_agents} subagents failed",
+                    &[("failed_agents", &failed_agents)],
+                )
             }
         } else {
             phase
@@ -704,7 +720,7 @@ fn agent_trail(
                 .filter(|text| !text.is_empty())
                 .unwrap_or_else(|| {
                     if calls.is_empty() {
-                        if live { "Thinking" } else { "Thought" }.to_owned()
+                        if live { tr("Thinking") } else { tr("Thought") }.to_owned()
                     } else {
                         crate::activity::summary(&calls, live).0
                     }
@@ -750,9 +766,12 @@ fn agent_trail(
                 div()
                     .id("header")
                     .role(if inert { Role::Label } else { Role::Button })
-                    .aria_label(format!(
-                        "{} the steps for {title}",
-                        if open { "Hide" } else { "Show" }
+                    .aria_label(tr_fmt(
+                        "{action} the steps for {title}",
+                        &[
+                            ("action", &if open { tr("Hide") } else { tr("Show") }),
+                            ("title", &title),
+                        ],
                     ))
                     .when(!inert, |d| d.aria_expanded(open).cursor_pointer())
                     .group("agent-phase")
@@ -919,7 +938,7 @@ fn agent_step(
                 .aria_expanded(open)
                 .aria_label(format!(
                     "{} {}: {summary}",
-                    if open { "Hide" } else { "Show" },
+                    if open { tr("Hide") } else { tr("Show") },
                     if reasoning { "thinking" } else { "note" }
                 ))
                 .flex()
@@ -938,7 +957,7 @@ fn agent_step(
                         .min_w_0()
                         .truncate()
                         .child(if open && reasoning {
-                            "Thinking".to_owned()
+                            tr("Thinking").to_owned()
                         } else {
                             summary
                         }),

@@ -1,6 +1,7 @@
 //! modeCommands.tsx's inline icon, tinted command name and first-line spacing.
 //! The editor keeps the original `/command` bytes for clipboard, IME and edits.
 use super::*;
+use natsu_core::i18n::tr;
 
 // A 1.5-em blank replaces the slash when shaping. Its byte mapping is shared by
 // hit testing, selection, caret movement and IME geometry; wrapped lines retain
@@ -107,8 +108,8 @@ impl Input {
     /// The compact composer in BtwSheet; Enter sends and Shift+Enter adds a line.
     pub(crate) fn side_question(cx: &mut Context<Self>) -> Self {
         let mut input = Self::new(cx);
-        input.label = "By-the-way question".into();
-        input.placeholder = "Ask a side question…".into();
+        input.label = tr("By-the-way question").into();
+        input.placeholder = tr("Ask a side question…").into();
         // `rows={1}`: the side composer has no workspace bar under it.
         input.min_height = 22.;
         input.height = 22.;

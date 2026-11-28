@@ -339,14 +339,14 @@ impl Shell {
         if muted {
             MenuAction::new("mute:resume", "Resume notifications").icon("bell")
         } else {
-            MenuAction::new("notifications-mute", "Mute notifications")
+            MenuAction::new("notifications-mute", tr("Mute notifications"))
                 .icon("bell-off")
                 .submenu(vec![
-                    MenuAction::new("mute:1h", "For 1 hour"),
-                    MenuAction::new("mute:4h", "For 4 hours"),
-                    MenuAction::new("mute:8h", "For 8 hours"),
-                    MenuAction::new("mute:forever", "Until resumed"),
-                    MenuAction::new("mute:custom", "Custom…"),
+                    MenuAction::new("mute:1h", tr("For 1 hour")),
+                    MenuAction::new("mute:4h", tr("For 4 hours")),
+                    MenuAction::new("mute:8h", tr("For 8 hours")),
+                    MenuAction::new("mute:forever", tr("Until resumed")),
+                    MenuAction::new("mute:custom", tr("Custom…")),
                 ])
         }
     }

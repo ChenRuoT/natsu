@@ -106,7 +106,7 @@ impl Shell {
             .id("github-star")
             .debug_selector(|| "github-star".into())
             .role(Role::Button)
-            .aria_label("Star Natsu on GitHub")
+            .aria_label(tr("Star Natsu on GitHub"))
             .size_full()
             .pl_2()
             .pr(px(32.))
@@ -147,9 +147,9 @@ impl Shell {
                     }),
             )
             .child(if busy {
-                "Starring…"
+                tr("Starring…")
             } else {
-                "Star on GitHub"
+                tr("Star on GitHub")
             })
             .when(busy, |d| d.opacity(0.65))
             .when(!busy, |d| {
@@ -161,7 +161,7 @@ impl Shell {
             .id("github-star-dismiss")
             .debug_selector(|| "github-star-dismiss".into())
             .role(Role::Button)
-            .aria_label("Don't show again")
+            .aria_label(tr("Don't show again"))
             .absolute()
             .right(px(4.))
             .top(px(4.))

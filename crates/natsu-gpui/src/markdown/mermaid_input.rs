@@ -1,6 +1,7 @@
 //! Checks applied before parsing and before passing source-derived styles to
 //! the SVG emitter. Keep these separate from the post-parse rendering limits.
 use mermaid_rs_renderer::ir::{Graph, NodeStyle};
+use natsu_core::i18n::tr;
 
 const MAX_PARSE_EXPANSIONS: usize = super::MAX_GRAPH_ITEMS;
 
@@ -16,7 +17,7 @@ pub(super) fn expansion_budget(source: &str) -> Result<(), String> {
                 )
             })
         {
-            return Err("Diagram style command exceeds the parser budget.".into());
+            return Err(tr("Diagram style command exceeds the parser budget.").into());
         }
     }
     // The parser expands every pair of grouped endpoints, and duplicates the
@@ -53,7 +54,7 @@ pub(super) fn expansion_budget(source: &str) -> Result<(), String> {
             .saturating_add(commas.saturating_mul(commas) / 4)
     };
     if edges > MAX_PARSE_EXPANSIONS || assignments > MAX_PARSE_EXPANSIONS {
-        return Err("Diagram exceeds the parser expansion budget.".into());
+        return Err(tr("Diagram exceeds the parser expansion budget.").into());
     }
     Ok(())
 }
@@ -132,7 +133,7 @@ pub(super) fn validate_styles(graph: &Graph) -> Result<(), String> {
             .all(|value| attribute(value))
     });
     if !(nodes && edges && boxes && shapes && boundaries && relations) {
-        return Err("Diagram contains an unsupported or unsafe style value.".into());
+        return Err(tr("Diagram contains an unsupported or unsafe style value.").into());
     }
     Ok(())
 }

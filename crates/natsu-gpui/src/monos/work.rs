@@ -1,5 +1,6 @@
 //! Read selected Mono work metadata in the background, once per source revision.
 use super::*;
+use natsu_core::i18n::{tr, tr_fmt};
 type Revision = (u64, u64, u64);
 #[derive(Default)]
 pub(super) struct Cache {
@@ -65,10 +66,14 @@ impl Monos {
                     }
                     Ok(None) => {
                         this.forget_document(&id, cx);
-                        this.error = Some("Document unavailable. It may have been deleted.".into());
+                        this.error =
+                            Some(tr("Document unavailable. It may have been deleted.").into());
                     }
                     Err(error) => {
-                        this.error = Some(format!("Could not open this document: {error}"))
+                        this.error = Some(tr_fmt(
+                            "Could not open this document: {error}",
+                            &[("error", &error)],
+                        ))
                     }
                 }
                 cx.notify();
@@ -113,7 +118,10 @@ impl Monos {
                 let (revision, data) = match result {
                     Ok(value) => value,
                     Err(error) => {
-                        this.error = Some(format!("Could not refresh this Mono’s work: {error}"));
+                        this.error = Some(tr_fmt(
+                            "Could not refresh this Mono’s work: {error}",
+                            &[("error", &error)],
+                        ));
                         cx.notify();
                         return;
                     }

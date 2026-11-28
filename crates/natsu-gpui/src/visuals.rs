@@ -5,6 +5,7 @@ use gpui::{
     PathBuilder, Pixels, Point, Render, Role, SharedString, Stateful, Window, canvas, div, fill,
     point, prelude::*, px, relative, size,
 };
+use natsu_core::i18n::{tr, tr_fmt};
 use natsu_core::visual::{
     Camera, Node, SceneObject, Shape, TextSize, ThemeColor, VisualDocument, VisualRuntime,
 };
@@ -1021,14 +1022,14 @@ impl VisualView {
                     .child(
                         div()
                             .flex_1()
-                            .child("Drag to orbit · ⌘/Ctrl + scroll to zoom"),
+                            .child(tr("Drag to orbit · ⌘/Ctrl + scroll to zoom")),
                     )
                     .child(
                         button(SharedString::from(format!(
                             "visual-camera-reset-{reset_key}"
                         )))
-                        .aria_label("Reset scene camera")
-                        .child("Reset camera")
+                        .aria_label(tr("Reset scene camera"))
+                        .child(tr("Reset camera"))
                         .on_click(cx.listener(move |this, _, _, cx| {
                             this.orbits.remove(&reset_key);
                             cx.notify();
@@ -1109,7 +1110,10 @@ impl Render for VisualView {
                     .border_color(color(&ThemeColor::Negative))
                     .text_size(px(12.))
                     .text_color(color(&ThemeColor::Negative))
-                    .child(format!("Visual could not update: {error}"))
+                    .child(tr_fmt(
+                        "Visual could not update: {error}",
+                        &[("error", &error)],
+                    ))
             }))
             .child(
                 div()

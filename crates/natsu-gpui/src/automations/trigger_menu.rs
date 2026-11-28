@@ -3,6 +3,7 @@
 //! never authenticates a provider or performs a network request.
 use super::*;
 use crate::popover::{Menu, MenuAction, MenuEvent, MenuItem, Popover, menu_popover};
+use natsu_core::i18n::tr;
 
 const CATEGORIES: [(&str, &str, &str); 6] = [
     ("time", "Scheduled", "clock"),
@@ -63,7 +64,9 @@ impl TriggerMenu {
                 "gitlab" => rgb(0xfc6d26).into(),
                 _ => content(if ready { 0.8 } else { 0.35 }),
             };
-            let action = MenuAction::new(kind, label).icon(mark).icon_color(color);
+            let action = MenuAction::new(kind, tr(label))
+                .icon(mark)
+                .icon_color(color);
             let action = if kind == "gitlab" {
                 action.icon_artwork("inbox-gitlab-color.svg")
             } else {
@@ -77,12 +80,12 @@ impl TriggerMenu {
                         .collect(),
                 )
             } else {
-                action.disabled(true).value("Not connected")
+                action.disabled(true).value(tr("Not connected"))
             };
             items.push(action.into());
         }
         if items.len() == 1 {
-            items.push(MenuItem::Note("No matching triggers".into()));
+            items.push(MenuItem::Note(tr("No matching triggers").into()));
         }
         items
     }
@@ -91,14 +94,20 @@ impl TriggerMenu {
         window: &mut Window,
         cx: &mut Context<Self>,
     ) -> Self {
-        let input =
-            cx.new(|cx| Input::field("Search triggers", "Search triggers", content(0.35), cx));
+        let input = cx.new(|cx| {
+            Input::field(
+                tr("Search triggers"),
+                tr("Search triggers"),
+                content(0.35),
+                cx,
+            )
+        });
         let search = cx.new(|_| SearchHeader {
             input: input.clone(),
         });
         let items = Self::items(&search, &connected, cx);
         let menu = cx.new(|cx| {
-            Menu::new("Choose automation trigger", items, window, cx)
+            Menu::new(tr("Choose automation trigger"), items, window, cx)
                 .width(250.)
                 .row_metrics(36., 14.)
                 .search_navigation()

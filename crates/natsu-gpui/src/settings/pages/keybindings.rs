@@ -4,6 +4,7 @@ use crate::{
     theme::*,
 };
 use gpui::{AnyElement, Context, FontWeight, Role, div, prelude::*, px};
+use natsu_core::i18n::{tr, tr_fmt};
 #[derive(Clone, Copy)]
 pub(crate) struct Binding {
     pub command: &'static str,
@@ -388,50 +389,50 @@ impl SettingsView {
             .iter()
             .filter(|r| cfg!(target_os = "macos") || r.command != "App: Quick Composer")
             .filter(|r| {
-                format!("{} {} {}", r.command, self.binding_label(r), r.when)
-                    .to_lowercase()
-                    .contains(&query)
+                format!(
+                    "{} {} {} {}",
+                    r.command,
+                    tr(r.command),
+                    self.binding_label(r),
+                    tr(r.when)
+                )
+                .to_lowercase()
+                .contains(&query)
             })
             .copied()
             .collect();
-        let action = div()
-            .flex()
-            .items_center()
-            .gap_3()
-            .child(
-                div()
-                    .text_size(px(12.))
-                    .text_color(content(0.4))
-                    .child(format!(
-                        "{} {}",
-                        rows.len(),
-                        if rows.len() == 1 {
-                            "binding"
-                        } else {
-                            "bindings"
-                        }
-                    )),
-            )
-            .child(
-                div()
-                    .h(px(28.))
-                    .w(px(176.))
-                    .flex()
-                    .items_center()
-                    .gap_2()
-                    .rounded_md()
-                    .border_1()
-                    .border_color(content(0.1))
-                    .px_2()
-                    .child(icon("search-01", 14.))
-                    .child(
-                        div()
-                            .min_w_0()
-                            .flex_1()
-                            .child(self.keybinding_filter.clone()),
-                    ),
-            )
-            .into_any_element();
+        let action =
+            div()
+                .flex()
+                .items_center()
+                .gap_3()
+                .child(div().text_size(px(12.)).text_color(content(0.4)).child(
+                    if rows.len() == 1 {
+                        tr_fmt("{count} binding", &[("count", &rows.len())])
+                    } else {
+                        tr_fmt("{count} bindings", &[("count", &rows.len())])
+                    },
+                ))
+                .child(
+                    div()
+                        .h(px(28.))
+                        .w(px(176.))
+                        .flex()
+                        .items_center()
+                        .gap_2()
+                        .rounded_md()
+                        .border_1()
+                        .border_color(content(0.1))
+                        .px_2()
+                        .child(icon("search-01", 14.))
+                        .child(
+                            div()
+                                .min_w_0()
+                                .flex_1()
+                                .child(self.keybinding_filter.clone()),
+                        ),
+                )
+                .into_any_element();
         let mut children = vec![
             div()
                 .flex()
@@ -444,13 +445,13 @@ impl SettingsView {
                 .text_size(px(11.))
                 .font_weight(FontWeight::SEMIBOLD)
                 .text_color(content(0.4))
-                .child(div().min_w_0().flex_1().child("COMMAND"))
-                .child(div().w(px(160.)).flex_shrink_0().child("KEYBINDING"))
-                .child(div().w(px(112.)).flex_shrink_0().child("WHEN"))
+                .child(div().min_w_0().flex_1().child(tr("COMMAND")))
+                .child(div().w(px(160.)).flex_shrink_0().child(tr("KEYBINDING")))
+                .child(div().w(px(112.)).flex_shrink_0().child(tr("WHEN")))
                 .into_any_element(),
         ];
         if rows.is_empty() {
-            children.push(super::super::widgets::note("No matching bindings"));
+            children.push(super::super::widgets::note(tr("No matching bindings")));
         }
         for row in rows {
             let command = row.command;
@@ -459,7 +460,7 @@ impl SettingsView {
             let disabled = self.prefs.keybindings.get(command) == Some(&None);
             let label = if recording {
                 if self.recording_preview.is_empty() {
-                    "Record…".into()
+                    tr("Record…").into()
                 } else {
                     self.recording_preview.clone()
                 }
@@ -481,7 +482,7 @@ impl SettingsView {
                             .flex_1()
                             .truncate()
                             .text_color(content(if disabled { 0.45 } else { 1. }))
-                            .child(command),
+                            .child(tr(command)),
                     )
                     .child(
                         div()
@@ -495,7 +496,10 @@ impl SettingsView {
                                     .id(gpui::SharedString::from(format!("shortcut-{command}")))
                                     .debug_selector(move || format!("shortcut-{command}"))
                                     .role(if row.fixed { Role::Label } else { Role::Button })
-                                    .aria_label(format!("Change {command} shortcut"))
+                                    .aria_label(tr_fmt(
+                                        "Change {command} shortcut",
+                                        &[("command", &tr(command))],
+                                    ))
                                     .h(px(24.))
                                     .w(px(112.))
                                     .flex()
@@ -537,7 +541,10 @@ impl SettingsView {
                                         .id(gpui::SharedString::from(format!("reset-{command}")))
                                         .debug_selector(move || format!("reset-shortcut-{command}"))
                                         .role(Role::Button)
-                                        .aria_label(format!("Reset {command} shortcut"))
+                                        .aria_label(tr_fmt(
+                                            "Reset {command} shortcut",
+                                            &[("command", &tr(command))],
+                                        ))
                                         .p_1()
                                         .rounded_md()
                                         .cursor_pointer()
@@ -559,7 +566,7 @@ impl SettingsView {
                             .font_family(crate::fonts::mono())
                             .text_size(px(11.))
                             .text_color(content(0.4))
-                            .child(row.when),
+                            .child(tr(row.when)),
                     )
                     .into_any_element(),
             );
@@ -575,10 +582,10 @@ impl SettingsView {
                     .into_any_element(),
             );
         }
-        vec![self.group(None,true,"Shortcuts",Some("Click a shortcut to record new keys. Press Delete while recording to disable it.".into()),Some(action),children)]
+        vec![self.group(None,true,tr("Shortcuts"),Some(tr("Click a shortcut to record new keys. Press Delete while recording to disable it.").into()),Some(action),children)]
     }
     fn binding_label(&self, row: &Binding) -> String {
-        command_shortcut(&self.prefs, row.command).unwrap_or_else(|| "Disabled".into())
+        command_shortcut(&self.prefs, row.command).unwrap_or_else(|| tr("Disabled").into())
     }
     pub(in crate::settings) fn record_key(
         &mut self,
@@ -614,7 +621,7 @@ impl SettingsView {
         let shortcut = key.unparse();
         self.recording_preview = shortcut_label(&shortcut);
         if bare || (!key.modifiers.platform && !key.modifiers.control && !key.modifiers.alt) {
-            self.recording_error = Some("Use Command, Control, or Option with a key.".into());
+            self.recording_error = Some(tr("Use Command, Control, or Option with a key.").into());
             cx.notify();
             return;
         }
@@ -624,7 +631,8 @@ impl SettingsView {
                 "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8"
             )
         {
-            self.recording_error = Some("Tab: Activate 1–8 needs a number key from 1 to 8".into());
+            self.recording_error =
+                Some(tr("Tab: Activate 1–8 needs a number key from 1 to 8").into());
             cx.notify();
             return;
         }
@@ -638,7 +646,10 @@ impl SettingsView {
                         .and_then(|s| s.as_ref())
                         == Some(&shortcut))
         }) {
-            self.recording_error = Some(format!("Already used by {}", other.command));
+            self.recording_error = Some(tr_fmt(
+                "Already used by {command}",
+                &[("command", &tr(other.command))],
+            ));
             cx.notify();
             return;
         }
